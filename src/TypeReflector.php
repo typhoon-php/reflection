@@ -491,6 +491,7 @@ final class TypeReflector
             'string' => new StringT(),
             'non-empty-string' => new NonEmptyStringT(),
             'numeric-string' => new NumericStringT(),
+            'array-key' => new ArrayKeyT(),
             'scalar' => new ScalarT(),
             'object' => new ObjectT(),
             'callable' => new CallableT(),
