@@ -906,6 +906,7 @@ final class TypeReflectorTest extends TestCase
         yield 'int' => ['int', new IntT()];
         yield 'float' => ['float', new FloatT()];
         yield 'string' => ['string', new StringT()];
+        yield 'array-key' => ['string|int', new UnionT(new StringT(), new IntT())];
         yield 'array' => ['array', new ArrayT()];
         yield 'iterable' => ['iterable', new IterableT()];
         yield 'object' => ['object', new ObjectT()];
