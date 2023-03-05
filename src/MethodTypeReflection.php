@@ -18,7 +18,7 @@ final class MethodTypeReflection
      */
     public function __construct(
         public readonly string $name,
-        private readonly array $templates,
+        public readonly array $templates,
         private readonly array $parameterTypes,
         public readonly Type $returnType,
     ) {

@@ -7,7 +7,7 @@
     ensureArrayStringOffsetsExist="true"
     errorLevel="1"
     findUnusedBaselineEntry="true"
-    findUnusedCode="false"
+    findUnusedCode="true"
     findUnusedPsalmSuppress="true"
     findUnusedVariablesAndParams="true"
     memoizeMethodCallResults="true"

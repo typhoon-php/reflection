@@ -218,6 +218,8 @@ final class TypeReflectorTest extends TestCase
     /**
      * @dataProvider nativeTypes
      * @dataProvider callableType
+     * @dataProvider voidType
+     * @dataProvider neverType
      */
     public function testItReflectsNativeMethodReturnType(string $type, Type $expectedType): void
     {
@@ -524,6 +526,8 @@ final class TypeReflectorTest extends TestCase
     /**
      * @dataProvider nativeTypes
      * @dataProvider callableType
+     * @dataProvider voidType
+     * @dataProvider neverType
      */
     public function testItReflectsMethodReturnType(string $type, Type $expectedType): void
     {
