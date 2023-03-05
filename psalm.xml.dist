@@ -7,7 +7,7 @@
     ensureArrayStringOffsetsExist="true"
     errorLevel="1"
     findUnusedBaselineEntry="true"
-    findUnusedCode="true"
+    findUnusedCode="false"
     findUnusedPsalmSuppress="true"
     findUnusedVariablesAndParams="true"
     memoizeMethodCallResults="true"
@@ -27,6 +27,7 @@
 
     <projectFiles>
         <directory name="src"/>
+        <directory name="tests"/>
         <ignoreFiles>
             <directory name="var"/>
             <directory name="vendor"/>
