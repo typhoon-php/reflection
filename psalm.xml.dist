@@ -40,6 +40,12 @@
     </ignoreExceptions>
 
     <issueHandlers>
+        <MissingThrowsDocblock>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </MissingThrowsDocblock>
+        <MixedAssignment errorLevel="suppress"/>
         <UnusedClass errorLevel="info"/>
     </issueHandlers>
 

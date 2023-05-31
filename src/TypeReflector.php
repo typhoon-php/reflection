@@ -99,7 +99,7 @@ final class TypeReflector
         $node = $findClassVisitor->node;
 
         if ($node === null) {
-            throw new \RuntimeException();
+            throw new \RuntimeException(sprintf('No class %s in %s.', $class, $source->description));
         }
 
         return [$node, $nameResolver->getNameContext()];
@@ -115,7 +115,7 @@ final class TypeReflector
             name: $class,
             parent: $node instanceof ClassNode && $node->extends !== null ? TypeParser::nameToClass($node->extends) : null,
             final: $node instanceof ClassNode && $node->isFinal(),
-            templateNames: $phpDoc->templateNames(),
+            templateNames: array_column(array_column($phpDoc->templateTags(), 'value'), 'name'),
         );
     }
 
@@ -125,16 +125,15 @@ final class TypeReflector
     private function parseTemplates(Scope $scope, PHPDoc $phpDoc): array
     {
         $templates = [];
-        $index = 0;
 
-        foreach ($phpDoc->templates() as $tagName => $tagValue) {
-            $templates[$tagValue->name] = new TemplateReflection(
-                index: $index++,
-                name: $tagValue->name,
-                constraint: $this->typeParser->parsePHPDocType($scope, $tagValue->bound) ?? types::mixed,
+        foreach ($phpDoc->templateTags() as $index => $tag) {
+            $templates[$tag->value->name] = new TemplateReflection(
+                index: $index,
+                name: $tag->value->name,
+                constraint: $this->typeParser->parsePHPDocType($scope, $tag->value->bound) ?? types::mixed,
                 variance: match (true) {
-                    str_ends_with($tagName, 'covariant') => Variance::COVARIANT,
-                    str_ends_with($tagName, 'contravariant') => Variance::CONTRAVARIANT,
+                    str_ends_with($tag->name, 'covariant') => Variance::COVARIANT,
+                    str_ends_with($tag->name, 'contravariant') => Variance::CONTRAVARIANT,
                     default => Variance::INVARIANT,
                 },
             );
@@ -228,7 +227,7 @@ final class TypeReflector
                 classScope: $classScope,
                 name: $methodName,
                 static: $methodNode->isStatic(),
-                templateNames: $methodPHPDoc->templateNames(),
+                templateNames: array_column(array_column($methodPHPDoc->templateTags(), 'value'), 'name'),
             );
 
             $methodBuilder = $classBuilder->method($methodName)

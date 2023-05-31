@@ -64,34 +64,43 @@ final class PHPDoc
     }
 
     /**
-     * @return list<non-empty-string>
+     * @return list<PhpDocTagNode<TemplateTagValueNode>>
      */
-    public function templateNames(): array
+    public function templateTags(): array
     {
-        return array_column(iterator_to_array($this->templates(), preserve_keys: false), 'name');
+        $templates = [];
+
+        foreach ($this->tags as $tag) {
+            if ($tag->value instanceof TemplateTagValueNode && !isset($templates[$tag->value->name])) {
+                /** @var PhpDocTagNode<TemplateTagValueNode> */
+                $templates[$tag->value->name] = $tag;
+            }
+        }
+
+        return array_values($templates);
     }
 
     /**
-     * @return \Generator<non-empty-string, TemplateTagValueNode>
+     * @return list<GenericTypeNode>
      */
-    public function templates(): \Generator
+    public function inheritedTypes(): array
     {
-        foreach ($this->tags as $tag) {
-            if ($tag->value instanceof TemplateTagValueNode) {
-                yield $tag->name => $tag->value;
-            }
-        }
-    }
+        $types = [];
 
-    /**
-     * @return \Generator<int, GenericTypeNode>
-     */
-    public function inheritedTypes(): \Generator
-    {
         foreach ($this->tags as $tag) {
-            if ($tag->value instanceof ExtendsTagValueNode || $tag->value instanceof ImplementsTagValueNode) {
-                yield $tag->value->type;
+            if (!($tag->value instanceof ExtendsTagValueNode || $tag->value instanceof ImplementsTagValueNode)) {
+                continue;
             }
+
+            $class = (string) $tag->value->type->type;
+
+            if (isset($types[(string) $tag->value->type->type])) {
+                continue;
+            }
+
+            $types[$class] = $tag->value->type;
         }
+
+        return array_values($types);
     }
 }
