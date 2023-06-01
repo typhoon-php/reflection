@@ -7,7 +7,6 @@ namespace ExtendedTypeSystem\Reflection\PHPDocParser;
 use ExtendedTypeSystem\Reflection\TagPrioritizer;
 use ExtendedTypeSystem\Reflection\TagPrioritizer\PHPStanOverPsalmOverOthersTagPrioritizer;
 use PhpParser\Node;
-use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Lexer\Lexer as PHPStanPhpDocLexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
@@ -22,7 +21,10 @@ use PHPStan\PhpDocParser\Parser\TypeParser;
 final class PHPDocParser
 {
     public function __construct(
-        private readonly PHPStanPhpDocParser $parser = new PHPStanPhpDocParser(new TypeParser(new ConstExprParser()), new ConstExprParser()),
+        private readonly PHPStanPhpDocParser $parser = new PHPStanPhpDocParser(
+            typeParser: new TypeParser(new ConstExprParser()),
+            constantExprParser: new ConstExprParser(),
+        ),
         private readonly Lexer $lexer = new PHPStanPhpDocLexer(),
         private readonly TagPrioritizer $tagPrioritizer = new PHPStanOverPsalmOverOthersTagPrioritizer(),
     ) {
@@ -33,16 +35,12 @@ final class PHPDocParser
         $phpDoc = $node->getDocComment()?->getText() ?? '';
 
         if (trim($phpDoc) === '') {
-            return new PHPDoc();
+            return new PHPDoc($this->tagPrioritizer);
         }
 
         $tokens = $this->lexer->tokenize($phpDoc);
         $tags = $this->parser->parse(new TokenIterator($tokens))->getTags();
-        usort(
-            $tags,
-            fn (PhpDocTagNode $a, PhpDocTagNode $b): int => $this->tagPrioritizer->priorityFor($b->name) <=> $this->tagPrioritizer->priorityFor($a->name),
-        );
 
-        return new PHPDoc($tags);
+        return new PHPDoc($this->tagPrioritizer, $tags);
     }
 }

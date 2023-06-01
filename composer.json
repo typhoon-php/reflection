@@ -22,6 +22,7 @@
         "phpunit/phpunit": "^10.1.3",
         "phpyh/coding-standard": "^2.2.0",
         "psalm/plugin-phpunit": "^0.18.4",
+        "roave/infection-static-analysis-plugin": "^1.32",
         "symfony/var-dumper": "^6.3.0",
         "vimeo/psalm": "^5.12.0"
     },
@@ -45,7 +46,7 @@
     "scripts": {
         "cleanup": "find var ! -path var ! -path var/.gitignore -exec rm -rf {} +",
         "fixcs": "PHP_CS_FIXER_IGNORE_ENV=1 vendor/bin/php-cs-fixer fix -v",
-        "infection": "infection --threads=max --show-mutations",
+        "infection": "roave-infection-static-analysis-plugin --threads=max --show-mutations  --psalm-config=psalm.xml.dist",
         "psalm": "psalm --show-info=true --no-diff",
         "test": "phpunit"
     }

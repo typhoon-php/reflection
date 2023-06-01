@@ -7,7 +7,9 @@
     },
     "tmpDir": "var",
     "mutators": {
-        "@default": true
+        "@default": true,
+        "NullSafeMethodCall": false,
+        "NullSafePropertyCall": false
     },
-    "minCoveredMsi": 95,
+    "minCoveredMsi": 95
 }

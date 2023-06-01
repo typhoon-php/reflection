@@ -14,7 +14,7 @@ use ExtendedTypeSystem\Reflection\TypeParser\PropertyScope;
 use ExtendedTypeSystem\Reflection\TypeParser\Scope;
 use ExtendedTypeSystem\Reflection\TypeParser\TypeParser;
 use ExtendedTypeSystem\Reflection\TypeReflector\ClassLikeReflectionBuilder;
-use ExtendedTypeSystem\Reflection\TypeReflector\FindClassVisitor;
+use ExtendedTypeSystem\Reflection\TypeReflector\FindClassLikeNodeVisitor;
 use ExtendedTypeSystem\Type\NamedObjectType;
 use ExtendedTypeSystem\types;
 use PhpParser\Lexer\Emulative;
@@ -91,7 +91,7 @@ final class TypeReflector
         $statements = $this->phpParser->parse($source->code) ?? [];
         $traverser = new NodeTraverser();
         $nameResolver = new NameResolver();
-        $findClassVisitor = new FindClassVisitor($class);
+        $findClassVisitor = new FindClassLikeNodeVisitor($class);
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($findClassVisitor);
         $traverser->traverse($statements);
@@ -115,7 +115,7 @@ final class TypeReflector
             name: $class,
             parent: $node instanceof ClassNode && $node->extends !== null ? TypeParser::nameToClass($node->extends) : null,
             final: $node instanceof ClassNode && $node->isFinal(),
-            templateNames: array_column(array_column($phpDoc->templateTags(), 'value'), 'name'),
+            templateNames: array_column($phpDoc->templates(), 'name'),
         );
     }
 
@@ -126,16 +126,13 @@ final class TypeReflector
     {
         $templates = [];
 
-        foreach ($phpDoc->templateTags() as $index => $tag) {
-            $templates[$tag->value->name] = new TemplateReflection(
+        foreach ($phpDoc->templates() as $index => $template) {
+            $variance = $template->getAttribute('variance');
+            $templates[$template->name] = new TemplateReflection(
                 index: $index,
-                name: $tag->value->name,
-                constraint: $this->typeParser->parsePHPDocType($scope, $tag->value->bound) ?? types::mixed,
-                variance: match (true) {
-                    str_ends_with($tag->name, 'covariant') => Variance::COVARIANT,
-                    str_ends_with($tag->name, 'contravariant') => Variance::CONTRAVARIANT,
-                    default => Variance::INVARIANT,
-                },
+                name: $template->name,
+                constraint: $this->typeParser->parsePHPDocType($scope, $template->bound) ?? types::mixed,
+                variance: $variance instanceof Variance ? $variance : Variance::INVARIANT,
             );
         }
 
@@ -227,7 +224,7 @@ final class TypeReflector
                 classScope: $classScope,
                 name: $methodName,
                 static: $methodNode->isStatic(),
-                templateNames: array_column(array_column($methodPHPDoc->templateTags(), 'value'), 'name'),
+                templateNames: array_column($methodPHPDoc->templates(), 'name'),
             );
 
             $methodBuilder = $classBuilder->method($methodName)

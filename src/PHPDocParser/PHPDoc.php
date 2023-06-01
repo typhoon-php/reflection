@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ExtendedTypeSystem\Reflection\PHPDocParser;
 
+use ExtendedTypeSystem\Reflection\TagPrioritizer;
+use ExtendedTypeSystem\Reflection\Variance;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ExtendsTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ImplementsTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
@@ -21,63 +23,91 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 final class PHPDoc
 {
     /**
-     * @param list<PhpDocTagNode> $tags
+     * @param array<PhpDocTagNode> $tags
      */
     public function __construct(
+        private readonly TagPrioritizer $tagPrioritizer,
         private readonly array $tags = [],
     ) {
     }
 
     public function varType(): ?TypeNode
     {
+        $typesByPriority = [];
+
         foreach ($this->tags as $tag) {
             if ($tag->value instanceof VarTagValueNode) {
-                return $tag->value->type;
+                $typesByPriority[$this->prioritizeTag($tag)] = $tag->value->type;
             }
         }
 
-        return null;
+        krsort($typesByPriority);
+
+        return reset($typesByPriority) ?: null;
     }
 
     public function paramType(string $name): ?TypeNode
     {
         $dollarName = '$' . $name;
+        $typesByPriority = [];
 
         foreach ($this->tags as $tag) {
             if ($tag->value instanceof ParamTagValueNode && $tag->value->parameterName === $dollarName) {
-                return $tag->value->type;
+                $typesByPriority[$this->prioritizeTag($tag)] = $tag->value->type;
             }
         }
 
-        return null;
+        krsort($typesByPriority);
+
+        return reset($typesByPriority) ?: null;
     }
 
     public function returnType(): ?TypeNode
     {
+        $typesByPriority = [];
+
         foreach ($this->tags as $tag) {
             if ($tag->value instanceof ReturnTagValueNode) {
-                return $tag->value->type;
+                $typesByPriority[$this->prioritizeTag($tag)] = $tag->value->type;
             }
         }
 
-        return null;
+        krsort($typesByPriority);
+
+        return reset($typesByPriority) ?: null;
     }
 
     /**
-     * @return list<PhpDocTagNode<TemplateTagValueNode>>
+     * @return list<TemplateTagValueNode>
      */
-    public function templateTags(): array
+    public function templates(): array
     {
-        $templates = [];
+        /** @var array<non-empty-string, non-empty-array<int, PhpDocTagNode<TemplateTagValueNode>>> */
+        $tagsByNameByPriority = [];
 
         foreach ($this->tags as $tag) {
-            if ($tag->value instanceof TemplateTagValueNode && !isset($templates[$tag->value->name])) {
+            if ($tag->value instanceof TemplateTagValueNode) {
                 /** @var PhpDocTagNode<TemplateTagValueNode> */
-                $templates[$tag->value->name] = $tag;
+                $tagsByNameByPriority[$tag->value->name][$this->prioritizeTag($tag)] = $tag;
             }
         }
 
-        return array_values($templates);
+        return array_values(
+            array_map(
+                static function (array $tags): TemplateTagValueNode {
+                    krsort($tags);
+                    $tag = reset($tags);
+                    $tag->value->setAttribute('variance', match (true) {
+                        str_ends_with($tag->name, 'covariant') => Variance::COVARIANT,
+                        str_ends_with($tag->name, 'contravariant') => Variance::CONTRAVARIANT,
+                        default => Variance::INVARIANT,
+                    });
+
+                    return $tag->value;
+                },
+                $tagsByNameByPriority,
+            ),
+        );
     }
 
     /**
@@ -85,22 +115,29 @@ final class PHPDoc
      */
     public function inheritedTypes(): array
     {
-        $types = [];
+        /** @var array<string, non-empty-array<int, GenericTypeNode>> */
+        $typesByClassByPriority = [];
 
         foreach ($this->tags as $tag) {
-            if (!($tag->value instanceof ExtendsTagValueNode || $tag->value instanceof ImplementsTagValueNode)) {
-                continue;
+            if ($tag->value instanceof ExtendsTagValueNode || $tag->value instanceof ImplementsTagValueNode) {
+                $typesByClassByPriority[(string) $tag->value->type->type][$this->prioritizeTag($tag)] = $tag->value->type;
             }
-
-            $class = (string) $tag->value->type->type;
-
-            if (isset($types[(string) $tag->value->type->type])) {
-                continue;
-            }
-
-            $types[$class] = $tag->value->type;
         }
 
-        return array_values($types);
+        return array_values(
+            array_map(
+                static function (array $tags): GenericTypeNode {
+                    krsort($tags);
+
+                    return reset($tags);
+                },
+                $typesByClassByPriority,
+            ),
+        );
+    }
+
+    private function prioritizeTag(PhpDocTagNode $tag): int
+    {
+        return $this->tagPrioritizer->priorityFor($tag->name);
     }
 }

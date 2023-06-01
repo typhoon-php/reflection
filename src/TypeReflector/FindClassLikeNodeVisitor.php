@@ -12,9 +12,8 @@ use PhpParser\NodeVisitorAbstract;
 /**
  * @internal
  * @psalm-internal ExtendedTypeSystem\Reflection
- * @template T of object
  */
-final class FindClassVisitor extends NodeVisitorAbstract
+final class FindClassLikeNodeVisitor extends NodeVisitorAbstract
 {
     /**
      * @psalm-readonly-allow-private-mutation
@@ -22,11 +21,16 @@ final class FindClassVisitor extends NodeVisitorAbstract
     public ?ClassLikeNode $node = null;
 
     /**
-     * @param class-string<T> $name
+     * @param class-string $class
      */
     public function __construct(
-        private readonly string $name,
+        private readonly string $class,
     ) {
+    }
+
+    public function beforeTraverse(array $nodes): void
+    {
+        $this->node = null;
     }
 
     public function enterNode(Node $node)
@@ -35,7 +39,7 @@ final class FindClassVisitor extends NodeVisitorAbstract
             return null;
         }
 
-        if ($node->namespacedName?->toString() === $this->name) {
+        if ($node->namespacedName?->toString() === $this->class) {
             $this->node = $node;
 
             return NodeTraverser::STOP_TRAVERSAL;
