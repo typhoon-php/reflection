@@ -22,6 +22,7 @@ use function PHPUnit\Framework\never;
  * @internal
  */
 #[CoversClass(PHPDocParser::class)]
+#[CoversClass(PHPDocBuilder::class)]
 #[CoversClass(PHPDoc::class)]
 final class PHPDocParserTest extends TestCase
 {

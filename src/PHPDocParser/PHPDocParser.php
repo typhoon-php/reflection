@@ -35,12 +35,14 @@ final class PHPDocParser
         $phpDoc = $node->getDocComment()?->getText() ?? '';
 
         if (trim($phpDoc) === '') {
-            return new PHPDoc($this->tagPrioritizer);
+            return new PHPDoc();
         }
 
         $tokens = $this->lexer->tokenize($phpDoc);
         $tags = $this->parser->parse(new TokenIterator($tokens))->getTags();
 
-        return new PHPDoc($this->tagPrioritizer, $tags);
+        return (new PHPDocBuilder($this->tagPrioritizer))
+            ->addTags($tags)
+            ->build();
     }
 }
