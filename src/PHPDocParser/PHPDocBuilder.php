@@ -65,6 +65,34 @@ final class PHPDocBuilder
         return $this;
     }
 
+    public function build(): PHPDoc
+    {
+        return new PHPDoc(
+            varType: $this->varTag?->value->type,
+            paramTypes: array_map(
+                static fn (PhpDocTagNode $tag): TypeNode => $tag->value->type,
+                $this->paramTags,
+            ),
+            returnType: $this->returnTag?->value->type,
+            templates: array_map(
+                static function (PhpDocTagNode $tag): TemplateTagValueNode {
+                    $tag->value->setAttribute('variance', match (true) {
+                        str_ends_with($tag->name, 'covariant') => Variance::COVARIANT,
+                        str_ends_with($tag->name, 'contravariant') => Variance::CONTRAVARIANT,
+                        default => Variance::INVARIANT,
+                    });
+
+                    return $tag->value;
+                },
+                $this->templateTags,
+            ),
+            inheritedTypes: array_map(
+                static fn (PhpDocTagNode $tag): GenericTypeNode => $tag->value->type,
+                $this->inheritTags,
+            ),
+        );
+    }
+
     private function addTag(PhpDocTagNode $tag): void
     {
         if ($tag->value instanceof VarTagValueNode) {
@@ -101,34 +129,6 @@ final class PHPDocBuilder
 
             return;
         }
-    }
-
-    public function build(): PHPDoc
-    {
-        return new PHPDoc(
-            varType: $this->varTag?->value->type,
-            paramTypes: array_map(
-                static fn (PhpDocTagNode $tag): TypeNode => $tag->value->type,
-                $this->paramTags,
-            ),
-            returnType: $this->returnTag?->value->type,
-            templates: array_map(
-                static function (PhpDocTagNode $tag): TemplateTagValueNode {
-                    $tag->value->setAttribute('variance', match (true) {
-                        str_ends_with($tag->name, 'covariant') => Variance::COVARIANT,
-                        str_ends_with($tag->name, 'contravariant') => Variance::CONTRAVARIANT,
-                        default => Variance::INVARIANT,
-                    });
-
-                    return $tag->value;
-                },
-                $this->templateTags,
-            ),
-            inheritedTypes: array_map(
-                static fn (PhpDocTagNode $tag): GenericTypeNode => $tag->value->type,
-                $this->inheritTags,
-            ),
-        );
     }
 
     /**
