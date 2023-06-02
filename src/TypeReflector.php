@@ -115,7 +115,7 @@ final class TypeReflector
             name: $class,
             parent: $node instanceof ClassNode && $node->extends !== null ? TypeParser::nameToClass($node->extends) : null,
             final: $node instanceof ClassNode && $node->isFinal(),
-            templateNames: array_column($phpDoc->templates(), 'name'),
+            templateNames: array_keys($phpDoc->templates),
         );
     }
 
@@ -126,7 +126,7 @@ final class TypeReflector
     {
         $templates = [];
 
-        foreach ($phpDoc->templates() as $index => $template) {
+        foreach (array_values($phpDoc->templates) as $index => $template) {
             $variance = $template->getAttribute('variance');
             $templates[$template->name] = new TemplateReflection(
                 index: $index,
@@ -143,7 +143,7 @@ final class TypeReflector
     {
         $templateArguments = [];
 
-        foreach ($phpDoc->inheritedTypes() as $phpDocInheritedType) {
+        foreach ($phpDoc->inheritedTypes as $phpDocInheritedType) {
             $type = $this->typeParser->parsePHPDocType($classScope, $phpDocInheritedType);
             \assert($type instanceof NamedObjectType);
             $templateArguments[$type->class] = $type->templateArguments;
@@ -199,7 +199,7 @@ final class TypeReflector
 
             $propertyPHPDoc = $this->phpDocParser->parse($propertyNode);
             $nativeType = $this->typeParser->parseNativeType($propertyScope, $propertyNode->type);
-            $phpDocType = $this->typeParser->parsePHPDocType($propertyScope, $propertyPHPDoc->varType());
+            $phpDocType = $this->typeParser->parsePHPDocType($propertyScope, $propertyPHPDoc->varType);
 
             foreach ($propertyNode->props as $eachProperty) {
                 $classBuilder->property($eachProperty->name->name)
@@ -224,7 +224,7 @@ final class TypeReflector
                 classScope: $classScope,
                 name: $methodName,
                 static: $methodNode->isStatic(),
-                templateNames: array_column($methodPHPDoc->templates(), 'name'),
+                templateNames: array_keys($methodPHPDoc->templates),
             );
 
             $methodBuilder = $classBuilder->method($methodName)
@@ -232,14 +232,14 @@ final class TypeReflector
                 ->templates($this->parseTemplates($methodScope, $methodPHPDoc));
             $methodBuilder->returnType
                 ->nativeType($this->typeParser->parseNativeType($methodScope, $methodNode->returnType))
-                ->phpDocType($this->typeParser->parsePHPDocType($methodScope, $methodPHPDoc->returnType()));
+                ->phpDocType($this->typeParser->parsePHPDocType($methodScope, $methodPHPDoc->returnType));
 
             foreach ($methodNode->params as $parameterNode) {
                 \assert($parameterNode->var instanceof VariableNode && \is_string($parameterNode->var->name));
 
                 $parameterName = $parameterNode->var->name;
                 $nativeParameterType = $this->typeParser->parseNativeType($methodScope, $parameterNode->type);
-                $phpDocParameterType = $this->typeParser->parsePHPDocType($methodScope, $methodPHPDoc->paramType($parameterName));
+                $phpDocParameterType = $this->typeParser->parsePHPDocType($methodScope, $methodPHPDoc->paramTypes[$parameterName] ?? null);
 
                 $methodBuilder->parameterType($parameterName)
                     ->nativeType($nativeParameterType)

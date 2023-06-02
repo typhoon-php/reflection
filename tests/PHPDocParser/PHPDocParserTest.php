@@ -62,7 +62,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $varType = $parser->parse($node)->varType();
+        $varType = $parser->parse($node)->varType;
 
         self::assertNull($varType);
     }
@@ -81,7 +81,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $varType = $parser->parse($node)->varType();
+        $varType = $parser->parse($node)->varType;
 
         self::assertEquals(new IdentifierTypeNode('string'), $varType);
     }
@@ -97,9 +97,9 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $paramType = $parser->parse($node)->paramType('a');
+        $paramTypes = $parser->parse($node)->paramTypes;
 
-        self::assertNull($paramType);
+        self::assertEmpty($paramTypes);
     }
 
     public function testItReturnsLatestPrioritizedParamTagType(): void
@@ -110,16 +110,23 @@ final class PHPDocParserTest extends TestCase
                 /**
                  * @example
                  * @param int $a
+                 * @param object $b
+                 * @param mixed $b
                  * @psalm-param float $a
                  * @psalm-param string $a
-                 * @psalm-param object $b
                  */
                 PHP,
         );
 
-        $paramType = $parser->parse($node)->paramType('a');
+        $paramTypes = $parser->parse($node)->paramTypes;
 
-        self::assertEquals(new IdentifierTypeNode('string'), $paramType);
+        self::assertEquals(
+            [
+                'a' => new IdentifierTypeNode('string'),
+                'b' => new IdentifierTypeNode('mixed'),
+            ],
+            $paramTypes,
+        );
     }
 
     public function testItReturnsNullReturnTypeWhenNoReturnTag(): void
@@ -133,7 +140,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $returnType = $parser->parse($node)->returnType();
+        $returnType = $parser->parse($node)->returnType;
 
         self::assertNull($returnType);
     }
@@ -152,7 +159,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $returnType = $parser->parse($node)->returnType();
+        $returnType = $parser->parse($node)->returnType;
 
         self::assertEquals(new IdentifierTypeNode('string'), $returnType);
     }
@@ -168,7 +175,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $templates = $parser->parse($node)->templates();
+        $templates = $parser->parse($node)->templates;
 
         self::assertEmpty($templates);
     }
@@ -189,12 +196,12 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $templates = $parser->parse($node)->templates();
+        $templates = $parser->parse($node)->templates;
 
         self::assertEquals(
             [
-                $this->createTemplateTagValueNode('T', new IdentifierTypeNode('string'), Variance::INVARIANT),
-                $this->createTemplateTagValueNode('T2', new IdentifierTypeNode('mixed'), Variance::INVARIANT),
+                'T' => $this->createTemplateTagValueNode('T', new IdentifierTypeNode('string'), Variance::INVARIANT),
+                'T2' => $this->createTemplateTagValueNode('T2', new IdentifierTypeNode('mixed'), Variance::INVARIANT),
             ],
             $templates,
         );
@@ -213,13 +220,13 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $templates = $parser->parse($node)->templates();
+        $templates = $parser->parse($node)->templates;
 
         self::assertEquals(
             [
-                $this->createTemplateTagValueNode('TInvariant', null, Variance::INVARIANT),
-                $this->createTemplateTagValueNode('TCovariant', null, Variance::COVARIANT),
-                $this->createTemplateTagValueNode('TContravariant', null, Variance::CONTRAVARIANT),
+                'TInvariant' => $this->createTemplateTagValueNode('TInvariant', null, Variance::INVARIANT),
+                'TCovariant' => $this->createTemplateTagValueNode('TCovariant', null, Variance::COVARIANT),
+                'TContravariant' => $this->createTemplateTagValueNode('TContravariant', null, Variance::CONTRAVARIANT),
             ],
             $templates,
         );
@@ -236,7 +243,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $inheritedTypes = $parser->parse($node)->inheritedTypes();
+        $inheritedTypes = $parser->parse($node)->inheritedTypes;
 
         self::assertEmpty($inheritedTypes);
     }
@@ -264,7 +271,7 @@ final class PHPDocParserTest extends TestCase
                 PHP,
         );
 
-        $inheritedTypes = $parser->parse($node)->inheritedTypes();
+        $inheritedTypes = $parser->parse($node)->inheritedTypes;
 
         self::assertEquals(
             [

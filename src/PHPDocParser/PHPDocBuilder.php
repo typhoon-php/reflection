@@ -88,7 +88,7 @@ final class PHPDocBuilder
             ),
             inheritedTypes: array_map(
                 static fn (PhpDocTagNode $tag): GenericTypeNode => $tag->value->type,
-                $this->inheritTags,
+                array_values($this->inheritTags),
             ),
         );
     }
@@ -181,11 +181,10 @@ final class PHPDocBuilder
      */
     private function addInheritTag(PhpDocTagNode $tag): void
     {
-        $class = (string) $tag->value->type->type;
-        \assert($class !== '');
+        $name = $tag->value->type->type->name;
 
-        if ($this->shouldReplaceTag($this->inheritTags[$class] ?? null, $tag)) {
-            $this->inheritTags[$class] = $tag;
+        if ($this->shouldReplaceTag($this->inheritTags[$name] ?? null, $tag)) {
+            $this->inheritTags[$name] = $tag;
         }
     }
 
