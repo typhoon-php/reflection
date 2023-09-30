@@ -100,10 +100,12 @@ final class PhpParserReflector
         if (!$node instanceof Stmt\Class_) {
             return 0;
         }
+    
+        $phpDoc = PhpDocParsingVisitor::fromNode($node);
 
         return ($node->isAbstract() ? ClassReflection::IS_EXPLICIT_ABSTRACT : 0)
-            + ($node->isFinal() ? ClassReflection::IS_FINAL : 0)
-            + ($node->isReadonly() ? ClassReflection::IS_READONLY : 0);
+            + ($node->isFinal() || $phpDoc->isFinal() ? ClassReflection::IS_FINAL : 0)
+            + ($node->isReadonly() || $phpDoc->isReadonly() ? ClassReflection::IS_READONLY : 0);
     }
 
     private function reflectParent(Stmt\ClassLike $node, PhpDoc $phpDoc): ?Type\NamedObjectType

@@ -34,7 +34,7 @@ final class ReflectorCompatibilityTest extends TestCase
     }
 
     /**
-     * @return \Generator<string, array{list<ClassLoader>, string}>
+     * @return \Generator<string, array{list<ClassLoader>, class-string}>
      */
     public static function classes(): \Generator
     {
@@ -54,7 +54,7 @@ final class ReflectorCompatibilityTest extends TestCase
     }
 
     /**
-     * @return \Generator<string, array{list<ClassLoader>, string}>
+     * @return \Generator<string, array{list<ClassLoader>, class-string}>
      */
     public static function readonlyClasses(): \Generator
     {
