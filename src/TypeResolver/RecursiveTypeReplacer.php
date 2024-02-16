@@ -116,11 +116,6 @@ abstract class RecursiveTypeReplacer implements Type\TypeVisitor
         return $type;
     }
 
-    public function visitCallableString(Type\CallableStringType $type): mixed
-    {
-        return $type;
-    }
-
     public function visitInterfaceString(Type\InterfaceStringType $type): mixed
     {
         return $type;
@@ -196,11 +191,6 @@ abstract class RecursiveTypeReplacer implements Type\TypeVisitor
     {
         /** @psalm-suppress MixedArgumentTypeCoercion */
         return types::nonEmptyArray($type->keyType->accept($this), $type->valueType->accept($this));
-    }
-
-    public function visitCallableArray(Type\CallableArrayType $type): mixed
-    {
-        return $type;
     }
 
     public function visitArray(Type\ArrayType $type): mixed

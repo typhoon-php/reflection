@@ -121,11 +121,6 @@ final class NullableChecker implements Type\TypeVisitor
         return false;
     }
 
-    public function visitCallableString(Type\CallableStringType $type): mixed
-    {
-        return false;
-    }
-
     public function visitInterfaceString(Type\InterfaceStringType $type): mixed
     {
         return false;
@@ -187,11 +182,6 @@ final class NullableChecker implements Type\TypeVisitor
     }
 
     public function visitNonEmptyArray(Type\NonEmptyArrayType $type): mixed
-    {
-        return false;
-    }
-
-    public function visitCallableArray(Type\CallableArrayType $type): mixed
     {
         return false;
     }

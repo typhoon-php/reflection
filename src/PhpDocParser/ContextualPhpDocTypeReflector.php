@@ -165,11 +165,20 @@ final class ContextualPhpDocTypeReflector
             'array-key' => types::arrayKey,
             'literal-int' => types::literalInt,
             'literal-string' => types::literalString,
-            'callable-string' => types::callableString,
+            'callable-string' => types::intersection(
+                types::literalString,
+                types::callable(),
+            ),
             'interface-string' => types::interfaceString,
             'enum-string' => types::enumString,
             'trait-string' => types::traitString,
-            'callable-array' => types::callableArray,
+            'callable-array' => types::intersection(
+                types::arrayShape([
+                    types::union(types::classString, types::object),
+                    types::literalString,
+                ]),
+                types::callable(),
+            ),
             'resource' => types::resource,
             'closed-resource' => types::closedResource,
             'object' => types::object,
