@@ -27,7 +27,7 @@ final class PhpStormStubsClassLocator implements ClassLocator
         return class_exists(PhpStormStubsMap::class);
     }
 
-    public function locateClass(string $name): null|FileResource
+    public function locateClass(string $name): ?FileResource
     {
         if (isset(PhpStormStubsMap::CLASSES[$name])) {
             $file = PhpStormStubsMap::CLASSES[$name];

@@ -12,7 +12,7 @@ use Typhoon\Reflection\FileResource;
  */
 final class NativeReflectionFileLocator implements ClassLocator
 {
-    public function locateClass(string $name): null|FileResource
+    public function locateClass(string $name): ?FileResource
     {
         try {
             $nativeReflection = new \ReflectionClass($name);

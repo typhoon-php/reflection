@@ -37,7 +37,7 @@ final class MetadataStorage
      * @param non-empty-string $name
      * @return ?TMetadata
      */
-    public function get(string $class, string $name): null|RootMetadata
+    public function get(string $class, string $name): ?RootMetadata
     {
         $key = self::key($class, $name);
 

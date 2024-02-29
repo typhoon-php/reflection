@@ -11,7 +11,7 @@ use Typhoon\Reflection\ClassLocator;
  */
 final class NativeReflectionLocator implements ClassLocator
 {
-    public function locateClass(string $name): null|\ReflectionClass
+    public function locateClass(string $name): ?\ReflectionClass
     {
         try {
             return new \ReflectionClass($name);

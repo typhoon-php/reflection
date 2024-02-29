@@ -30,6 +30,7 @@ final class ClassReflections
             return 0;
         }
 
+        /** @var int-mask-of<\ReflectionClass::IS_*> */
         return ($node->isAbstract() ? ClassReflection::IS_EXPLICIT_ABSTRACT : 0)
             | ($node->isFinal() ? ClassReflection::IS_FINAL : 0)
             | ($node->isReadonly() ? ClassReflection::IS_READONLY : 0);
