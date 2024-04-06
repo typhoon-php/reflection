@@ -46,7 +46,7 @@ final class TyphoonReflector implements ClassExistenceChecker, ClassReflector
     ): self {
         return new self(
             phpParserReflector: new PhpParserReflector(
-                phpParser: $phpParser ?? (new ParserFactory())->createForNewestSupportedVersion(),
+                phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
                 phpDocParser: new PhpDocParser($tagPrioritizer),
             ),
             nativeReflector: new NativeReflector(),
