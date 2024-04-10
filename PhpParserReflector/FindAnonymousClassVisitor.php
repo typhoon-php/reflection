@@ -27,11 +27,11 @@ final class FindAnonymousClassVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node): ?int
     {
-        if ($node->getLine() < $this->name->line) {
+        if ($node->getStartLine() < $this->name->line) {
             return null;
         }
 
-        if ($node->getLine() > $this->name->line) {
+        if ($node->getStartLine() > $this->name->line) {
             return NodeTraverser::STOP_TRAVERSAL;
         }
 
