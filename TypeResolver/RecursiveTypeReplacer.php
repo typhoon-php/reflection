@@ -153,6 +153,14 @@ abstract class RecursiveTypeReplacer extends DefaultTypeVisitor
         return types::offset($type->accept($this), $offset->accept($this));
     }
 
+    public function static(Type $self, string $class, array $arguments): mixed
+    {
+        return types::static($class, ...array_map(
+            fn(Type $templateArgument): Type => $templateArgument->accept($this),
+            $arguments,
+        ));
+    }
+
     public function template(Type $self, string $name, AtClass|AtFunction|AtMethod $declaredAt, array $arguments): mixed
     {
         return types::template($name, $declaredAt, ...array_map(

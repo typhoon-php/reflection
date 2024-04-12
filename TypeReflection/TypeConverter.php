@@ -138,6 +138,11 @@ final class TypeConverter extends DefaultTypeVisitor
         throw new NonConvertableType($self);
     }
 
+    public function static(Type $self, string $class, array $arguments): mixed
+    {
+        return NamedTypeReflection::namedObject('static');
+    }
+
     public function intersection(Type $self, array $types): mixed
     {
         return new IntersectionTypeReflection(array_map(
