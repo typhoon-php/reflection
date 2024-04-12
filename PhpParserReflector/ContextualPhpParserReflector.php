@@ -586,7 +586,7 @@ final class ContextualPhpParserReflector
 
         foreach ($phpDoc->typeAliasImports() as $typeImport) {
             $alias = $typeImport->importedAs ?? $typeImport->importedAlias;
-            $typeAliases[$alias] = types::alias($this->resolveNameAsClass($typeImport->importedFrom), $typeImport->importedAlias);
+            $typeAliases[$alias] = types::alias($typeImport->importedAlias, $this->resolveNameAsClass($typeImport->importedFrom));
         }
 
         return $typeAliases;
@@ -631,7 +631,7 @@ final class ContextualPhpParserReflector
                 static $class = null;
                 $class ??= $this->resolveNameAsClass($typeImport->importedFrom);
 
-                return types::alias($class, $typeImport->importedAlias, ...$arguments);
+                return types::alias($typeImport->importedAlias, $class, ...$arguments);
             };
         }
 

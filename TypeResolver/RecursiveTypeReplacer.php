@@ -23,9 +23,9 @@ use Typhoon\Type\Variance;
  */
 abstract class RecursiveTypeReplacer extends DefaultTypeVisitor
 {
-    public function alias(Type $self, string $class, string $name, array $arguments): mixed
+    public function alias(Type $self, string $name, string $class, array $arguments): mixed
     {
-        return types::alias($class, $name, ...array_map(
+        return types::alias($name, $class, ...array_map(
             fn(Type $templateArgument): Type => $templateArgument->accept($this),
             $arguments,
         ));
