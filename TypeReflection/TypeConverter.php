@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\TypeReflection;
 
+use Typhoon\Type\At;
 use Typhoon\Type\AtClass;
 use Typhoon\Type\AtFunction;
 use Typhoon\Type\AtMethod;
@@ -129,7 +130,7 @@ final class TypeConverter extends DefaultTypeVisitor
         return new UnionTypeReflection($convertedTypes);
     }
 
-    public function template(Type $self, string $name, AtClass|AtFunction|AtMethod $declaredAt, array $arguments): mixed
+    public function template(Type $self, string $name, At|AtFunction|AtClass|AtMethod $declaredAt, array $arguments): mixed
     {
         if ($name === 'self' || $name === 'parent' || $name === 'static') {
             return NamedTypeReflection::namedObject($name);
