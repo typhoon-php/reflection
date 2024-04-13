@@ -8,8 +8,8 @@ use Typhoon\Reflection\AttributeReflection\AttributeReflections;
 use Typhoon\Reflection\ClassReflection\ClassReflector;
 use Typhoon\Reflection\Metadata\ParameterMetadata;
 use Typhoon\Reflection\TypeReflection\TypeConverter;
-use Typhoon\Type\DefaultTypeVisitor;
 use Typhoon\Type\Type;
+use Typhoon\Type\Visitor\DefaultTypeVisitor;
 
 /**
  * @api

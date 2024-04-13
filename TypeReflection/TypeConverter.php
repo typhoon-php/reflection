@@ -7,8 +7,8 @@ namespace Typhoon\Reflection\TypeReflection;
 use Typhoon\Type\AtClass;
 use Typhoon\Type\AtFunction;
 use Typhoon\Type\AtMethod;
-use Typhoon\Type\DefaultTypeVisitor;
 use Typhoon\Type\Type;
+use Typhoon\Type\Visitor\DefaultTypeVisitor;
 
 /**
  * @internal
