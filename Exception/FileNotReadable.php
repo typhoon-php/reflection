@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Exception;
 
-use Typhoon\Reflection\ReflectionException;
-
 /**
  * @api
  */
-final class FileNotReadable extends ReflectionException
+final class FileNotReadable extends \RuntimeException
 {
     public function __construct(string $file, ?\Throwable $previous = null)
     {

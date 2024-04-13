@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Internal\ClassReflector;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -18,37 +18,37 @@ final class BinaryOperation implements Expression
         private readonly string $operator,
     ) {}
 
-    public function evaluate(ClassReflector $classReflector): mixed
+    public function evaluate(Reflector $reflector): mixed
     {
         /** @psalm-suppress MixedOperand */
         return match ($this->operator) {
-            '&' => $this->left->evaluate($classReflector) & $this->right->evaluate($classReflector),
-            '|' => $this->left->evaluate($classReflector) | $this->right->evaluate($classReflector),
-            '^' => $this->left->evaluate($classReflector) ^ $this->right->evaluate($classReflector),
-            '&&' => $this->left->evaluate($classReflector) && $this->right->evaluate($classReflector),
-            '||' => $this->left->evaluate($classReflector) || $this->right->evaluate($classReflector),
-            '??' => $this->left->evaluate($classReflector) ?? $this->right->evaluate($classReflector),
-            '.' => $this->left->evaluate($classReflector) . $this->right->evaluate($classReflector),
-            '/' => $this->left->evaluate($classReflector) / $this->right->evaluate($classReflector),
-            '==' => $this->left->evaluate($classReflector) == $this->right->evaluate($classReflector),
-            '>' => $this->left->evaluate($classReflector) > $this->right->evaluate($classReflector),
-            '>=' => $this->left->evaluate($classReflector) >= $this->right->evaluate($classReflector),
-            '===' => $this->left->evaluate($classReflector) === $this->right->evaluate($classReflector),
-            'and' => $this->left->evaluate($classReflector) and $this->right->evaluate($classReflector),
-            'or' => $this->left->evaluate($classReflector) or $this->right->evaluate($classReflector),
-            'xor' => $this->left->evaluate($classReflector) xor $this->right->evaluate($classReflector),
-            '-' => $this->left->evaluate($classReflector) - $this->right->evaluate($classReflector),
-            '%' => $this->left->evaluate($classReflector) % $this->right->evaluate($classReflector),
-            '*' => $this->left->evaluate($classReflector) * $this->right->evaluate($classReflector),
-            '!=' => $this->left->evaluate($classReflector) != $this->right->evaluate($classReflector),
-            '!==' => $this->left->evaluate($classReflector) !== $this->right->evaluate($classReflector),
-            '+' => $this->left->evaluate($classReflector) + $this->right->evaluate($classReflector),
-            '**' => $this->left->evaluate($classReflector) ** $this->right->evaluate($classReflector),
-            '<<' => $this->left->evaluate($classReflector) << $this->right->evaluate($classReflector),
-            '>>' => $this->left->evaluate($classReflector) >> $this->right->evaluate($classReflector),
-            '<' => $this->left->evaluate($classReflector) < $this->right->evaluate($classReflector),
-            '<=' => $this->left->evaluate($classReflector) <= $this->right->evaluate($classReflector),
-            '<=>' => $this->left->evaluate($classReflector) <=> $this->right->evaluate($classReflector),
+            '&' => $this->left->evaluate($reflector) & $this->right->evaluate($reflector),
+            '|' => $this->left->evaluate($reflector) | $this->right->evaluate($reflector),
+            '^' => $this->left->evaluate($reflector) ^ $this->right->evaluate($reflector),
+            '&&' => $this->left->evaluate($reflector) && $this->right->evaluate($reflector),
+            '||' => $this->left->evaluate($reflector) || $this->right->evaluate($reflector),
+            '??' => $this->left->evaluate($reflector) ?? $this->right->evaluate($reflector),
+            '.' => $this->left->evaluate($reflector) . $this->right->evaluate($reflector),
+            '/' => $this->left->evaluate($reflector) / $this->right->evaluate($reflector),
+            '==' => $this->left->evaluate($reflector) == $this->right->evaluate($reflector),
+            '>' => $this->left->evaluate($reflector) > $this->right->evaluate($reflector),
+            '>=' => $this->left->evaluate($reflector) >= $this->right->evaluate($reflector),
+            '===' => $this->left->evaluate($reflector) === $this->right->evaluate($reflector),
+            'and' => $this->left->evaluate($reflector) and $this->right->evaluate($reflector),
+            'or' => $this->left->evaluate($reflector) or $this->right->evaluate($reflector),
+            'xor' => $this->left->evaluate($reflector) xor $this->right->evaluate($reflector),
+            '-' => $this->left->evaluate($reflector) - $this->right->evaluate($reflector),
+            '%' => $this->left->evaluate($reflector) % $this->right->evaluate($reflector),
+            '*' => $this->left->evaluate($reflector) * $this->right->evaluate($reflector),
+            '!=' => $this->left->evaluate($reflector) != $this->right->evaluate($reflector),
+            '!==' => $this->left->evaluate($reflector) !== $this->right->evaluate($reflector),
+            '+' => $this->left->evaluate($reflector) + $this->right->evaluate($reflector),
+            '**' => $this->left->evaluate($reflector) ** $this->right->evaluate($reflector),
+            '<<' => $this->left->evaluate($reflector) << $this->right->evaluate($reflector),
+            '>>' => $this->left->evaluate($reflector) >> $this->right->evaluate($reflector),
+            '<' => $this->left->evaluate($reflector) < $this->right->evaluate($reflector),
+            '<=' => $this->left->evaluate($reflector) <= $this->right->evaluate($reflector),
+            '<=>' => $this->left->evaluate($reflector) <=> $this->right->evaluate($reflector),
         };
     }
 }

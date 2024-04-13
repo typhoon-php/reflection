@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Internal\ClassReflector;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -16,7 +16,7 @@ final class Value implements Expression
         private readonly null|bool|int|float|string|array $value,
     ) {}
 
-    public function evaluate(ClassReflector $classReflector): mixed
+    public function evaluate(Reflector $reflector): mixed
     {
         return $this->value;
     }

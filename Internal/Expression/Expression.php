@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Internal\ClassReflector;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -12,5 +12,5 @@ use Typhoon\Reflection\Internal\ClassReflector;
  */
 interface Expression
 {
-    public function evaluate(ClassReflector $classReflector): mixed;
+    public function evaluate(Reflector $reflector): mixed;
 }

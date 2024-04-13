@@ -4,444 +4,191 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\Reflection\AttributeReflection\AttributeReflections;
-use Typhoon\Reflection\ClassReflection\ClassReflector;
-use Typhoon\Reflection\Exception\MethodDoesNotExist;
-use Typhoon\Reflection\Exception\MethodDoesNotHavePrototype;
-use Typhoon\Reflection\Exception\ParameterDoesNotExist;
-use Typhoon\Reflection\Exception\TemplateDoesNotExist;
-use Typhoon\Reflection\Metadata\MethodMetadata;
-use Typhoon\Reflection\Metadata\ParameterMetadata;
-use Typhoon\Reflection\TypeReflection\TypeConverter;
-use Typhoon\Reflection\TypeResolver\TemplateResolver;
+use Typhoon\DeclarationId\MethodId;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
+use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
-use Typhoon\Type\TypeVisitor;
+use Typhoon\Type\types;
+use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\parameterId;
 
 /**
  * @api
- * @property-read non-empty-string $name
- * @property-read class-string $class
- * @psalm-suppress PropertyNotSetInConstructor
+ * @extends Reflection<MethodId>
  */
-final class MethodReflection extends \ReflectionMethod
+final class MethodReflection extends Reflection
 {
-    private ?AttributeReflections $attributes = null;
-
-    private bool $nativeLoaded = false;
+    /**
+     * @var non-empty-string
+     */
+    public readonly string $name;
 
     /**
-     * @var ?list<ParameterReflection>
+     * @var ?array<non-empty-string, ParameterReflection>
      */
     private ?array $parameters = null;
 
-    /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
-     * @param class-string $currentClass
-     */
-    public function __construct(
-        private readonly ClassReflector $classReflector,
-        private readonly MethodMetadata $metadata,
-        private readonly string $currentClass,
-    ) {
-        unset($this->name, $this->class);
+    public function __construct(MethodId $id, TypedMap $data, Reflector $reflector)
+    {
+        $this->name = $id->name;
+
+        parent::__construct($id, $data, $reflector);
+    }
+
+    public function class(): ClassReflection
+    {
+        return $this->reflector->reflect($this->id->class);
+    }
+
+    public function declaringClass(): ClassReflection
+    {
+        return $this->reflector->reflect($this->declarationId()->class);
     }
 
     /**
-     * @throws MethodDoesNotExist
-     * @psalm-suppress MethodSignatureMismatch, UnusedPsalmSuppress
+     * @return ?non-empty-string
      */
-    public static function createFromMethodName(string $method, ?TyphoonReflector $reflector = null): static
+    public function file(): ?string
     {
-        $parts = explode('::', $method);
-
-        if (\count($parts) !== 2) {
-            throw new MethodDoesNotExist($method);
-        }
-
-        return ($reflector ?? TyphoonReflector::build())->reflectClass($parts[0])->getMethod($parts[1]);
-    }
-
-    public function __get(string $name)
-    {
-        return match ($name) {
-            'name' => $this->metadata->name,
-            'class' => $this->metadata->class,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
-        };
-    }
-
-    public function __isset(string $name): bool
-    {
-        return $name === 'name' || $name === 'class';
-    }
-
-    public function __toString(): string
-    {
-        $this->loadNative();
-
-        return parent::__toString();
-    }
-
-    /**
-     * @param array<Type> $templateArguments
-     * @return TypeVisitor<Type>
-     */
-    public function createTypeResolver(array $templateArguments = []): TypeVisitor
-    {
-        return new TemplateResolver(
-            templateArguments: TemplateResolver::prepareTemplateArguments($this->getTemplates(), $templateArguments),
-        );
-    }
-
-    /**
-     * @template TClass as object
-     * @param class-string<TClass>|null $name
-     * @return ($name is null ? list<AttributeReflection<object>> : list<AttributeReflection<TClass>>)
-     */
-    public function getAttributes(?string $name = null, int $flags = 0): array
-    {
-        if ($this->attributes === null) {
-            $class = $this->metadata->class;
-            $method = $this->metadata->name;
-            $this->attributes = AttributeReflections::create(
-                $this->classReflector,
-                $this->metadata->attributes,
-                static fn(): array => (new \ReflectionMethod($class, $method))->getAttributes(),
-            );
-        }
-
-        return $this->attributes->get($name, $flags);
-    }
-
-    public function getClosure(?object $object = null): \Closure
-    {
-        $this->loadNative();
-
-        return parent::getClosure($object);
-    }
-
-    public function getClosureCalledClass(): ?ClassReflection
-    {
-        return null;
-    }
-
-    public function getClosureScopeClass(): ?ClassReflection
-    {
-        return null;
-    }
-
-    public function getClosureThis(): ?object
-    {
-        return null;
-    }
-
-    public function getClosureUsedVariables(): array
-    {
-        return [];
-    }
-
-    public function getDeclaringClass(): ClassReflection
-    {
-        return $this->classReflector->reflectClass($this->metadata->class);
-    }
-
-    public function getDocComment(): string|false
-    {
-        return $this->metadata->docComment;
-    }
-
-    public function getEndLine(): int|false
-    {
-        return $this->metadata->endLine;
-    }
-
-    public function getExtension(): ?\ReflectionExtension
-    {
-        if ($this->metadata->extension === false) {
+        if ($this->data[Data::WrittenInC()] ?? false) {
             return null;
         }
 
-        return new \ReflectionExtension($this->metadata->extension);
+        return $this->declaringClass()->file();
     }
 
-    public function getExtensionName(): string|false
+    public function isWrittenInC(): bool
     {
-        return $this->metadata->extension;
-    }
-
-    public function getFileName(): string|false
-    {
-        return $this->metadata->file;
-    }
-
-    public function getModifiers(): int
-    {
-        return $this->metadata->modifiers;
-    }
-
-    public function getName(): string
-    {
-        return $this->metadata->name;
-    }
-
-    public function getNamespaceName(): string
-    {
-        return '';
-    }
-
-    public function getNumberOfParameters(): int
-    {
-        return \count($this->metadata->parameters);
-    }
-
-    public function getNumberOfRequiredParameters(): int
-    {
-        foreach ($this->metadata->parameters as $parameter) {
-            if ($parameter->optional) {
-                return $parameter->position;
-            }
-        }
-
-        return $this->getNumberOfParameters();
-    }
-
-    public function getParameter(int|string $nameOrPosition): ParameterReflection
-    {
-        $parameters = $this->getParameters();
-
-        if (\is_int($nameOrPosition)) {
-            if (isset($parameters[$nameOrPosition])) {
-                return $parameters[$nameOrPosition];
-            }
-
-            throw new ParameterDoesNotExist($nameOrPosition);
-        }
-
-        foreach ($parameters as $parameter) {
-            if ($parameter->name === $nameOrPosition) {
-                return $parameter;
-            }
-        }
-
-        throw new ParameterDoesNotExist($nameOrPosition);
-    }
-
-    /**
-     * @return list<ParameterReflection>
-     */
-    public function getParameters(): array
-    {
-        return $this->parameters ??= array_map(
-            fn(ParameterMetadata $parameter): ParameterReflection => new ParameterReflection($this->classReflector, $parameter),
-            $this->metadata->parameters,
-        );
-    }
-
-    public function getPrototype(): \ReflectionMethod
-    {
-        if ($this->metadata->prototype === null) {
-            throw new MethodDoesNotHavePrototype($this->currentClass, $this->metadata->name);
-        }
-
-        [$class, $name] = $this->metadata->prototype;
-
-        return $this->classReflector->reflectClass($class)->getMethod($name);
-    }
-
-    public function getReturnType(): ?\ReflectionType
-    {
-        return $this->metadata->returnType->native?->accept(new TypeConverter());
-    }
-
-    /**
-     * @return ($origin is Origin::Resolved ? Type : null|Type)
-     */
-    public function getReturnTyphoonType(Origin $origin = Origin::Resolved): ?Type
-    {
-        return $this->metadata->returnType->get($origin);
-    }
-
-    public function getShortName(): string
-    {
-        return $this->metadata->name;
-    }
-
-    public function getStartLine(): int|false
-    {
-        return $this->metadata->startLine;
-    }
-
-    public function getStaticVariables(): array
-    {
-        $this->loadNative();
-
-        return parent::getStaticVariables();
-    }
-
-    /**
-     * @throws TemplateDoesNotExist
-     */
-    public function getTemplate(int|string $nameOrPosition): TemplateReflection
-    {
-        if (\is_int($nameOrPosition)) {
-            return $this->metadata->templates[$nameOrPosition] ?? throw new TemplateDoesNotExist($nameOrPosition);
-        }
-
-        foreach ($this->metadata->templates as $template) {
-            if ($template->name === $nameOrPosition) {
-                return $template;
-            }
-        }
-
-        throw new TemplateDoesNotExist($nameOrPosition);
-    }
-
-    /**
-     * @return list<TemplateReflection>
-     */
-    public function getTemplates(): array
-    {
-        return $this->metadata->templates;
-    }
-
-    public function getTentativeReturnType(): ?\ReflectionType
-    {
-        return $this->metadata->tentativeReturnType?->accept(new TypeConverter());
-    }
-
-    public function getTentativeReturnTyphoonType(): ?Type
-    {
-        return $this->metadata->tentativeReturnType;
-    }
-
-    public function getThrowsTyphoonType(): ?Type
-    {
-        return $this->metadata->throwsTypePhpDoc;
-    }
-
-    public function hasPrototype(): bool
-    {
-        return $this->metadata->prototype !== null;
-    }
-
-    public function hasReturnType(): bool
-    {
-        return $this->metadata->returnType->native !== null;
-    }
-
-    public function hasTentativeReturnType(): bool
-    {
-        return $this->metadata->tentativeReturnType !== null;
-    }
-
-    public function inNamespace(): bool
-    {
-        return false;
-    }
-
-    public function invoke(?object $object = null, mixed ...$args): mixed
-    {
-        $this->loadNative();
-
-        return parent::invoke($object, ...$args);
-    }
-
-    public function invokeArgs(?object $object = null, array $args = []): mixed
-    {
-        $this->loadNative();
-
-        return parent::invokeArgs($object, $args);
+        return ($this->data[Data::WrittenInC()] ?? false) || $this->declaringClass()->isWrittenInC();
     }
 
     public function isAbstract(): bool
     {
-        return ($this->metadata->modifiers & self::IS_ABSTRACT) !== 0;
+        return $this->data[Data::Abstract()] ?? false;
     }
 
-    public function isClosure(): bool
+    public function isFinal(Kind $kind = Kind::Resolved): bool
     {
-        return false;
-    }
-
-    public function isConstructor(): bool
-    {
-        return $this->metadata->name === '__construct';
-    }
-
-    public function isDeprecated(): bool
-    {
-        return $this->metadata->deprecated;
-    }
-
-    public function isDestructor(): bool
-    {
-        return $this->metadata->name === '__destruct';
-    }
-
-    public function isFinal(Origin $origin = Origin::Resolved): bool
-    {
-        return match ($origin) {
-            Origin::PhpDoc => $this->metadata->finalPhpDoc,
-            Origin::Native => $this->metadata->finalNative(),
-            Origin::Resolved => $this->metadata->finalPhpDoc || $this->metadata->finalNative(),
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeFinal()] ?? false,
+            Kind::Annotated => $this->data[Data::AnnotatedFinal()] ?? false,
+            Kind::Resolved => $this->data[Data::NativeFinal()] ?? $this->data[Data::AnnotatedFinal()] ?? false,
         };
     }
 
     public function isGenerator(): bool
     {
-        return $this->metadata->generator;
-    }
-
-    public function isInternal(): bool
-    {
-        return $this->metadata->internal;
+        return $this->data[Data::Generator()] ?? false;
     }
 
     public function isPrivate(): bool
     {
-        return ($this->metadata->modifiers & self::IS_PRIVATE) !== 0;
+        return $this->data[Data::Visibility()] === Visibility::Private;
     }
 
     public function isProtected(): bool
     {
-        return ($this->metadata->modifiers & self::IS_PROTECTED) !== 0;
+        return $this->data[Data::Visibility()] === Visibility::Protected;
     }
 
     public function isPublic(): bool
     {
-        return ($this->metadata->modifiers & self::IS_PUBLIC) !== 0;
+        $visibility = $this->data[Data::Visibility()];
+
+        return $visibility === null || $visibility === Visibility::Public;
     }
 
     public function isStatic(): bool
     {
-        return ($this->metadata->modifiers & self::IS_STATIC) !== 0;
-    }
-
-    public function isUserDefined(): bool
-    {
-        return !$this->isInternal();
+        return $this->data[Data::Static()];
     }
 
     public function isVariadic(): bool
     {
-        $lastParameterKey = array_key_last($this->metadata->parameters);
+        $parameters = $this->parameters();
+        $lastParameterName = array_key_last($parameters);
 
-        return $lastParameterKey !== null && $this->metadata->parameters[$lastParameterKey]->variadic;
+        return $lastParameterName !== null && $parameters[$lastParameterName]->isVariadic();
     }
+
+    /**
+     * @return non-negative-int
+     */
+    public function numberOfRequiredParameters(): int
+    {
+        $parameter = null;
+
+        foreach ($this->parameters() as $parameter) {
+            if ($parameter->isOptional()) {
+                return $parameter->index;
+            }
+        }
+
+        if ($parameter === null) {
+            return 0;
+        }
+
+        return $parameter->index + 1;
+    }
+
+    // public function prototype(): ?self
+    // {
+    // }
 
     public function returnsReference(): bool
     {
-        return $this->metadata->returnsReference;
+        return $this->data[Data::ByReference()] ?? false;
     }
 
-    public function setAccessible(bool $accessible): void {}
-
-    private function loadNative(): void
+    /**
+     * @return ($kind is Kind::Resolved ? Type : ?Type)
+     */
+    public function returnType(Kind $kind = Kind::Resolved): ?Type
     {
-        if (!$this->nativeLoaded) {
-            parent::__construct($this->currentClass, $this->metadata->name);
-            $this->nativeLoaded = true;
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeType()] ?? null,
+            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
+            Kind::Resolved => $this->data[Data::ResolvedType()]
+                ?? $this->data[Data::AnnotatedType()]
+                ?? $this->data[Data::NativeType()]
+                ?? types::mixed,
+        };
+    }
+
+    public function parameter(int|string $indexOrName): ?ParameterReflection
+    {
+        if (\is_int($indexOrName)) {
+            return array_values($this->parameters())[$indexOrName] ?? null;
         }
+
+        return $this->parameters()[$indexOrName] ?? null;
+    }
+
+    /**
+     * @return array<non-empty-string, ParameterReflection>
+     */
+    public function parameters(): array
+    {
+        if ($this->parameters !== null) {
+            return $this->parameters;
+        }
+
+        $this->parameters = [];
+
+        foreach ($this->data[Data::Parameters()] as $name => $data) {
+            $this->parameters[$name] = new ParameterReflection(
+                id: parameterId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->parameters;
+    }
+
+    public function toNative(): \ReflectionMethod
+    {
+        return new MethodAdapter($this);
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Cache;
 
 use Psr\SimpleCache\CacheInterface;
-use Typhoon\Reflection\Metadata\MetadataCacheItem;
+use Typhoon\Reflection\Internal\DataCacheItem;
 
 /**
  * @api
@@ -20,7 +20,7 @@ final class FreshCache implements CacheInterface
     {
         $value = $this->cache->get($key, $default);
 
-        if ($value instanceof MetadataCacheItem && $value->changed()) {
+        if ($value instanceof DataCacheItem && $value->changed()) {
             return $default;
         }
 
@@ -51,7 +51,7 @@ final class FreshCache implements CacheInterface
         $values = [];
 
         foreach ($this->cache->getMultiple($keys) as $key => $value) {
-            if ($value instanceof MetadataCacheItem && $value->changed()) {
+            if ($value instanceof DataCacheItem && $value->changed()) {
                 $value = $default;
             }
 
@@ -75,7 +75,7 @@ final class FreshCache implements CacheInterface
     {
         $value = $this->cache->get($key);
 
-        if ($value instanceof MetadataCacheItem && $value->changed()) {
+        if ($value instanceof DataCacheItem && $value->changed()) {
             return false;
         }
 

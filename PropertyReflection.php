@@ -4,223 +4,106 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\Reflection\AttributeReflection\AttributeReflections;
-use Typhoon\Reflection\ClassReflection\ClassReflector;
-use Typhoon\Reflection\Metadata\PropertyMetadata;
-use Typhoon\Reflection\TypeReflection\TypeConverter;
+use Typhoon\DeclarationId\PropertyId;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\NativeAdapter\PropertyAdapter;
+use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
+use Typhoon\Type\types;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api
- * @property-read non-empty-string $name
- * @property-read class-string $class
- * @psalm-suppress PropertyNotSetInConstructor
+ * @readonly
+ * @extends Reflection<PropertyId>
  */
-final class PropertyReflection extends \ReflectionProperty
+final class PropertyReflection extends Reflection
 {
-    private ?AttributeReflections $attributes = null;
-
-    private bool $nativeLoaded = false;
-
     /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
+     * @var non-empty-string
      */
-    public function __construct(
-        private readonly ClassReflector $classReflector,
-        private readonly PropertyMetadata $metadata,
-    ) {
-        unset($this->name, $this->class);
+    public readonly string $name;
+
+    public function __construct(PropertyId $id, TypedMap $data, Reflector $reflector)
+    {
+        $this->name = $id->name;
+
+        parent::__construct($id, $data, $reflector);
     }
 
-    public function __get(string $name)
+    public function class(): ClassReflection
     {
-        return match ($name) {
-            'name' => $this->metadata->name,
-            'class' => $this->metadata->class,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
-        };
+        return $this->reflector->reflect($this->id->class);
     }
 
-    public function __isset(string $name): bool
+    public function declaringClass(): ClassReflection
     {
-        return $name === 'name' || $name === 'class';
-    }
-
-    public function __toString(): string
-    {
-        $this->loadNative();
-
-        return parent::__toString();
-    }
-
-    /**
-     * @template TClass as object
-     * @param class-string<TClass>|null $name
-     * @return ($name is null ? list<AttributeReflection<object>> : list<AttributeReflection<TClass>>)
-     */
-    public function getAttributes(?string $name = null, int $flags = 0): array
-    {
-        if ($this->attributes === null) {
-            $class = $this->metadata->class;
-            $property = $this->metadata->name;
-            $this->attributes = AttributeReflections::create(
-                $this->classReflector,
-                $this->metadata->attributes,
-                static fn(): array => (new \ReflectionProperty($class, $property))->getAttributes(),
-            );
-        }
-
-        return $this->attributes->get($name, $flags);
-    }
-
-    public function getDeclaringClass(): ClassReflection
-    {
-        return $this->classReflector->reflectClass($this->metadata->class);
-    }
-
-    public function getDefaultValue(): mixed
-    {
-        $this->loadNative();
-
-        return parent::getDefaultValue();
-    }
-
-    public function getDocComment(): string|false
-    {
-        return $this->metadata->docComment;
-    }
-
-    /**
-     * @return positive-int|false
-     */
-    public function getEndLine(): int|false
-    {
-        return $this->metadata->endLine;
-    }
-
-    public function getModifiers(): int
-    {
-        return $this->metadata->modifiers;
-    }
-
-    public function getName(): string
-    {
-        return $this->metadata->name;
-    }
-
-    /**
-     * @return positive-int|false
-     */
-    public function getStartLine(): int|false
-    {
-        return $this->metadata->startLine;
-    }
-
-    public function getType(): ?\ReflectionType
-    {
-        return $this->metadata->type->native?->accept(new TypeConverter());
-    }
-
-    /**
-     * @return ($origin is Origin::Resolved ? Type : null|Type)
-     */
-    public function getTyphoonType(Origin $origin = Origin::Resolved): ?Type
-    {
-        return $this->metadata->type->get($origin);
-    }
-
-    public function getValue(?object $object = null): mixed
-    {
-        $this->loadNative();
-
-        return parent::getValue($object);
-    }
-
-    public function hasDefaultValue(): bool
-    {
-        return $this->metadata->hasDefaultValue;
-    }
-
-    public function hasType(): bool
-    {
-        return $this->metadata->type->native !== null;
-    }
-
-    public function isDefault(): bool
-    {
-        return true;
-    }
-
-    public function isDeprecated(): bool
-    {
-        return $this->metadata->deprecated;
-    }
-
-    public function isInitialized(?object $object = null): bool
-    {
-        $this->loadNative();
-
-        return parent::isInitialized($object);
-    }
-
-    public function isPrivate(): bool
-    {
-        return ($this->metadata->modifiers & self::IS_PRIVATE) !== 0;
-    }
-
-    public function isPromoted(): bool
-    {
-        return $this->metadata->promoted;
-    }
-
-    public function isProtected(): bool
-    {
-        return ($this->metadata->modifiers & self::IS_PROTECTED) !== 0;
-    }
-
-    public function isPublic(): bool
-    {
-        return ($this->metadata->modifiers & self::IS_PUBLIC) === \ReflectionProperty::IS_PUBLIC;
-    }
-
-    public function isReadonly(Origin $origin = Origin::Resolved): bool
-    {
-        return match ($origin) {
-            Origin::PhpDoc => $this->metadata->readonlyPhpDoc,
-            Origin::Native => $this->metadata->readonlyNative(),
-            Origin::Resolved => $this->metadata->readonlyPhpDoc || $this->metadata->readonlyNative(),
-        };
+        return $this->reflector->reflect($this->declarationId()->class);
     }
 
     public function isStatic(): bool
     {
-        return ($this->metadata->modifiers & self::IS_STATIC) !== 0;
+        return $this->data[Data::Static()] ?? false;
     }
 
-    public function setAccessible(bool $accessible): void {}
+    public function isPromoted(): bool
+    {
+        return $this->data[Data::Promoted()] ?? false;
+    }
+
+    public function defaultValue(): mixed
+    {
+        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this->reflector);
+    }
+
+    public function hasDefaultValue(): bool
+    {
+        return ($this->data[Data::DefaultValueExpression()] ?? null)  !== null;
+    }
+
+    public function isPrivate(): bool
+    {
+        return $this->data[Data::Visibility()] === Visibility::Private;
+    }
+
+    public function isProtected(): bool
+    {
+        return $this->data[Data::Visibility()] === Visibility::Protected;
+    }
+
+    public function isPublic(): bool
+    {
+        $visibility = $this->data[Data::Visibility()];
+
+        return $visibility === null || $visibility === Visibility::Public;
+    }
+
+    public function isReadonly(Kind $kind = Kind::Resolved): bool
+    {
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeReadonly()] ?? false,
+            Kind::Annotated => $this->data[Data::AnnotatedReadonly()] ?? false,
+            Kind::Resolved => $this->data[Data::NativeReadonly()] ?? $this->data[Data::AnnotatedReadonly()] ?? false,
+        };
+    }
 
     /**
-     * @psalm-suppress MethodSignatureMismatch
+     * @return ($kind is Kind::Resolved ? Type : ?Type)
      */
-    public function setValue(mixed $objectOrValue, mixed $value = null): void
+    public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        $this->loadNative();
-
-        if (\func_num_args() === 1) {
-            parent::setValue($objectOrValue);
-        }
-
-        \assert(\is_object($objectOrValue));
-
-        parent::setValue($objectOrValue, $value);
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeType()] ?? null,
+            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
+            Kind::Resolved => $this->data[Data::ResolvedType()]
+                ?? $this->data[Data::AnnotatedType()]
+                ?? $this->data[Data::NativeType()]
+                ?? types::mixed,
+        };
     }
 
-    private function loadNative(): void
+    public function toNative(): \ReflectionProperty
     {
-        if (!$this->nativeLoaded) {
-            parent::__construct($this->metadata->class, $this->metadata->name);
-            $this->nativeLoaded = true;
-        }
+        return new PropertyAdapter($this);
     }
 }

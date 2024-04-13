@@ -21,12 +21,12 @@ use Typhoon\TypeContext\TypeContext;
 final class ExpressionCompiler
 {
     public function __construct(
-        private TypeContext $typeContext = new TypeContext(),
-        private readonly string $file = '',
-        private readonly string $function = '',
-        private readonly string $class = '',
+        private readonly TypeContext $typeContext = new TypeContext(),
+        private readonly ?string $file = null,
+        private readonly ?string $function = null,
+        private readonly ?string $class = null,
         private readonly bool $trait = false,
-        private readonly string $method = '',
+        private readonly ?string $method = null,
     ) {}
 
     /**
@@ -37,17 +37,17 @@ final class ExpressionCompiler
         return match (true) {
             $expr === null => null,
             $expr instanceof Scalar\String_,
-            $expr instanceof Scalar\Int_,
-            $expr instanceof Scalar\Float_ => new Value($expr->value),
+            $expr instanceof Scalar\LNumber,
+            $expr instanceof Scalar\DNumber => new Value($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
             $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
-            $expr instanceof Scalar\MagicConst\File => new Value($this->file),
-            $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file)),
+            $expr instanceof Scalar\MagicConst\File => new Value($this->file ?? ''),
+            $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file ?? '')),
             $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->typeContext->namespace?->toStringWithoutSlash() ?? ''),
-            $expr instanceof Scalar\MagicConst\Function_ => new Value($this->function),
-            $expr instanceof Scalar\MagicConst\Class_ => new Value($this->class),
+            $expr instanceof Scalar\MagicConst\Function_ => new Value($this->function ?? ''),
+            $expr instanceof Scalar\MagicConst\Class_ => new Value($this->class ?? ''),
             $expr instanceof Scalar\MagicConst\Trait_ => new Value($this->trait ? $this->class : ''),
-            $expr instanceof Scalar\MagicConst\Method => new Value($this->method),
+            $expr instanceof Scalar\MagicConst\Method => new Value($this->method ?? ''),
             $expr instanceof Coalesce && $expr->left instanceof Expr\ArrayDimFetch => new ArrayFetchCoalesce(
                 array: $this->compile($expr->left->var),
                 key: $this->compile($expr->left->dim ?? throw new \LogicException()),

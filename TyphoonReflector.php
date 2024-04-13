@@ -4,182 +4,193 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use PhpParser\Parser as PhpParser;
-use PhpParser\ParserFactory;
+use PhpParser\Parser;
 use Psr\SimpleCache\CacheInterface;
+use Typhoon\ChangeDetector\FileChangeDetector;
+use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\ClassConstantId;
+use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\MethodId;
+use Typhoon\DeclarationId\PropertyId;
+use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
-use Typhoon\Reflection\ClassLocator\ClassLocators;
-use Typhoon\Reflection\ClassLocator\ComposerClassLocator;
-use Typhoon\Reflection\ClassLocator\PhpStormStubsClassLocator;
-use Typhoon\Reflection\ClassReflection\ClassReflector;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Metadata\ClassMetadata;
-use Typhoon\Reflection\Metadata\MetadataStorage;
-use Typhoon\Reflection\NameContext\AnonymousClassName;
-use Typhoon\Reflection\NativeReflector\NativeReflector;
-use Typhoon\Reflection\PhpDocParser\PhpDocParser;
-use Typhoon\Reflection\PhpDocParser\PrefixBasedTagPrioritizer;
-use Typhoon\Reflection\PhpDocParser\TagPrioritizer;
-use Typhoon\Reflection\PhpParserReflector\PhpParserReflector;
-use Typhoon\Reflection\TypeContext\ClassExistenceChecker;
-use Typhoon\Reflection\TypeContext\WeakClassExistenceChecker;
+use Typhoon\Reflection\Exception\FileNotReadable;
+use Typhoon\Reflection\Internal\CleanUp;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\DataStorage;
+use Typhoon\Reflection\Internal\PhpParserReflector\FindAnonymousClassVisitor;
+use Typhoon\Reflection\Internal\PhpParserReflector\PhpParser;
+use Typhoon\Reflection\Internal\PhpParserReflector\ReflectPhpParserNode;
+use Typhoon\Reflection\Internal\PhpParserReflector\SymbolReflectingVisitor;
+use Typhoon\Reflection\Internal\ResolveAttributesRepeated;
+use Typhoon\Reflection\Internal\ResolveClassInheritance;
+use Typhoon\Reflection\Internal\ResolveParametersIndex;
+use Typhoon\Reflection\Locator\ComposerLocator;
+use Typhoon\Reflection\Locator\Locators;
+use Typhoon\Reflection\Locator\NativeReflectionLocator;
+use Typhoon\TypeContext\NodeVisitor\TypeContextVisitor;
+use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\classId;
 
 /**
  * @api
  */
-final class TyphoonReflector implements ClassExistenceChecker, ClassReflector
+final class TyphoonReflector implements Reflector
 {
     private function __construct(
-        private readonly PhpParserReflector $phpParserReflector,
-        private readonly NativeReflector $nativeReflector,
-        private readonly ClassLocator $classLocator,
-        private readonly MetadataStorage $metadataStorage,
-        private readonly bool $fallbackToNativeReflection,
+        private readonly PhpParser $phpParser,
+        private readonly Locator $locator,
+        private readonly DataStorage $storage,
     ) {}
 
+    /**
+     * @param ?list<Locator> $locators
+     */
     public static function build(
-        ?ClassLocator $classLocator = null,
+        ?array $locators = null,
         CacheInterface $cache = new InMemoryCache(),
-        TagPrioritizer $tagPrioritizer = new PrefixBasedTagPrioritizer(),
-        ?PhpParser $phpParser = null,
-        bool $fallbackToNativeReflection = true,
+        ?Parser $phpParser = null,
     ): self {
         return new self(
-            phpParserReflector: new PhpParserReflector(
-                phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
-                phpDocParser: new PhpDocParser($tagPrioritizer),
-            ),
-            nativeReflector: new NativeReflector(),
-            classLocator: $classLocator ?? self::defaultClassLocator(),
-            metadataStorage: new MetadataStorage($cache),
-            fallbackToNativeReflection: $fallbackToNativeReflection,
+            phpParser: new PhpParser($phpParser),
+            locator: new Locators($locators ?? self::defaultLocators()),
+            storage: new DataStorage($cache),
         );
     }
 
-    public static function defaultClassLocator(): ClassLocator
-    {
-        $classLocators = [];
-
-        if (PhpStormStubsClassLocator::isSupported()) {
-            $classLocators[] = new PhpStormStubsClassLocator();
-        }
-
-        if (ComposerClassLocator::isSupported()) {
-            $classLocators[] = new ComposerClassLocator();
-        }
-
-        return new ClassLocators($classLocators);
-    }
-
     /**
-     * @psalm-assert-if-true class-string $name
+     * @return list<Locator>
      */
-    public function classExists(string $name): bool
+    public static function defaultLocators(): array
     {
-        if ($name === '') {
-            return false;
+        $locators = [];
+
+        if (class_exists(PhpStormStubsLocator::class)) {
+            $locators[] = new PhpStormStubsLocator();
         }
 
-        if (class_exists($name, false) || interface_exists($name, false) || trait_exists($name, false)) {
-            return true;
+        if (ComposerLocator::isSupported()) {
+            $locators[] = new ComposerLocator();
         }
 
-        // If $name is a valid anonymous class name, it must have passed the class_exists() check above.
-        if (str_contains($name, '@')) {
-            return false;
-        }
+        $locators[] = new NativeReflectionLocator();
 
-        /** @var non-empty-string $name Psalm */
-        try {
-            $this->reflectClassMetadata($name);
-
-            return true;
-        } catch (ClassDoesNotExist) {
-            return false;
-        }
+        return $locators;
     }
 
     /**
-     * @psalm-suppress InvalidReturnType, InvalidReturnStatement
      * @template T of object
-     * @param string|class-string<T>|T $name
+     * @param string|class-string<T>|T $nameOrObject
      * @return ClassReflection<T>
-     * @throws ReflectionException
      */
-    public function reflectClass(string|object $name): ClassReflection
+    public function reflectClass(string|object $nameOrObject): ClassReflection
     {
-        if (\is_object($name)) {
-            return new ClassReflection($this, $this->reflectClassMetadata($name::class));
-        }
-
-        if ($name === '') {
-            throw new ClassDoesNotExist($name);
-        }
-
-        return new ClassReflection($this, $this->reflectClassMetadata($name));
+        /** @var ClassReflection<T> */
+        return $this->reflect(classId($nameOrObject));
     }
 
-    /**
-     * @param non-empty-string $name
-     * @throws ReflectionException
-     */
-    private function reflectClassMetadata(string $name): ClassMetadata
+    public function reflect(DeclarationId $id): Reflection
     {
-        $anonymousName = AnonymousClassName::tryFromString($name);
-
-        if ($anonymousName !== null) {
-            return $this->phpParserReflector->reflectAnonymousClass($anonymousName);
-        }
-
-        $metadata = $this->metadataStorage->get(ClassMetadata::class, $name);
-
-        if ($metadata !== null) {
-            return $metadata;
-        }
-
-        $resource = $this->locateClass($name);
-
-        if ($resource instanceof \ReflectionClass) {
-            $metadata = $this->nativeReflector->reflectClass($resource);
-            $this->metadataStorage->save($metadata);
-
-            return $metadata;
-        }
-
-        $this->phpParserReflector->reflectFile($resource, new WeakClassExistenceChecker($this), $this->metadataStorage);
-        $metadata = $this->metadataStorage->get(ClassMetadata::class, $name);
-        $this->metadataStorage->commit();
-
-        return $metadata ?? throw new ClassDoesNotExist($name);
+        return match (true) {
+            $id instanceof ClassId => new ClassReflection(
+                id: $id,
+                data: $this->doReflect($id) ?? throw new ClassDoesNotExist($id->name),
+                reflector: $this,
+            ),
+            $id instanceof AnonymousClassId => new ClassReflection(
+                id: $id,
+                data: $this->doReflectAnonymous($id) ?? throw new ClassDoesNotExist($id->name),
+                reflector: $this,
+            ),
+            $id instanceof PropertyId => $this->reflect($id->class)->property($id->name) ?? throw new \LogicException('Does not exist'),
+            $id instanceof ClassConstantId => $this->reflect($id->class)->constant($id->name) ?? throw new \LogicException('Does not exist'),
+            $id instanceof MethodId => $this->reflect($id->class)->method($id->name) ?? throw new \LogicException('Does not exist'),
+        };
     }
 
-    /**
-     * @param non-empty-string $name
-     */
-    private function locateClass(string $name): FileResource|\ReflectionClass
+    private function doReflect(ClassId $id): ?TypedMap
     {
-        $resource = $this->classLocator->locateClass($name);
+        $data = $this->storage->get($id);
 
-        if ($resource instanceof FileResource) {
-            return $resource;
+        if ($data !== null) {
+            return $data;
         }
 
-        if (!$this->fallbackToNativeReflection) {
-            throw new ClassDoesNotExist($name);
+        $resource = $this->locator->locate($id);
+
+        if ($resource === null) {
+            return null;
         }
 
-        try {
-            $reflectionClass = new \ReflectionClass($name);
-        } catch (\ReflectionException) {
-            throw new ClassDoesNotExist($name);
+        $typeContextVisitor = new TypeContextVisitor($resource->data[Data::File()] ?? null);
+        PhpParser::traverse($this->phpParser->parse($resource->code), [
+            $typeContextVisitor,
+            new SymbolReflectingVisitor(
+                code: $resource->code,
+                data: $resource->data,
+                typeContextProvider: $typeContextVisitor,
+                storage: $this->storage,
+                hooks: [
+                    new ReflectPhpParserNode(),
+                    ...$resource->hooks,
+                    new ResolveAttributesRepeated(),
+                    new ResolveParametersIndex(),
+                    new ResolveClassInheritance($this),
+                    new CleanUp(),
+                ],
+            ),
+        ]);
+
+        $data = $this->storage->get($id);
+
+        $this->storage->commit();
+
+        return $data;
+    }
+
+    private function doReflectAnonymous(AnonymousClassId $id): ?TypedMap
+    {
+        $data = $this->storage->get($id);
+
+        if ($data !== null) {
+            return $data;
         }
 
-        $file = $reflectionClass->getFileName();
+        $code = @file_get_contents($id->file);
 
-        if ($file !== false) {
-            return new FileResource($file, $reflectionClass->getExtensionName());
+        if ($code === false) {
+            throw new FileNotReadable($id->file);
         }
 
-        return $reflectionClass;
+        $typeContextVisitor = new TypeContextVisitor(file: $id->file);
+        $finder = new FindAnonymousClassVisitor($typeContextVisitor, $id);
+
+        PhpParser::traverse($this->phpParser->parse($code), [$typeContextVisitor, $finder]);
+
+        if ($finder->data === null) {
+            return null;
+        }
+
+        $data = $finder->data
+            ->with(Data::File(), $id->file)
+            ->with(Data::UnresolvedChangeDetectors(), [FileChangeDetector::fromFileAndContents($id->file, $code)]);
+
+        $hooks = [
+            new ReflectPhpParserNode(),
+            new ResolveAttributesRepeated(),
+            new ResolveParametersIndex(),
+            new ResolveClassInheritance($this),
+            new CleanUp(),
+        ];
+
+        foreach ($hooks as $hook) {
+            $data = $hook->reflect($id, $data);
+        }
+
+        $this->storage->save($id, $data);
+
+        return $data;
     }
 }

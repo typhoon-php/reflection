@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Internal\ClassReflector;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -20,13 +20,13 @@ final class UnaryOperation implements Expression
         private readonly string $operator,
     ) {}
 
-    public function evaluate(ClassReflector $classReflector): mixed
+    public function evaluate(Reflector $reflector): mixed
     {
         return match ($this->operator) {
-            '+' => +$this->expression->evaluate($classReflector),
-            '-' => -$this->expression->evaluate($classReflector),
-            '!' => !$this->expression->evaluate($classReflector),
-            '~' => ~$this->expression->evaluate($classReflector),
+            '+' => +$this->expression->evaluate($reflector),
+            '-' => -$this->expression->evaluate($reflector),
+            '!' => !$this->expression->evaluate($reflector),
+            '~' => ~$this->expression->evaluate($reflector),
         };
     }
 }

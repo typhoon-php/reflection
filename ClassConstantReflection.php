@@ -4,167 +4,104 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\Reflection\AttributeReflection\AttributeReflections;
-use Typhoon\Reflection\ClassReflection\ClassReflector;
-use Typhoon\Reflection\Metadata\ClassConstantMetadata;
-use Typhoon\Reflection\TypeReflection\TypeConverter;
+use Typhoon\DeclarationId\ClassConstantId;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\NativeAdapter\ClassConstantAdapter;
+use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
+use Typhoon\Type\types;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api
- * @property-read non-empty-string $name
- * @property-read class-string $class
- * @psalm-suppress PropertyNotSetInConstructor
+ * @readonly
+ * @extends Reflection<ClassConstantId>
  */
-final class ClassConstantReflection extends \ReflectionClassConstant
+final class ClassConstantReflection extends Reflection
 {
-    private ?AttributeReflections $attributes = null;
-
-    private bool $nativeLoaded = false;
-
     /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
+     * @var non-empty-string
      */
-    public function __construct(
-        private readonly ClassReflector $classReflector,
-        private readonly ClassConstantMetadata $metadata,
-    ) {
-        unset($this->name, $this->class);
+    public readonly string $name;
+
+    public function __construct(ClassConstantId $id, TypedMap $data, Reflector $reflector)
+    {
+        $this->name = $id->name;
+
+        parent::__construct($id, $data, $reflector);
     }
 
-    public function __get(string $name)
+    public function class(): ClassReflection
     {
-        return match ($name) {
-            'name' => $this->metadata->name,
-            'class' => $this->metadata->class,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
-        };
+        return $this->reflector->reflect($this->id->class);
     }
 
-    public function __isset(string $name): bool
+    public function declaringClass(): ClassReflection
     {
-        return $name === 'name' || $name === 'class';
+        return $this->reflector->reflect($this->declarationId()->class);
     }
 
-    public function __toString(): string
+    public function value(): mixed
     {
-        $this->loadNative();
-
-        return parent::__toString();
-    }
-
-    /**
-     * @template TClass as object
-     * @param class-string<TClass>|null $name
-     * @return ($name is null ? list<AttributeReflection<object>> : list<AttributeReflection<TClass>>)
-     */
-    public function getAttributes(?string $name = null, int $flags = 0): array
-    {
-        if ($this->attributes === null) {
-            $class = $this->metadata->class;
-            $constant = $this->metadata->name;
-            $this->attributes = AttributeReflections::create(
-                $this->classReflector,
-                $this->metadata->attributes,
-                static fn(): array => (new \ReflectionClassConstant($class, $constant))->getAttributes(),
-            );
-        }
-
-        return $this->attributes->get($name, $flags);
-    }
-
-    public function getDeclaringClass(): ClassReflection
-    {
-        return $this->classReflector->reflectClass($this->metadata->class);
-    }
-
-    public function getDocComment(): string|false
-    {
-        return $this->metadata->docComment;
-    }
-
-    /**
-     * @return positive-int|false
-     */
-    public function getEndLine(): int|false
-    {
-        return $this->metadata->endLine;
-    }
-
-    public function getModifiers(): int
-    {
-        return $this->metadata->modifiers;
-    }
-
-    public function getName(): string
-    {
-        return $this->metadata->name;
-    }
-
-    /**
-     * @return positive-int|false
-     */
-    public function getStartLine(): int|false
-    {
-        return $this->metadata->startLine;
-    }
-
-    public function getType(): ?\ReflectionType
-    {
-        return $this->metadata->type->native?->accept(new TypeConverter());
-    }
-
-    /**
-     * @return ($origin is Origin::Resolved ? Type : null|Type)
-     */
-    public function getTyphoonType(Origin $origin = Origin::Resolved): ?Type
-    {
-        return $this->metadata->type->get($origin);
-    }
-
-    public function getValue(): mixed
-    {
-        $this->loadNative();
-
-        return parent::getValue();
-    }
-
-    public function hasType(): bool
-    {
-        return $this->metadata->type->native !== null;
-    }
-
-    public function isEnumCase(): bool
-    {
-        return $this->metadata->enumCase;
-    }
-
-    public function isFinal(): bool
-    {
-        return ($this->metadata->modifiers & self::IS_FINAL) !== 0;
+        return $this->data[Data::ValueExpression()]->evaluate($this->reflector);
     }
 
     public function isPrivate(): bool
     {
-        return ($this->metadata->modifiers & self::IS_PRIVATE) !== 0;
+        return $this->data[Data::Visibility()] === Visibility::Private;
     }
 
     public function isProtected(): bool
     {
-        return ($this->metadata->modifiers & self::IS_PROTECTED) !== 0;
+        return $this->data[Data::Visibility()] === Visibility::Protected;
     }
 
     public function isPublic(): bool
     {
-        return ($this->metadata->modifiers & self::IS_PUBLIC) === \ReflectionProperty::IS_PUBLIC;
+        $visibility = $this->data[Data::Visibility()];
+
+        return $visibility === null || $visibility === Visibility::Public;
     }
 
-    private function loadNative(): void
+    public function isFinal(Kind $kind = Kind::Resolved): bool
     {
-        if (!$this->nativeLoaded) {
-            parent::__construct($this->metadata->class, $this->metadata->name);
-            $this->nativeLoaded = true;
-        }
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeFinal()] ?? false,
+            Kind::Annotated => $this->data[Data::AnnotatedFinal()] ?? false,
+            Kind::Resolved => $this->data[Data::NativeFinal()] ?? $this->data[Data::AnnotatedFinal()] ?? false,
+        };
+    }
+
+    public function isEnumCase(): bool
+    {
+        return $this->data[Data::EnumCase()] ?? false;
+    }
+
+    /**
+     * @psalm-suppress MixedReturnStatement, MixedInferredReturnType
+     */
+    public function backingValue(): int|string
+    {
+        return $this->data[Data::BackingValueExpression()]->evaluate($this->reflector);
+    }
+
+    /**
+     * @return ($kind is Kind::Resolved ? Type : ?Type)
+     */
+    public function type(Kind $kind = Kind::Resolved): ?Type
+    {
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeType()] ?? null,
+            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
+            Kind::Resolved => $this->data[Data::ResolvedType()]
+                ?? $this->data[Data::AnnotatedType()]
+                ?? $this->data[Data::NativeType()]
+                ?? types::mixed,
+        };
+    }
+
+    public function toNative(): \ReflectionClassConstant
+    {
+        return new ClassConstantAdapter($this);
     }
 }

@@ -4,432 +4,73 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\Reflection\AttributeReflection\AttributeReflections;
-use Typhoon\Reflection\ClassReflection\ClassReflector;
-use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Exception\InterfaceDoesNotExist;
-use Typhoon\Reflection\Exception\MethodDoesNotExist;
-use Typhoon\Reflection\Exception\NotAnInterface;
-use Typhoon\Reflection\Exception\PropertyDoesNotExist;
-use Typhoon\Reflection\Exception\TemplateDoesNotExist;
-use Typhoon\Reflection\Exception\TypeAliasDoesNotExist;
-use Typhoon\Reflection\Metadata\ClassConstantMetadata;
-use Typhoon\Reflection\Metadata\ClassMetadata;
-use Typhoon\Reflection\Metadata\MethodMetadata;
-use Typhoon\Reflection\Metadata\PropertyMetadata;
-use Typhoon\Reflection\TypeResolver\TemplateResolver;
-use Typhoon\Type\Type;
-use Typhoon\Type\TypeVisitor;
+use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\ClassId;
+use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
+use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\classConstantId;
+use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\methodId;
+use function Typhoon\DeclarationId\propertyId;
 
 /**
  * @api
- * @template-covariant T of object
- * @extends \ReflectionClass<T>
- * @property-read class-string<T> $name
- * @psalm-suppress PropertyNotSetInConstructor
+ * @readonly
+ * @extends Reflection<ClassId|AnonymousClassId>
+ * @template-covariant TObject of object
  */
-final class ClassReflection extends \ReflectionClass
+final class ClassReflection extends Reflection
 {
-    public const IS_READONLY = 65536;
-
-    private ?AttributeReflections $attributes = null;
-
-    private bool $nativeLoaded = false;
+    /**
+     * @var class-string<TObject>
+     */
+    public readonly string $name;
 
     /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
-     * @param ClassMetadata<T> $metadata
+     * @var ?array<non-empty-string, ClassConstantReflection>
      */
-    public function __construct(
-        private readonly ClassReflector $classReflector,
-        private readonly ClassMetadata $metadata,
-    ) {
-        unset($this->name);
-    }
-
-    public function __get(string $name): mixed
-    {
-        return match ($name) {
-            'name' => $this->metadata->name,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
-        };
-    }
-
-    public function __isset(string $name): bool
-    {
-        return $name === 'name';
-    }
-
-    public function __toString(): string
-    {
-        $this->loadNative();
-
-        return parent::__toString();
-    }
+    private ?array $constants = null;
 
     /**
-     * @param array<Type> $templateArguments
-     * @return TypeVisitor<Type>
+     * @var ?array<non-empty-string, PropertyReflection>
      */
-    public function createTypeResolver(array $templateArguments = [], bool $resolveStatic = false): TypeVisitor
-    {
-        return new TemplateResolver(
-            templateArguments: TemplateResolver::prepareTemplateArguments($this->getTemplates(), $templateArguments),
-            self: $this->name,
-            resolveStatic: $resolveStatic,
-        );
-    }
+    private ?array $properties = null;
 
     /**
-     * @template TClass as object
-     * @param class-string<TClass>|null $name
-     * @return ($name is null ? list<AttributeReflection<object>> : list<AttributeReflection<TClass>>)
+     * @var ?array<non-empty-string, MethodReflection>
      */
-    public function getAttributes(?string $name = null, int $flags = 0): array
+    private ?array $methods = null;
+
+    public function __construct(ClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector)
     {
-        if ($this->attributes === null) {
-            $class = $this->metadata->name;
-            $this->attributes = AttributeReflections::create(
-                $this->classReflector,
-                $this->metadata->attributes,
-                static fn(): array => (new \ReflectionClass($class))->getAttributes(),
-            );
+        /** @psalm-suppress PropertyTypeCoercion */
+        $this->name = $id->name;
+
+        parent::__construct($id, $data, $reflector);
+    }
+
+    public function isInstanceOf(string|ClassId|AnonymousClassId $class): bool
+    {
+        if (\is_string($class)) {
+            $class = classId($class);
         }
 
-        return $this->attributes->get($name, $flags);
-    }
-
-    public function getConstant(string $name): mixed
-    {
-        $this->loadNative();
-
-        return parent::getConstant($name);
-    }
-
-    public function getConstants(?int $filter = null): array
-    {
-        $this->loadNative();
-
-        return parent::getConstants($filter);
-    }
-
-    public function getConstructor(): ?MethodReflection
-    {
-        return $this->getResolvedMethods()['__construct'] ?? null;
-    }
-
-    public function getDefaultProperties(): array
-    {
-        $this->loadNative();
-
-        return parent::getDefaultProperties();
-    }
-
-    public function getDocComment(): string|false
-    {
-        return $this->metadata->docComment;
-    }
-
-    public function getEndLine(): int|false
-    {
-        return $this->metadata->endLine;
-    }
-
-    public function getExtension(): ?\ReflectionExtension
-    {
-        if ($this->metadata->extension === false) {
-            return null;
-        }
-
-        return new \ReflectionExtension($this->metadata->extension);
-    }
-
-    public function getExtensionName(): string|false
-    {
-        return $this->metadata->extension;
-    }
-
-    public function getFileName(): string|false
-    {
-        return $this->metadata->file;
-    }
-
-    public function getInterfaceNames(): array
-    {
-        return array_keys($this->getInterfaces());
-    }
-
-    /**
-     * @return array<interface-string, self>
-     */
-    public function getInterfaces(): array
-    {
-        return iterator_to_array($this->yieldInterfaces());
-    }
-
-    public function getMethod(string $name): MethodReflection
-    {
-        return $this->getResolvedMethods()[$name] ?? throw new MethodDoesNotExist($name);
-    }
-
-    /**
-     * @return list<MethodReflection>
-     */
-    public function getMethods(?int $filter = null): array
-    {
-        if ($filter === null || $filter === 0) {
-            return array_values($this->getResolvedMethods());
-        }
-
-        return array_values(array_filter(
-            $this->getResolvedMethods(),
-            static fn(MethodReflection $method): bool => ($filter & $method->getModifiers()) !== 0,
-        ));
-    }
-
-    public function getModifiers(): int
-    {
-        return $this->metadata->modifiers;
-    }
-
-    public function getName(): string
-    {
-        return $this->metadata->name;
-    }
-
-    public function getNamespaceName(): string
-    {
-        $lastSlashPosition = strrpos($this->metadata->name, '\\');
-
-        if ($lastSlashPosition === false) {
-            return '';
-        }
-
-        return substr($this->metadata->name, 0, $lastSlashPosition);
-    }
-
-    public function getParentClass(): self|false
-    {
-        $parentClass = $this->metadata->parentClass();
-
-        if ($parentClass === null) {
-            return false;
-        }
-
-        return $this->reflectClass($parentClass);
-    }
-
-    /**
-     * @return list<PropertyReflection>
-     */
-    public function getProperties(?int $filter = null): array
-    {
-        if ($filter === null || $filter === 0) {
-            return array_values($this->getResolvedProperties());
-        }
-
-        return array_values(array_filter(
-            $this->getResolvedProperties(),
-            static fn(PropertyReflection $property): bool => ($filter & $property->getModifiers()) !== 0,
-        ));
-    }
-
-    public function getProperty(string $name): PropertyReflection
-    {
-        return $this->getResolvedProperties()[$name] ?? throw new PropertyDoesNotExist($name);
-    }
-
-    public function getReflectionConstant(string $name): ClassConstantReflection|false
-    {
-        return $this->getResolvedConstants()[$name] ?? false;
-    }
-
-    /**
-     * @return list<ClassConstantReflection>
-     */
-    public function getReflectionConstants(?int $filter = null): array
-    {
-        if ($filter === null || $filter === 0) {
-            return array_values($this->getResolvedConstants());
-        }
-
-        return array_values(array_filter(
-            $this->getResolvedConstants(),
-            static fn(ClassConstantReflection $constant): bool => ($filter & $constant->getModifiers()) !== 0,
-        ));
-    }
-
-    public function getShortName(): string
-    {
-        $lastSlashPosition = strrpos($this->metadata->name, '\\');
-
-        if ($lastSlashPosition === false) {
-            return $this->metadata->name;
-        }
-
-        $shortName = substr($this->metadata->name, $lastSlashPosition + 1);
-        \assert($shortName !== '');
-
-        return $shortName;
-    }
-
-    public function getStartLine(): int|false
-    {
-        return $this->metadata->startLine;
-    }
-
-    public function getStaticProperties(): array
-    {
-        $this->loadNative();
-
-        return parent::getStaticProperties();
-    }
-
-    public function getStaticPropertyValue(string $name, mixed $default = null): mixed
-    {
-        $this->loadNative();
-
-        return parent::getStaticPropertyValue($name, $default);
-    }
-
-    /**
-     * @throws TemplateDoesNotExist
-     */
-    public function getTemplate(int|string $nameOrPosition): TemplateReflection
-    {
-        if (\is_int($nameOrPosition)) {
-            return $this->metadata->templates[$nameOrPosition] ?? throw new TemplateDoesNotExist($nameOrPosition);
-        }
-
-        foreach ($this->metadata->templates as $template) {
-            if ($template->name === $nameOrPosition) {
-                return $template;
-            }
-        }
-
-        throw new TemplateDoesNotExist($nameOrPosition);
-    }
-
-    /**
-     * @return list<TemplateReflection>
-     */
-    public function getTemplates(): array
-    {
-        return $this->metadata->templates;
-    }
-
-    public function getTraitAliases(): array
-    {
-        $traitAliases = [];
-
-        foreach ($this->metadata->traitMethodAliases as $trait => $methodAliases) {
-            foreach ($methodAliases as $method => $aliases) {
-                foreach ($aliases as $alias) {
-                    if ($alias->alias === null) {
-                        continue;
-                    }
-
-                    $traitAliases[$alias->alias] = $trait . '::' . $method;
-                }
-            }
-        }
-
-        return $traitAliases;
-    }
-
-    public function getTraitNames(): array
-    {
-        $traitNames = [];
-
-        foreach ($this->yieldTraits() as $name => $_trait) {
-            $traitNames[] = $name;
-        }
-
-        return $traitNames;
-    }
-
-    /**
-     * @return array<trait-string, self>
-     */
-    public function getTraits(): array
-    {
-        return iterator_to_array($this->yieldTraits());
-    }
-
-    /**
-     * @throws TypeAliasDoesNotExist
-     */
-    public function getTypeAlias(string $name): Type
-    {
-        return $this->metadata->typeAliases[$name] ?? throw new TypeAliasDoesNotExist($name);
-    }
-
-    /**
-     * @return array<non-empty-string, Type>
-     */
-    public function getTypeAliases(): array
-    {
-        return $this->metadata->typeAliases;
-    }
-
-    public function hasConstant(string $name): bool
-    {
-        return isset($this->getResolvedConstants()[$name]);
-    }
-
-    public function hasMethod(string $name): bool
-    {
-        return isset($this->getResolvedMethods()[$name]);
-    }
-
-    public function hasProperty(string $name): bool
-    {
-        return isset($this->getResolvedProperties()[$name]);
-    }
-
-    public function implementsInterface(string|\ReflectionClass $interface): bool
-    {
-        if (\is_string($interface)) {
-            try {
-                $interface = $this->reflectClass($interface);
-            } catch (ClassDoesNotExist) {
-                /** @var string $interface */
-                throw new InterfaceDoesNotExist($interface);
-            }
-        }
-
-        if (!$interface->isInterface()) {
-            throw new NotAnInterface($interface->name);
-        }
-
-        if ($this->metadata->name === $interface->name) {
-            return true;
-        }
-
-        foreach ($this->yieldInterfaces() as $implementedInterface) {
-            if ($implementedInterface->name === $interface->name) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function inNamespace(): bool
-    {
-        return str_contains($this->metadata->name, '\\');
+        return $this->id->equals($class)
+            || \array_key_exists($class->name, $this->data[Data::ResolvedParents()] ?? [])
+            || \array_key_exists($class->name, $this->data[Data::ResolvedInterfaces()] ?? []);
     }
 
     public function isAbstract(): bool
     {
-        if ($this->metadata->interface) {
-            return $this->getMethods() !== [];
+        if ($this->isAbstractClass()) {
+            return true;
         }
 
-        if ($this->metadata->trait) {
-            foreach ($this->getMethods() as $method) {
-                if ($method->isAbstract()) {
+        if ($this->isInterface() || $this->isTrait()) {
+            foreach ($this->data[Data::Methods()] ?? [] as $method) {
+                if ($method[Data::Abstract()] ?? false) {
                     return true;
                 }
             }
@@ -437,268 +78,234 @@ final class ClassReflection extends \ReflectionClass
             return false;
         }
 
-        return ($this->metadata->modifiers & self::IS_EXPLICIT_ABSTRACT) !== 0;
+        return false;
+    }
+
+    public function isAbstractClass(): bool
+    {
+        return $this->data[Data::Abstract()] ?? false;
     }
 
     public function isAnonymous(): bool
     {
-        return $this->metadata->anonymous;
+        return $this->id instanceof AnonymousClassId;
     }
 
     public function isCloneable(): bool
     {
         return !$this->isAbstract()
-            && !$this->metadata->interface
-            && !$this->metadata->trait
-            && !$this->metadata->enum
-            && (!$this->hasMethod('__clone') || $this->getMethod('__clone')->isPublic());
+            && $this->data[Data::ClassKind()] === ClassKind::Class_
+            && ($this->method('__clone')?->isPublic() ?? true);
     }
 
-    public function isDeprecated(): bool
+    public function isTrait(): bool
     {
-        return $this->metadata->deprecated;
+        return $this->data[Data::ClassKind()] === ClassKind::Trait;
     }
 
     public function isEnum(): bool
     {
-        return $this->metadata->enum;
+        return $this->data[Data::ClassKind()] === ClassKind::Enum;
     }
 
-    public function isFinal(Origin $origin = Origin::Resolved): bool
+    public function isFinal(Kind $kind = Kind::Resolved): bool
     {
-        return match ($origin) {
-            Origin::PhpDoc => $this->metadata->finalPhpDoc,
-            Origin::Native => $this->metadata->finalNative(),
-            Origin::Resolved => $this->metadata->finalPhpDoc || $this->metadata->finalNative(),
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeFinal()] ?? false,
+            Kind::Annotated => $this->data[Data::AnnotatedFinal()] ?? false,
+            Kind::Resolved => $this->data[Data::NativeFinal()] ?? $this->data[Data::AnnotatedFinal()] ?? false,
         };
-    }
-
-    public function isInstance(object $object): bool
-    {
-        return $this->metadata->name === $object::class || $this->reflectClass($object::class)->isSubclassOf($this);
     }
 
     public function isInstantiable(): bool
     {
         return !$this->isAbstract()
-            && !$this->metadata->interface
-            && !$this->metadata->trait
-            && !$this->metadata->enum
-            && (!$this->hasMethod('__construct') || $this->getMethod('__construct')->isPublic());
+            && $this->data[Data::ClassKind()] === ClassKind::Class_
+            && ($this->method('__construct')?->isPublic() ?? true);
     }
 
     public function isInterface(): bool
     {
-        return $this->metadata->interface;
+        return $this->data[Data::ClassKind()] === ClassKind::Interface;
     }
 
-    public function isInternal(): bool
+    public function isReadonly(Kind $kind = Kind::Resolved): bool
     {
-        return $this->metadata->internal;
-    }
-
-    public function isIterable(): bool
-    {
-        return !$this->metadata->interface
-            && !$this->isAbstract()
-            && $this->implementsInterface(\Traversable::class);
-    }
-
-    public function isIterateable(): bool
-    {
-        return $this->isIterable();
-    }
-
-    public function isReadonly(Origin $origin = Origin::Resolved): bool
-    {
-        return match ($origin) {
-            Origin::PhpDoc => $this->metadata->readonlyPhpDoc,
-            Origin::Native => $this->metadata->readonlyNative(),
-            Origin::Resolved => $this->metadata->readonlyPhpDoc || $this->metadata->readonlyNative(),
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeReadonly()] ?? false,
+            Kind::Annotated => $this->data[Data::AnnotatedReadonly()] ?? false,
+            Kind::Resolved => $this->data[Data::NativeReadonly()] ?? $this->data[Data::AnnotatedReadonly()] ?? false,
         };
     }
 
-    public function isSubclassOf(string|\ReflectionClass $class): bool
+    public function namespace(): string
     {
-        if (\is_string($class)) {
-            if ($class === $this->metadata->name) {
-                return false;
-            }
+        $lastSlashPosition = strrpos($this->name, '\\');
 
-            $class = $this->reflectClass($class);
-        } elseif ($class->name === $this->metadata->name) {
-            return false;
+        if ($lastSlashPosition === false) {
+            return '';
         }
 
-        if ($class->isInterface() && $this->implementsInterface($class)) {
-            return true;
+        return substr($this->name, 0, $lastSlashPosition);
+    }
+
+    public function parent(): ?self
+    {
+        $parentName = $this->parentName();
+
+        if ($parentName === null) {
+            return null;
         }
 
-        $parentClass = $this->metadata->parentClass();
-
-        if ($parentClass === null) {
-            return false;
-        }
-
-        return $class->name === $parentClass || $this->reflectClass($parentClass)->isSubclassOf($class);
-    }
-
-    public function isTrait(): bool
-    {
-        return $this->metadata->trait;
-    }
-
-    public function isUserDefined(): bool
-    {
-        return !$this->isInternal();
-    }
-
-    public function newInstance(mixed ...$args): object
-    {
-        $this->loadNative();
-
-        return parent::newInstance(...$args);
+        return $this->reflector->reflect(classId($parentName));
     }
 
     /**
-     * @psalm-suppress MethodSignatureMismatch
+     * @return ?non-empty-string
      */
-    public function newInstanceArgs(array $args = []): object
+    public function parentName(): ?string
     {
-        $this->loadNative();
-
-        return parent::newInstanceArgs($args);
+        return array_key_first($this->data[Data::ResolvedParents()] ?? []);
     }
 
-    public function newInstanceWithoutConstructor(): object
+    /**
+     * @return non-empty-string
+     */
+    public function shortName(): string
     {
-        $this->loadNative();
+        $lastSlashPosition = strrpos($this->name, '\\');
 
-        return parent::newInstanceWithoutConstructor();
+        if ($lastSlashPosition === false) {
+            return $this->name;
+        }
+
+        $shortName = substr($this->name, $lastSlashPosition + 1);
+        \assert($shortName !== '');
+
+        return $shortName;
     }
 
-    public function setStaticPropertyValue(string $name, mixed $value): void
+    public function constant(string $name): ?ClassConstantReflection
     {
-        $this->loadNative();
-
-        parent::setStaticPropertyValue($name, $value);
+        return $this->constants()[$name] ?? null;
     }
 
     /**
      * @return array<non-empty-string, ClassConstantReflection>
      */
-    private function getResolvedConstants(): array
+    public function constants(): array
     {
-        return array_map(
-            fn(ClassConstantMetadata $metadata): ClassConstantReflection => new ClassConstantReflection(
-                classReflector: $this->classReflector,
-                metadata: $metadata,
-            ),
-            $this->metadata->resolvedConstants($this->reflectClassMetadata(...)),
-        );
+        if ($this->constants !== null) {
+            return $this->constants;
+        }
+
+        $this->constants = [];
+
+        foreach ($this->data[Data::ClassConstants()] ?? [] as $name => $data) {
+            $this->constants[$name] = new ClassConstantReflection(
+                id: classConstantId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->constants;
     }
 
-    /**
-     * @return array<non-empty-string, MethodReflection>
-     */
-    private function getResolvedMethods(): array
+    public function property(string $name): ?PropertyReflection
     {
-        return array_map(
-            fn(MethodMetadata $metadata): MethodReflection => new MethodReflection(
-                classReflector: $this->classReflector,
-                metadata: $metadata,
-                currentClass: $this->metadata->name,
-            ),
-            $this->metadata->resolvedMethods($this->reflectClassMetadata(...)),
-        );
+        return $this->properties()[$name] ?? null;
     }
 
     /**
      * @return array<non-empty-string, PropertyReflection>
      */
-    private function getResolvedProperties(): array
+    public function properties(): array
     {
-        return array_map(
-            fn(PropertyMetadata $metadata): PropertyReflection => new PropertyReflection(
-                classReflector: $this->classReflector,
-                metadata: $metadata,
-            ),
-            $this->metadata->resolvedProperties($this->reflectClassMetadata(...)),
-        );
+        if ($this->properties !== null) {
+            return $this->properties;
+        }
+
+        $this->properties = [];
+
+        foreach ($this->data[Data::Properties()] ?? [] as $name => $data) {
+            $this->properties[$name] = new PropertyReflection(
+                id: propertyId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->properties;
+    }
+
+    public function method(string $name): ?MethodReflection
+    {
+        return $this->methods()[$name] ?? null;
     }
 
     /**
-     * @psalm-assert-if-true self $this->getParentClass()
+     * @return array<non-empty-string, MethodReflection>
      */
-    private function hasParent(): bool
+    public function methods(): array
     {
-        return $this->metadata->parentClass() !== null;
-    }
-
-    private function loadNative(): void
-    {
-        if (!$this->nativeLoaded) {
-            parent::__construct($this->metadata->name);
-            $this->nativeLoaded = true;
+        if ($this->methods !== null) {
+            return $this->methods;
         }
-    }
 
-    /**
-     * @param non-empty-string $class
-     * @throws ReflectionException
-     */
-    private function reflectClass(string $class): self
-    {
-        return $this->classReflector->reflectClass($class);
+        $this->methods = [];
+
+        foreach ($this->data[Data::Methods()] ?? [] as $name => $data) {
+            $this->methods[$name] = new MethodReflection(
+                id: methodId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->methods;
     }
 
     /**
-     * @param non-empty-string $class
-     * @throws ReflectionException
+     * @return ?non-empty-string
      */
-    private function reflectClassMetadata(string $class): ClassMetadata
+    public function extension(): ?string
     {
-        return $this->reflectClass($class)->metadata;
+        return $this->data[Data::Extension()] ?? null;
     }
 
     /**
-     * @return \Generator<interface-string, self>
+     * @return ?non-empty-string
      */
-    private function yieldInterfaces(): \Generator
+    public function file(): ?string
     {
-        $interfaces = [];
-        $ancestors = [];
+        return $this->data[Data::File()] ?? null;
+    }
 
-        foreach ($this->metadata->interfaceClasses() as $interfaceClass) {
-            $ancestors[] = $interface = $this->reflectClass($interfaceClass);
-            yield $interface->name => $interface;
-        }
-
-        foreach ($ancestors as $ancestor) {
-            foreach ($ancestor->getInterfaces() as $interface) {
-                yield $interface->name => $interface;
-            }
-        }
-
-        if ($this->hasParent()) {
-            foreach ($this->getParentClass()->getInterfaces() as $interface) {
-                yield $interface->name => $interface;
-            }
-        }
-
-        return $interfaces;
+    public function isWrittenInC(): bool
+    {
+        return $this->data[Data::WrittenInC()] ?? false;
     }
 
     /**
-     * @return \Generator<trait-string, self>
+     * @psalm-suppress MixedMethodCall
+     * @return TObject
      */
-    private function yieldTraits(): \Generator
+    public function newInstance(mixed ...$arguments): object
     {
-        foreach ($this->metadata->traitClasses() as $traitClass) {
-            $trait = $this->reflectClass($traitClass);
-            /** @var trait-string */
-            $name = $trait->name;
-            yield $name => $trait;
-        }
+        return new $this->name(...$arguments);
+    }
+
+    /**
+     * @return TObject
+     */
+    public function newInstanceWithoutConstructor(): object
+    {
+        return (new \ReflectionClass($this->name))->newInstanceWithoutConstructor();
+    }
+
+    public function toNative(): \ReflectionClass
+    {
+        return new ClassAdapter($this, $this->reflector);
     }
 }

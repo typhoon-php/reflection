@@ -4,300 +4,116 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\Reflection\AttributeReflection\AttributeReflections;
-use Typhoon\Reflection\ClassReflection\ClassReflector;
-use Typhoon\Reflection\Metadata\ParameterMetadata;
-use Typhoon\Reflection\TypeReflection\TypeConverter;
+use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\ParameterId;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
 use Typhoon\Type\Type;
-use Typhoon\Type\Visitor\DefaultTypeVisitor;
+use Typhoon\Type\types;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api
- * @property-read non-empty-string $name
- * @psalm-suppress PropertyNotSetInConstructor
+ * @readonly
+ * @extends Reflection<ParameterId>
  */
-final class ParameterReflection extends \ReflectionParameter
+final class ParameterReflection extends Reflection
 {
-    private ?AttributeReflections $attributes = null;
-
-    private bool $nativeLoaded = false;
+    /**
+     * @var non-empty-string
+     */
+    public readonly string $name;
 
     /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
+     * @var non-negative-int
      */
-    public function __construct(
-        private readonly ClassReflector $classReflector,
-        private readonly ParameterMetadata $metadata,
-    ) {
-        unset($this->name);
+    public readonly int $index;
+
+    public function __construct(ParameterId $id, TypedMap $data, Reflector $reflector)
+    {
+        $this->name = $id->name;
+        $this->index = $data[Data::Index()];
+
+        parent::__construct($id, $data, $reflector);
     }
 
-    public function __get(string $name): mixed
+    public function function(): MethodReflection
     {
-        return match ($name) {
-            'name' => $this->metadata->name,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
-        };
+        return $this->reflector->reflect($this->id->function);
     }
 
-    public function __isset(string $name): bool
+    public function class(): ?ClassReflection
     {
-        return $name === 'name';
-    }
-
-    public function __toString(): string
-    {
-        $this->loadNative();
-
-        return parent::__toString();
-    }
-
-    public function allowsNull(): bool
-    {
-        return $this->metadata->type->native?->accept(
-            new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
-                public function null(Type $self): mixed
-                {
-                    return true;
-                }
-
-                public function union(Type $self, array $types): mixed
-                {
-                    foreach ($types as $type) {
-                        if ($type->accept($this)) {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-
-                public function mixed(Type $self): mixed
-                {
-                    return true;
-                }
-
-                protected function default(Type $self): mixed
-                {
-                    return false;
-                }
-            },
-        ) ?? true;
-    }
-
-    public function canBePassedByValue(): bool
-    {
-        return !$this->metadata->passedByReference;
-    }
-
-    /**
-     * @template TClass as object
-     * @param class-string<TClass>|null $name
-     * @return ($name is null ? list<AttributeReflection<object>> : list<AttributeReflection<TClass>>)
-     */
-    public function getAttributes(?string $name = null, int $flags = 0): array
-    {
-        if ($this->attributes === null) {
-            $function = $this->function();
-            $parameter = $this->metadata->name;
-            $this->attributes = AttributeReflections::create(
-                $this->classReflector,
-                $this->metadata->attributes,
-                static fn(): array => (new \ReflectionParameter($function, $parameter))->getAttributes(),
-            );
-        }
-
-        return $this->attributes->get($name, $flags);
-    }
-
-    public function getClass(): ?ClassReflection
-    {
-        return $this->metadata->type->native?->accept(
-            new /** @extends DefaultTypeVisitor<?ClassReflection> */ class ($this->classReflector) extends DefaultTypeVisitor {
-                public function __construct(
-                    private readonly ClassReflector $classReflector,
-                ) {}
-
-                public function namedObject(Type $self, string $class, array $arguments): mixed
-                {
-                    return $this->classReflector->reflectClass($class);
-                }
-
-                public function closure(Type $self, array $parameters, Type $return): mixed
-                {
-                    return $this->classReflector->reflectClass(\Closure::class);
-                }
-
-                protected function default(Type $self): mixed
-                {
-                    return null;
-                }
-            },
-        );
-    }
-
-    public function getDeclaringClass(): ?ClassReflection
-    {
-        if ($this->metadata->class === null) {
+        if ($this->id->function instanceof FunctionId) {
             return null;
         }
 
-        return $this->classReflector->reflectClass($this->metadata->class);
+        return $this->reflector->reflect($this->id->function->class);
     }
 
-    public function getDeclaringFunction(): MethodReflection
+    public function declaringFunction(): MethodReflection
     {
-        return $this->getDeclaringClass()?->getMethod($this->metadata->functionOrMethod)
-            ?? throw new \LogicException('Functions are not supported yet');
+        return $this->reflector->reflect($this->declarationId()->function);
     }
 
-    public function getDefaultValue(): mixed
+    public function declaringClass(): ?ClassReflection
     {
-        $this->loadNative();
+        $declarationId = $this->declarationId();
 
-        return parent::getDefaultValue();
+        if ($declarationId->function instanceof FunctionId) {
+            return null;
+        }
+
+        return $this->reflector->reflect($declarationId->function->class);
     }
 
-    public function getDefaultValueConstantName(): ?string
+    public function hasDefaultValue(): bool
     {
-        $this->loadNative();
-
-        return parent::getDefaultValueConstantName();
+        return ($this->data[Data::DefaultValueExpression()] ?? null) !== null;
     }
 
-    /**
-     * @return positive-int|false
-     */
-    public function getEndLine(): int|false
+    public function defaultValue(): mixed
     {
-        return $this->metadata->endLine;
-    }
-
-    public function getName(): string
-    {
-        return $this->metadata->name;
-    }
-
-    public function getPosition(): int
-    {
-        return $this->metadata->position;
-    }
-
-    /**
-     * @return positive-int|false
-     */
-    public function getStartLine(): int|false
-    {
-        return $this->metadata->startLine;
-    }
-
-    public function getType(): ?\ReflectionType
-    {
-        return $this->metadata->type->native?->accept(new TypeConverter());
-    }
-
-    /**
-     * @return ($origin is Origin::Resolved ? Type : null|Type)
-     */
-    public function getTyphoonType(Origin $origin = Origin::Resolved): ?Type
-    {
-        return $this->metadata->type->get($origin);
-    }
-
-    public function hasType(): bool
-    {
-        return $this->metadata->type->native !== null;
-    }
-
-    public function isArray(): bool
-    {
-        return $this->metadata->type->native?->accept(
-            new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
-                public function array(Type $self, Type $key, Type $value, array $elements): mixed
-                {
-                    return true;
-                }
-
-                protected function default(Type $self): mixed
-                {
-                    return false;
-                }
-            },
-        ) ?? false;
-    }
-
-    public function isCallable(): bool
-    {
-        return $this->metadata->type->native?->accept(
-            new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
-                public function callable(Type $self, array $parameters, Type $return): mixed
-                {
-                    return true;
-                }
-
-                protected function default(Type $self): mixed
-                {
-                    return false;
-                }
-            },
-        ) ?? false;
-    }
-
-    public function isDefaultValueAvailable(): bool
-    {
-        return $this->metadata->defaultValueAvailable;
-    }
-
-    public function isDefaultValueConstant(): bool
-    {
-        $this->loadNative();
-
-        return parent::isDefaultValueConstant();
-    }
-
-    public function isDeprecated(): bool
-    {
-        return $this->metadata->deprecated;
+        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this->reflector);
     }
 
     public function isOptional(): bool
     {
-        return $this->metadata->optional;
+        return $this->hasDefaultValue() || $this->isVariadic();
     }
 
     public function isPassedByReference(): bool
     {
-        return $this->metadata->passedByReference;
+        return $this->data[Data::ByReference()] ?? false;
     }
 
     public function isPromoted(): bool
     {
-        return $this->metadata->promoted;
+        return $this->data[Data::Promoted()] ?? false;
     }
 
     public function isVariadic(): bool
     {
-        return $this->metadata->variadic;
+        return $this->data[Data::Variadic()] ?? false;
     }
 
     /**
-     * @return non-empty-string|array{class-string, non-empty-string}
+     * @return ($kind is Kind::Resolved ? Type : ?Type)
      */
-    private function function(): array|string
+    public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        if ($this->metadata->class === null) {
-            return $this->metadata->functionOrMethod;
-        }
-
-        return [$this->metadata->class, $this->metadata->functionOrMethod];
+        return match ($kind) {
+            Kind::Native => $this->data[Data::NativeType()] ?? null,
+            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
+            Kind::Resolved => $this->data[Data::ResolvedType()]
+                ?? $this->data[Data::AnnotatedType()]
+                ?? $this->data[Data::NativeType()]
+                ?? types::mixed,
+        };
     }
 
-    private function loadNative(): void
+    public function toNative(): \ReflectionParameter
     {
-        if (!$this->nativeLoaded) {
-            parent::__construct($this->function(), $this->metadata->name);
-            $this->nativeLoaded = true;
-        }
+        return new ParameterAdapter($this, $this->reflector);
     }
 }

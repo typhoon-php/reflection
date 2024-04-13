@@ -4,69 +4,59 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\Reflection\Metadata\AttributeMetadata;
+use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Expression\Expression;
+use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
+use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\classId;
 
 /**
  * @api
- * @template TAttribute of object
- * @extends \ReflectionAttribute<TAttribute>
+ * @readonly
  */
-final class AttributeReflection extends \ReflectionAttribute
+final class AttributeReflection
 {
-    /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
-     * @param class-string<TAttribute> $resolvedName
-     * @param \Closure(): list<\ReflectionAttribute> $nativeAttributesFactory
-     */
     public function __construct(
-        private readonly string $resolvedName,
-        private readonly AttributeMetadata $metadata,
-        private readonly \Closure $nativeAttributesFactory,
+        public readonly DeclarationId $declaredAt,
+        private readonly TypedMap $data,
+        private readonly Reflector $reflector,
     ) {}
 
-    public function __toString(): string
-    {
-        return $this->native()->__toString();
-    }
-
-    public function getArguments(): array
-    {
-        return $this->native()->getArguments();
-    }
-
     /**
-     * @return class-string<TAttribute>
+     * @return non-empty-string
      */
-    public function getName(): string
+    public function className(): string
     {
-        return $this->resolvedName;
+        return $this->data[Data::AttributeClass()];
     }
 
-    public function getTarget(): int
+    public function class(): ClassReflection
     {
-        return $this->metadata->target;
+        return $this->reflector->reflect(classId($this->className()));
     }
 
     public function isRepeated(): bool
     {
-        return $this->metadata->repeated;
+        return $this->data[Data::Repeated()];
     }
 
-    /**
-     * @return TAttribute
-     */
+    public function arguments(): array
+    {
+        return array_map(
+            fn(Expression $expression): mixed => $expression->evaluate($this->reflector),
+            $this->data[Data::ArgumentExpressions()],
+        );
+    }
+
     public function newInstance(): object
     {
-        return $this->native()->newInstance();
+        /** @psalm-suppress InvalidStringClass */
+        return new ($this->className())(...$this->arguments());
     }
 
-    /**
-     * @return \ReflectionAttribute<TAttribute>
-     */
-    private function native(): \ReflectionAttribute
+    public function toNative(): \ReflectionAttribute
     {
-        /** @var \ReflectionAttribute<TAttribute> */
-        return ($this->nativeAttributesFactory)()[$this->metadata->position];
+        return new AttributeAdapter($this);
     }
 }

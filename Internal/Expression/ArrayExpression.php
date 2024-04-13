@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Internal\ClassReflector;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -19,12 +19,12 @@ final class ArrayExpression implements Expression
         private readonly array $elements,
     ) {}
 
-    public function evaluate(ClassReflector $classReflector): mixed
+    public function evaluate(Reflector $reflector): mixed
     {
         $array = [];
 
         foreach ($this->elements as $element) {
-            $value = $element->value->evaluate($classReflector);
+            $value = $element->value->evaluate($reflector);
 
             if ($element->key === null) {
                 $array[] = $value;
@@ -40,7 +40,7 @@ final class ArrayExpression implements Expression
             }
 
             /** @psalm-suppress MixedArrayOffset */
-            $array[$element->key->evaluate($classReflector)] = $value;
+            $array[$element->key->evaluate($reflector)] = $value;
         }
 
         return $array;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Internal\ClassReflector;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -20,11 +20,11 @@ final class Instantiation implements Expression
         private readonly array $arguments,
     ) {}
 
-    public function evaluate(ClassReflector $classReflector): mixed
+    public function evaluate(Reflector $reflector): mixed
     {
         /** @psalm-suppress MixedMethodCall */
-        return new ($this->class->evaluate($classReflector))(...array_map(
-            static fn(Expression $expression): mixed => $expression->evaluate($classReflector),
+        return new ($this->class->evaluate($reflector))(...array_map(
+            static fn(Expression $expression): mixed => $expression->evaluate($reflector),
             $this->arguments,
         ));
     }
