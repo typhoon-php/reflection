@@ -8,9 +8,9 @@ use Typhoon\Reflection\TemplateReflection;
 use Typhoon\Type\AtClass;
 use Typhoon\Type\AtFunction;
 use Typhoon\Type\AtMethod;
-use Typhoon\Type\RecursiveTypeReplacer;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
+use Typhoon\Type\Visitor\RecursiveTypeReplacer;
 
 /**
  * @internal
