@@ -23,7 +23,6 @@ final class ExpressionCompiler
     public function __construct(
         private TypeContext $typeContext = new TypeContext(),
         private readonly string $file = '',
-        private readonly string $namespace = '',
         private readonly string $function = '',
         private readonly string $class = '',
         private readonly bool $trait = false,
@@ -44,7 +43,7 @@ final class ExpressionCompiler
             $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
             $expr instanceof Scalar\MagicConst\File => new Value($this->file),
             $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file)),
-            $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->namespace),
+            $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->typeContext->namespace?->toStringWithoutSlash() ?? ''),
             $expr instanceof Scalar\MagicConst\Function_ => new Value($this->function),
             $expr instanceof Scalar\MagicConst\Class_ => new Value($this->class),
             $expr instanceof Scalar\MagicConst\Trait_ => new Value($this->trait ? $this->class : ''),
