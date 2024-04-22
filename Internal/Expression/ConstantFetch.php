@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
+use Typhoon\Reflection\Internal\ClassReflector;
+
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
@@ -18,16 +20,13 @@ final class ConstantFetch implements Expression
         private readonly ?string $global,
     ) {}
 
-    public function evaluate(EvaluationContext $context): mixed
+    public function evaluate(ClassReflector $classReflector): mixed
     {
-        if ($this->global === null) {
-            return $context->constant($this->name);
+        // TODO use constant reflection
+        if ($this->global === null || \defined($this->name)) {
+            return \constant($this->name);
         }
 
-        try {
-            return $context->constant($this->name);
-        } catch (\Throwable) {
-            return $context->constant($this->global);
-        }
+        return \constant($this->global);
     }
 }

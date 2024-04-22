@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
+use Typhoon\Reflection\Internal\ClassReflector;
+
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
@@ -15,12 +17,10 @@ final class ClassConstantFetch implements Expression
         private readonly Expression $name,
     ) {}
 
-    public function evaluate(EvaluationContext $context): mixed
+    public function evaluate(ClassReflector $classReflector): mixed
     {
+        // TODO return $context->reflectClass($this->class->evaluate($context))->;
         /** @psalm-suppress MixedArgument */
-        return $context->classConstant(
-            class: $this->class->evaluate($context),
-            name: $this->name->evaluate($context),
-        );
+        return \constant(sprintf('%s::%s', $this->class->evaluate($classReflector), $this->name->evaluate($classReflector)));
     }
 }
