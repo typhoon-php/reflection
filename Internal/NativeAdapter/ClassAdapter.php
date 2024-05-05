@@ -318,8 +318,14 @@ final class ClassAdapter extends \ReflectionClass
     {
         if (\is_string($interface)) {
             try {
-                $interfaceReflection = $this->reflector->reflect(classId($interface))->toNative();
-            } catch (\InvalidArgumentException|ClassDoesNotExist) {
+                $interfaceId = classId($interface);
+            } catch (\AssertionError) {
+                throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
+            }
+
+            try {
+                $interfaceReflection = $this->reflector->reflect($interfaceId)->toNative();
+            } catch (ClassDoesNotExist) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
             }
         } else {
@@ -412,8 +418,14 @@ final class ClassAdapter extends \ReflectionClass
             }
 
             try {
-                $this->reflector->reflect(classId($class))->toNative();
-            } catch (\InvalidArgumentException|ClassDoesNotExist) {
+                $classId = classId($class);
+            } catch (\AssertionError) {
+                throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
+            }
+
+            try {
+                $this->reflector->reflect($classId);
+            } catch (ClassDoesNotExist) {
                 throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
             }
 
