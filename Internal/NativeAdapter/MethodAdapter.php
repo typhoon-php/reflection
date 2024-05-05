@@ -27,7 +27,7 @@ final class MethodAdapter extends \ReflectionMethod
     }
 
     /**
-     * @psalm-suppress MethodSignatureMismatch
+     * @psalm-suppress MethodSignatureMismatch, PossiblyUnusedMethod, UnusedPsalmSuppress, UnusedParam
      */
     public static function createFromMethodName(string $method): static
     {
@@ -204,6 +204,9 @@ final class MethodAdapter extends \ReflectionMethod
         return ($this->reflection->data[Data::TentativeType()] ?? null)?->accept(new ToNativeTypeConverter());
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod, UnusedPsalmSuppress
+     */
     public function hasPrototype(): bool
     {
         try {

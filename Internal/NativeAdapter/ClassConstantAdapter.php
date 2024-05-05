@@ -82,6 +82,9 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
         return $this->reflection->name;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod, UnusedPsalmSuppress
+     */
     public function getType(): ?\ReflectionType
     {
         if ($this->isEnumCase()) {
@@ -96,6 +99,9 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
         return $this->reflection->value();
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod, UnusedPsalmSuppress
+     */
     public function hasType(): bool
     {
         return !$this->isEnumCase()
