@@ -26,10 +26,9 @@ final class Resource
 
     /**
      * @param non-empty-string $file
-     * @param ?non-empty-string $extension
      * @param list<ReflectionHook> $hooks
      */
-    public static function fromFile(string $file, ?string $extension = null, array $hooks = []): self
+    public static function fromFile(string $file, TypedMap $data = new TypedMap(), array $hooks = []): self
     {
         $code = @file_get_contents($file);
 
@@ -39,9 +38,8 @@ final class Resource
 
         return new self(
             code: $code,
-            data: (new TypedMap())
+            data: $data
                 ->with(Data::File(), $file)
-                ->with(Data::Extension(), $extension)
                 ->with(Data::UnresolvedChangeDetectors(), [FileChangeDetector::fromFileAndContents($file, $code)]),
             hooks: $hooks,
         );

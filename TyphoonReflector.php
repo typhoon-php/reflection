@@ -27,9 +27,11 @@ use Typhoon\Reflection\Internal\PhpParserReflector\SymbolReflectingVisitor;
 use Typhoon\Reflection\Internal\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\ResolveParametersIndex;
+use Typhoon\Reflection\Locator\AnonymousClassLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\Locators;
-use Typhoon\Reflection\Locator\NativeReflectionLocator;
+use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
+use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 use Typhoon\TypeContext\NodeVisitor\TypeContextVisitor;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\classId;
@@ -75,7 +77,9 @@ final class TyphoonReflector implements Reflector
             $locators[] = new ComposerLocator();
         }
 
-        $locators[] = new NativeReflectionLocator();
+        $locators[] = new NativeReflectionClassLocator();
+        $locators[] = new NativeReflectionFunctionLocator();
+        $locators[] = new AnonymousClassLocator();
 
         return $locators;
     }

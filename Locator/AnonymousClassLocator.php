@@ -14,25 +14,14 @@ use Typhoon\Reflection\Resource;
 /**
  * @api
  */
-final class Locators implements Locator
+final class AnonymousClassLocator implements Locator
 {
-    /**
-     * @param iterable<Locator> $locators
-     */
-    public function __construct(
-        private readonly iterable $locators,
-    ) {}
-
     public function locate(ConstantId|FunctionId|ClassId|AnonymousClassId $id): ?Resource
     {
-        foreach ($this->locators as $locator) {
-            $resource = $locator->locate($id);
-
-            if ($resource !== null) {
-                return $resource;
-            }
+        if (!$id instanceof AnonymousClassId) {
+            return null;
         }
 
-        return null;
+        return Resource::fromFile($id->file);
     }
 }
