@@ -128,7 +128,17 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return new UnionTypeAdapter($convertedTypes);
     }
 
-    public function static(Type $self, ClassId|AnonymousClassId $class, array $arguments): mixed
+    public function self(Type $self, null|ClassId|AnonymousClassId $resolvedClass, array $arguments): mixed
+    {
+        return NamedTypeAdapter::namedObject('self');
+    }
+
+    public function parent(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+    {
+        return NamedTypeAdapter::namedObject('parent');
+    }
+
+    public function static(Type $self, null|ClassId|AnonymousClassId $resolvedClass, array $arguments): mixed
     {
         return NamedTypeAdapter::namedObject('static');
     }
