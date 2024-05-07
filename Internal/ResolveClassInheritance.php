@@ -17,16 +17,12 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ResolveClassInheritance implements ReflectionHook
 {
-    public function __construct(
-        private readonly Reflector $reflector,
-    ) {}
-
-    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $data;
         }
 
-        return ClassInheritanceResolver::resolve($this->reflector, $id, $data);
+        return ClassInheritanceResolver::resolve($reflector, $id, $data);
     }
 }

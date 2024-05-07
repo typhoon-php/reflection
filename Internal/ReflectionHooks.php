@@ -14,16 +14,21 @@ use Typhoon\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class CleanUp implements ReflectionHook
+final class ReflectionHooks implements ReflectionHook
 {
+    /**
+     * @param list<ReflectionHook> $hooks
+     */
+    public function __construct(
+        private readonly array $hooks,
+    ) {}
+
     public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
-        return $data->without(
-            Data::TypeContext(),
-            Data::UnresolvedChangeDetectors(),
-            Data::UnresolvedInterfaces(),
-            Data::UnresolvedTraits(),
-            Data::UnresolvedParent(),
-        );
+        foreach ($this->hooks as $hook) {
+            $data = $hook->reflect($id, $data, $reflector);
+        }
+
+        return $data;
     }
 }
