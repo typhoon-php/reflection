@@ -7,7 +7,6 @@ namespace Typhoon\Reflection\Internal;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
-use Typhoon\Reflection\Reflector;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -16,7 +15,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class CleanUp implements ReflectionHook
 {
-    public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         return $data->without(
             Data::TypeContext(),

@@ -7,7 +7,6 @@ namespace Typhoon\Reflection\Internal;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
-use Typhoon\Reflection\Reflector;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -23,10 +22,10 @@ final class ReflectionHooks implements ReflectionHook
         private readonly array $hooks,
     ) {}
 
-    public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         foreach ($this->hooks as $hook) {
-            $data = $hook->reflect($id, $data, $reflector);
+            $data = $hook->reflect($id, $data);
         }
 
         return $data;

@@ -41,7 +41,6 @@ use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TraitMethodAlias;
 use Typhoon\Reflection\Internal\UsedName;
 use Typhoon\Reflection\Internal\Visibility;
-use Typhoon\Reflection\Reflector;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 use Typhoon\TypeContext\TypeContext;
@@ -57,7 +56,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         private ExpressionCompiler $expressionCompiler = new ExpressionCompiler(),
     ) {}
 
-    public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         $node = $data[Data::Node()] ?? null;
 

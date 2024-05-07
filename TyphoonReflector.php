@@ -123,7 +123,7 @@ final class TyphoonReflector implements Reflector
 
         $id = classId($name);
         $data = $resolvedResource->baseData->with(Data::Node(), $finder->node);
-        $data = $this->buildHooks()->reflect($id, $data, $this);
+        $data = $this->buildHooks()->reflect($id, $data);
 
         /** @var ClassReflection<T> */
         return new ClassReflection($id, $data, $this);
@@ -233,7 +233,7 @@ final class TyphoonReflector implements Reflector
 
         foreach ($nodes as $declarationId => $node) {
             $data = $baseData->with(Data::Node(), $node);
-            $this->storage->stageForCommit($declarationId, fn(): TypedMap => $hook->reflect($declarationId, $data, $this));
+            $this->storage->stageForCommit($declarationId, static fn(): TypedMap => $hook->reflect($declarationId, $data));
         }
     }
 
@@ -247,7 +247,7 @@ final class TyphoonReflector implements Reflector
             ...$hooks,
             new ResolveAttributesRepeated(),
             new ResolveParametersIndex(),
-            new ResolveClassInheritance(),
+            new ResolveClassInheritance($this),
             new CleanUp(),
         ]);
     }
