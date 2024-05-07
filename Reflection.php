@@ -37,7 +37,7 @@ abstract class Reflection
     {
         return $this->attributes ??= array_map(
             fn(TypedMap $data): AttributeReflection => new AttributeReflection(
-                declaredAt: $this->id,
+                targetId: $this->id,
                 data: $data,
                 reflector: $this->reflector,
             ),

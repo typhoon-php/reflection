@@ -4,35 +4,40 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
+use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
+use PhpParser\ParserFactory;
 use Psr\SimpleCache\CacheInterface;
-use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\DeclarationIdMap;
 use Typhoon\DeclarationId\MethodId;
+use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Exception\FileNotReadable;
 use Typhoon\Reflection\Internal\CleanUp;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataStorage;
-use Typhoon\Reflection\Internal\PhpParserReflector\FindAnonymousClassVisitor;
-use Typhoon\Reflection\Internal\PhpParserReflector\PhpParser;
+use Typhoon\Reflection\Internal\PhpParserReflector\FindTopLevelDeclarationsVisitor;
+use Typhoon\Reflection\Internal\PhpParserReflector\FixNodeStartLineVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\ReflectPhpParserNode;
-use Typhoon\Reflection\Internal\PhpParserReflector\SymbolReflectingVisitor;
+use Typhoon\Reflection\Internal\PhpParserReflector\SetTypeContextVisitor;
+use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\ResolveClassInheritance;
+use Typhoon\Reflection\Internal\ResolvedResource;
 use Typhoon\Reflection\Internal\ResolveParametersIndex;
-use Typhoon\Reflection\Locator\AnonymousClassLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
-use Typhoon\TypeContext\NodeVisitor\TypeContextVisitor;
+use Typhoon\TypeContext\TypeContextVisitor;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\classId;
 
@@ -42,7 +47,7 @@ use function Typhoon\DeclarationId\classId;
 final class TyphoonReflector implements Reflector
 {
     private function __construct(
-        private readonly PhpParser $phpParser,
+        private readonly Parser $phpParser,
         private readonly Locator $locator,
         private readonly DataStorage $storage,
     ) {}
@@ -56,7 +61,7 @@ final class TyphoonReflector implements Reflector
         ?Parser $phpParser = null,
     ): self {
         return new self(
-            phpParser: new PhpParser($phpParser),
+            phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
             locator: new Locators($locators ?? self::defaultLocators()),
             storage: new DataStorage($cache),
         );
@@ -79,7 +84,6 @@ final class TyphoonReflector implements Reflector
 
         $locators[] = new NativeReflectionClassLocator();
         $locators[] = new NativeReflectionFunctionLocator();
-        $locators[] = new AnonymousClassLocator();
 
         return $locators;
     }
@@ -95,31 +99,50 @@ final class TyphoonReflector implements Reflector
         return $this->reflect(classId($nameOrObject));
     }
 
+    /**
+     * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, UndefinedMethod
+     */
     public function reflect(DeclarationId $id): Reflection
     {
         return match (true) {
             $id instanceof ClassId => new ClassReflection(
                 id: $id,
-                data: $this->doReflect($id) ?? throw new ClassDoesNotExist($id->name),
-                reflector: $this,
-            ),
-            $id instanceof AnonymousClassId => new ClassReflection(
-                id: $id,
-                data: $this->doReflectAnonymous($id) ?? throw new ClassDoesNotExist($id->name),
+                data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name),
                 reflector: $this,
             ),
             $id instanceof PropertyId => $this->reflect($id->class)->property($id->name) ?? throw new \LogicException('Does not exist'),
             $id instanceof ClassConstantId => $this->reflect($id->class)->constant($id->name) ?? throw new \LogicException('Does not exist'),
             $id instanceof MethodId => $this->reflect($id->class)->method($id->name) ?? throw new \LogicException('Does not exist'),
+            $id instanceof ParameterId => $this->reflect($id->function)->parameter($id->name) ?? throw new \LogicException('Does not exist'),
         };
     }
 
-    private function doReflect(ClassId $id): ?TypedMap
+    /**
+     * @return DeclarationIdMap<ClassId|AnonymousClassId, ClassReflection>
+     */
+    public function reflectCode(string $code, TypedMap $baseData = new TypedMap()): DeclarationIdMap
     {
-        $data = $this->storage->get($id);
+        $nodes = $this->parse($code);
+        $this->stageForCommit($nodes, $baseData);
 
-        if ($data !== null) {
-            return $data;
+        /** @var DeclarationIdMap<ClassId|AnonymousClassId, ClassReflection> */
+        $reflections = new DeclarationIdMap();
+
+        foreach ($nodes as $declarationId => $_) {
+            $reflections = $reflections->with($declarationId, $this->reflect($declarationId));
+        }
+
+        $this->storage->rollback();
+
+        return $reflections;
+    }
+
+    private function reflectData(ClassId $id): ?TypedMap
+    {
+        $cachedData = $this->storage->get($id);
+
+        if ($cachedData !== null) {
+            return $cachedData;
         }
 
         $resource = $this->locator->locate($id);
@@ -128,24 +151,10 @@ final class TyphoonReflector implements Reflector
             return null;
         }
 
-        $typeContextVisitor = new TypeContextVisitor($resource->data[Data::File()] ?? null);
-        PhpParser::traverse($this->phpParser->parse($resource->code), [
-            $typeContextVisitor,
-            new SymbolReflectingVisitor(
-                code: $resource->code,
-                data: $resource->data,
-                typeContextProvider: $typeContextVisitor,
-                storage: $this->storage,
-                hooks: [
-                    new ReflectPhpParserNode(),
-                    ...$resource->hooks,
-                    new ResolveAttributesRepeated(),
-                    new ResolveParametersIndex(),
-                    new ResolveClassInheritance($this),
-                    new CleanUp(),
-                ],
-            ),
-        ]);
+        $resolvedResource = ResolvedResource::resolve($resource);
+
+        $nodes = $this->parse($resolvedResource->code);
+        $this->stageForCommit($nodes, $resolvedResource->baseData, $resolvedResource->hooks);
 
         $data = $this->storage->get($id);
 
@@ -154,47 +163,51 @@ final class TyphoonReflector implements Reflector
         return $data;
     }
 
-    private function doReflectAnonymous(AnonymousClassId $id): ?TypedMap
+    /**
+     * @return DeclarationIdMap<ClassId|AnonymousClassId, ClassLike>
+     */
+    private function parse(string $code): DeclarationIdMap
     {
-        $data = $this->storage->get($id);
+        $nameResolver = new NameResolver();
+        $typeContextVisitor = new TypeContextVisitor($nameResolver->getNameContext());
+        $finder = new FindTopLevelDeclarationsVisitor($typeContextVisitor);
 
-        if ($data !== null) {
-            return $data;
-        }
+        $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
+        $traverser->addVisitor($nameResolver);
+        $traverser->addVisitor($typeContextVisitor);
+        $traverser->addVisitor(new SetTypeContextVisitor($typeContextVisitor));
+        $traverser->addVisitor($finder);
+        $traverser->traverse($nodes);
 
-        $code = @file_get_contents($id->file);
+        return $finder->nodes;
+    }
 
-        if ($code === false) {
-            throw new FileNotReadable($id->file);
-        }
-
-        $typeContextVisitor = new TypeContextVisitor(file: $id->file);
-        $finder = new FindAnonymousClassVisitor($typeContextVisitor, $id);
-
-        PhpParser::traverse($this->phpParser->parse($code), [$typeContextVisitor, $finder]);
-
-        if ($finder->data === null) {
-            return null;
-        }
-
-        $data = $finder->data
-            ->with(Data::File(), $id->file)
-            ->with(Data::UnresolvedChangeDetectors(), [FileChangeDetector::fromFileAndContents($id->file, $code)]);
-
+    /**
+     * @param DeclarationIdMap<ClassId|AnonymousClassId, ClassLike> $nodes
+     * @param list<ReflectionHook> $hooks
+     */
+    private function stageForCommit(DeclarationIdMap $nodes, TypedMap $baseData = new TypedMap(), array $hooks = []): void
+    {
         $hooks = [
             new ReflectPhpParserNode(),
+            ...$hooks,
             new ResolveAttributesRepeated(),
             new ResolveParametersIndex(),
             new ResolveClassInheritance($this),
             new CleanUp(),
         ];
 
-        foreach ($hooks as $hook) {
-            $data = $hook->reflect($id, $data);
+        foreach ($nodes as $declarationId => $node) {
+            $data = $baseData->with(Data::Node(), $node);
+            $this->storage->stageForCommit($declarationId, static function () use ($declarationId, $data, $hooks): TypedMap {
+                foreach ($hooks as $hook) {
+                    $data = $hook->reflect($declarationId, $data);
+                }
+
+                return $data;
+            });
         }
-
-        $this->storage->save($id, $data);
-
-        return $data;
     }
 }

@@ -11,7 +11,12 @@ use Typhoon\Reflection\Reflector;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-interface Expression
+enum MagicLine implements Expression
 {
-    public function evaluate(Reflection $reflection, Reflector $reflector): mixed;
+    case Constant;
+
+    public function evaluate(Reflection $reflection, Reflector $reflector): int
+    {
+        return $reflection->startLine() ?? 0;
+    }
 }

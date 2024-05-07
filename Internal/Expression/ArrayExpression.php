@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
+use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
 
 /**
@@ -19,12 +20,12 @@ final class ArrayExpression implements Expression
         private readonly array $elements,
     ) {}
 
-    public function evaluate(Reflector $reflector): mixed
+    public function evaluate(Reflection $reflection, Reflector $reflector): mixed
     {
         $array = [];
 
         foreach ($this->elements as $element) {
-            $value = $element->value->evaluate($reflector);
+            $value = $element->value->evaluate($reflection, $reflector);
 
             if ($element->key === null) {
                 $array[] = $value;
@@ -40,7 +41,7 @@ final class ArrayExpression implements Expression
             }
 
             /** @psalm-suppress MixedArrayOffset */
-            $array[$element->key->evaluate($reflector)] = $value;
+            $array[$element->key->evaluate($reflection, $reflector)] = $value;
         }
 
         return $array;

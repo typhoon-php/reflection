@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Locator;
 
 use Composer\Autoload\ClassLoader;
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\FunctionId;
@@ -22,7 +21,7 @@ final class ComposerLocator implements Locator
         return class_exists(ClassLoader::class);
     }
 
-    public function locate(ConstantId|FunctionId|ClassId|AnonymousClassId $id): ?Resource
+    public function locate(ConstantId|FunctionId|ClassId $id): ?Resource
     {
         if ($id instanceof FunctionId) {
             return null;
@@ -32,9 +31,7 @@ final class ComposerLocator implements Locator
             $file = $loader->findFile($id->name);
 
             if ($file !== false) {
-                \assert($file !== '');
-
-                return Resource::fromFile($file);
+                return new Resource($file);
             }
         }
 

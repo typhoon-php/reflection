@@ -16,10 +16,10 @@ final class FixNodeStartLineVisitor extends NodeVisitorAbstract
     private const START_LINE_ATTRIBUTE = 'startLine';
 
     /**
-     * @param string|array<\PhpToken> $code
+     * @param array<\PhpToken> $tokens
      */
     public function __construct(
-        private string|array $code,
+        private readonly array $tokens,
     ) {}
 
     public function enterNode(Node $node): ?int
@@ -50,11 +50,7 @@ final class FixNodeStartLineVisitor extends NodeVisitorAbstract
      */
     private function findFirstTokenLine(int $offset, array $tokenKinds): int
     {
-        if (\is_string($this->code)) {
-            $this->code = \PhpToken::tokenize($this->code);
-        }
-
-        foreach ($this->code as $token) {
+        foreach ($this->tokens as $token) {
             if ($token->pos >= $offset && $token->is($tokenKinds)) {
                 return $token->line;
             }

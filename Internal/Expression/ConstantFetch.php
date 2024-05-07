@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
+use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
 
 /**
@@ -13,20 +14,20 @@ use Typhoon\Reflection\Reflector;
 final class ConstantFetch implements Expression
 {
     /**
-     * @param non-empty-string $name
+     * @param non-empty-string $namespacedName
      */
     public function __construct(
-        private readonly string $name,
-        private readonly ?string $global,
+        private readonly string $namespacedName,
+        private readonly ?string $globalName,
     ) {}
 
-    public function evaluate(Reflector $reflector): mixed
+    public function evaluate(Reflection $reflection, Reflector $reflector): mixed
     {
-        // TODO use constant reflection
-        if ($this->global === null || \defined($this->name)) {
-            return \constant($this->name);
+        // todo via reflection
+        if ($this->globalName === null || \defined($this->namespacedName)) {
+            return \constant($this->namespacedName);
         }
 
-        return \constant($this->global);
+        return \constant($this->globalName);
     }
 }

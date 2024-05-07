@@ -17,23 +17,27 @@ use function Typhoon\DeclarationId\classId;
  */
 final class AttributeReflection
 {
-    public function __construct(
-        public readonly DeclarationId $declaredAt,
-        private readonly TypedMap $data,
-        private readonly Reflector $reflector,
-    ) {}
-
     /**
-     * @return non-empty-string
+     * @var non-empty-string
      */
-    public function className(): string
-    {
-        return $this->data[Data::AttributeClass()];
+    public readonly string $name;
+
+    public function __construct(
+        public readonly DeclarationId $targetId,
+        public readonly TypedMap $data,
+        private readonly Reflector $reflector,
+    ) {
+        $this->name = $this->data[Data::AttributeClass()];
     }
 
     public function class(): ClassReflection
     {
-        return $this->reflector->reflect(classId($this->className()));
+        return $this->reflector->reflect(classId($this->name));
+    }
+
+    public function target(): Reflection
+    {
+        return $this->reflector->reflect($this->targetId);
     }
 
     public function isRepeated(): bool
@@ -44,7 +48,7 @@ final class AttributeReflection
     public function arguments(): array
     {
         return array_map(
-            fn(Expression $expression): mixed => $expression->evaluate($this->reflector),
+            fn(Expression $expression): mixed => $expression->evaluate($this->target(), $this->reflector),
             $this->data[Data::ArgumentExpressions()],
         );
     }
@@ -52,7 +56,7 @@ final class AttributeReflection
     public function newInstance(): object
     {
         /** @psalm-suppress InvalidStringClass */
-        return new ($this->className())(...$this->arguments());
+        return new ($this->name)(...$this->arguments());
     }
 
     public function toNative(): \ReflectionAttribute

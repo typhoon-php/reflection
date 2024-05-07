@@ -43,7 +43,12 @@ final class ClassConstantReflection extends Reflection
 
     public function value(): mixed
     {
-        return $this->data[Data::ValueExpression()]->evaluate($this->reflector);
+        // TODO is it correct?
+        if ($this->isEnumCase()) {
+            return \constant($this->id->class->name . '::' . $this->name);
+        }
+
+        return $this->data[Data::ValueExpression()]->evaluate($this, $this->reflector);
     }
 
     public function isPrivate(): bool
@@ -82,7 +87,7 @@ final class ClassConstantReflection extends Reflection
      */
     public function backingValue(): int|string
     {
-        return $this->data[Data::BackingValueExpression()]->evaluate($this->reflector);
+        return $this->data[Data::BackingValueExpression()]->evaluate($this, $this->reflector);
     }
 
     /**

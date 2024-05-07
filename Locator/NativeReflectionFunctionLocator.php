@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Locator;
 
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\FunctionId;
@@ -18,7 +17,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class NativeReflectionFunctionLocator implements Locator
 {
-    public function locate(ConstantId|FunctionId|ClassId|AnonymousClassId $id): ?Resource
+    public function locate(ConstantId|FunctionId|ClassId $id): ?Resource
     {
         if (!$id instanceof FunctionId) {
             return null;
@@ -38,12 +37,12 @@ final class NativeReflectionFunctionLocator implements Locator
         }
 
         $extension = $reflection->getExtensionName();
-        $data = new TypedMap();
+        $baseData = new TypedMap();
 
         if ($extension !== false) {
-            $data = $data->with(Data::Extension(), $extension);
+            $baseData = $baseData->with(Data::Extension(), $extension);
         }
 
-        return Resource::fromFile($file, $data);
+        return new Resource($file, $baseData);
     }
 }

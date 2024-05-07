@@ -40,7 +40,7 @@ final class AttributeAdapter extends \ReflectionAttribute
             } else {
                 $attributes = array_values(array_filter(
                     $attributes,
-                    static fn(AttributeReflection $attribute): bool => $attribute->className() === $name,
+                    static fn(AttributeReflection $attribute): bool => $attribute->name === $name,
                 ));
             }
         }
@@ -64,13 +64,13 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function getName(): string
     {
-        return $this->reflection->className();
+        return $this->reflection->name;
     }
 
     public function getTarget(): int
     {
         /** @psalm-suppress ParadoxicalCondition */
-        return match ($this->reflection->declaredAt::class) {
+        return match ($this->reflection->targetId::class) {
             FunctionId::class => \Attribute::TARGET_FUNCTION,
             ParameterId::class => \Attribute::TARGET_PARAMETER,
             ClassId::class, AnonymousClassId::class => \Attribute::TARGET_CLASS,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\FunctionId;
@@ -14,5 +13,5 @@ use Typhoon\DeclarationId\FunctionId;
  */
 interface Locator
 {
-    public function locate(ConstantId|FunctionId|ClassId|AnonymousClassId $id): ?Resource;
+    public function locate(ConstantId|FunctionId|ClassId $id): ?Resource;
 }

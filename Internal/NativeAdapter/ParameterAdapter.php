@@ -104,14 +104,25 @@ final class ParameterAdapter extends \ReflectionParameter
     public function getClass(): ?\ReflectionClass
     {
         return $this->reflection->type(Kind::Native)?->accept(
-            new /** @extends DefaultTypeVisitor<?ClassReflection> */ class ($this->reflector) extends DefaultTypeVisitor {
+            new /** @extends DefaultTypeVisitor<?ClassReflection> */ class ($this->reflection, $this->reflector) extends DefaultTypeVisitor {
                 public function __construct(
+                    private readonly ParameterReflection $reflection,
                     private readonly Reflector $reflector,
                 ) {}
 
                 public function namedObject(Type $self, ClassId|AnonymousClassId $class, array $arguments): mixed
                 {
                     return $this->reflector->reflect($class);
+                }
+
+                public function self(Type $self, null|ClassId|AnonymousClassId $resolvedClass, array $arguments): mixed
+                {
+                    return $this->reflection->class();
+                }
+
+                public function parent(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+                {
+                    return $this->reflection->class()?->parent();
                 }
 
                 public function closure(Type $self, array $parameters, Type $return): mixed

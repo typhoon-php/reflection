@@ -74,7 +74,7 @@ final class ParameterReflection extends Reflection
 
     public function defaultValue(): mixed
     {
-        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this->reflector);
+        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this, $this->reflector);
     }
 
     public function isOptional(): bool

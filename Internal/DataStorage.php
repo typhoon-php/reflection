@@ -48,15 +48,10 @@ final class DataStorage
         return null;
     }
 
-    public function save(DeclarationId $id, TypedMap $data): void
-    {
-        $this->cache->set(self::key($id), new DataCacheItem($data));
-    }
-
     /**
      * @param \Closure(): TypedMap $data
      */
-    public function saveDeferred(DeclarationId $id, \Closure $data): void
+    public function stageForCommit(DeclarationId $id, \Closure $data): void
     {
         $this->deferred[self::key($id)] = new DataCacheItem($data);
     }
@@ -68,6 +63,11 @@ final class DataStorage
         }
 
         $this->cache->setMultiple($this->deferred);
+        $this->deferred = [];
+    }
+
+    public function rollback(): void
+    {
         $this->deferred = [];
     }
 }

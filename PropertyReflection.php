@@ -31,6 +31,15 @@ final class PropertyReflection extends Reflection
         parent::__construct($id, $data, $reflector);
     }
 
+    public function file(): ?string
+    {
+        if ($this->data[Data::WrittenInC()] ?? false) {
+            return null;
+        }
+
+        return $this->declaringClass()->file();
+    }
+
     public function class(): ClassReflection
     {
         return $this->reflector->reflect($this->id->class);
@@ -53,7 +62,7 @@ final class PropertyReflection extends Reflection
 
     public function defaultValue(): mixed
     {
-        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this->reflector);
+        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this, $this->reflector);
     }
 
     public function hasDefaultValue(): bool

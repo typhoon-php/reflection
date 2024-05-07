@@ -12,7 +12,6 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VariadicPlaceholder;
-use Typhoon\TypeContext\TypeContext;
 
 /**
  * @internal
@@ -20,15 +19,6 @@ use Typhoon\TypeContext\TypeContext;
  */
 final class ExpressionCompiler
 {
-    public function __construct(
-        private readonly TypeContext $typeContext = new TypeContext(),
-        private readonly ?string $file = null,
-        private readonly ?string $function = null,
-        private readonly ?string $class = null,
-        private readonly bool $trait = false,
-        private readonly ?string $method = null,
-    ) {}
-
     /**
      * @return ($expr is null ? null : Expression)
      */
@@ -40,14 +30,14 @@ final class ExpressionCompiler
             $expr instanceof Scalar\LNumber,
             $expr instanceof Scalar\DNumber => new Value($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
-            $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
-            $expr instanceof Scalar\MagicConst\File => new Value($this->file ?? ''),
-            $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file ?? '')),
-            $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->typeContext->namespace?->toStringWithoutSlash() ?? ''),
-            $expr instanceof Scalar\MagicConst\Function_ => new Value($this->function ?? ''),
-            $expr instanceof Scalar\MagicConst\Class_ => new Value($this->class ?? ''),
-            $expr instanceof Scalar\MagicConst\Trait_ => new Value($this->trait ? $this->class : ''),
-            $expr instanceof Scalar\MagicConst\Method => new Value($this->method ?? ''),
+            $expr instanceof Scalar\MagicConst\Line => MagicLine::Constant,
+            $expr instanceof Scalar\MagicConst\File => MagicFile::Constant,
+            $expr instanceof Scalar\MagicConst\Dir => MagicDir::Constant,
+            $expr instanceof Scalar\MagicConst\Namespace_ => MagicNamespace::Constant,
+            $expr instanceof Scalar\MagicConst\Function_ => MagicFunction::Constant,
+            $expr instanceof Scalar\MagicConst\Class_ => MagicClass::Constant,
+            $expr instanceof Scalar\MagicConst\Trait_ => MagicTrait::Constant,
+            $expr instanceof Scalar\MagicConst\Method => MagicMethod::Constant,
             $expr instanceof Coalesce && $expr->left instanceof Expr\ArrayDimFetch => new ArrayFetchCoalesce(
                 array: $this->compile($expr->left->var),
                 key: $this->compile($expr->left->dim ?? throw new \LogicException()),
@@ -100,11 +90,10 @@ final class ExpressionCompiler
             return new Value(false);
         }
 
-        $preResolved = $this->typeContext->preResolveConstantName($name);
-
+        // TODO
         return new ConstantFetch(
-            name: $preResolved->name->toStringWithoutSlash(),
-            global: $preResolved->global?->toStringWithoutSlash(),
+            namespacedName: $name->toString(),
+            globalName: $name->toString(),
         );
     }
 
@@ -132,10 +121,18 @@ final class ExpressionCompiler
         }
 
         if ($name instanceof Name) {
-            return new Value($this->typeContext->resolveClassName($name)->toString());
+            if ($name->isSpecialClassName()) {
+                return match ($name->toLowerString()) {
+                    'self' => MagicClass::Constant,
+                    'parent' => ParentClass::Instance,
+                    'static' => throw new \LogicException('static'),
+                };
+            }
+
+            return new Value($name->toString());
         }
 
-        throw new \LogicException();
+        throw new \LogicException('anonymous');
     }
 
     private function compileIdentifier(Expr|Identifier $name): Expression
