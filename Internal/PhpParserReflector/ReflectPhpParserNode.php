@@ -92,7 +92,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::NativeReadonly(), $node->isReadonly())
                 ->with(Data::NativeFinal(), $node->isFinal())
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
-                ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties(), $node->isReadonly()))
+                ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties()))
                 ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
         }
 
@@ -101,7 +101,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::ClassKind(), ClassKind::Interface)
                 ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->extends))
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
-                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods(), abstract: true));
+                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
         }
 
         if ($node instanceof Enum_) {
@@ -320,7 +320,7 @@ final class ReflectPhpParserNode implements ReflectionHook
      * @param array<Property> $nodes
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectProperties(TypeContext $typeContext, array $nodes, bool $readonly = false): array
+    private function reflectProperties(TypeContext $typeContext, array $nodes): array
     {
         $properties = [];
 
@@ -329,7 +329,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->reflectNode($node)
                 ->with(Data::Attributes(), $this->reflectAttributes($node->attrGroups))
                 ->with(Data::Static(), $node->isStatic())
-                ->with(Data::NativeReadonly(), $readonly || $node->isReadonly())
+                ->with(Data::NativeReadonly(), $node->isReadonly())
                 ->with(Data::NativeType(), $this->reflectType($typeContext, $node->type))
                 ->with(Data::Visibility(), $this->reflectVisibility($node->flags));
 
@@ -351,7 +351,7 @@ final class ReflectPhpParserNode implements ReflectionHook
      * @param array<ClassMethod> $nodes
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectMethods(TypeContext $typeContext, array $nodes, bool $abstract = false): array
+    private function reflectMethods(TypeContext $typeContext, array $nodes): array
     {
         $methods = [];
 
@@ -359,7 +359,7 @@ final class ReflectPhpParserNode implements ReflectionHook
             $methods[$node->name->name] = $this->reflectNode($node)
                 ->with(Data::Static(), $node->isStatic())
                 ->with(Data::NativeFinal(), $node->isFinal())
-                ->with(Data::Abstract(), $abstract || $node->isAbstract())
+                ->with(Data::Abstract(), $node->isAbstract())
                 ->with(Data::NativeType(), $this->reflectType($typeContext, $node->returnType))
                 ->with(Data::Visibility(), $this->reflectVisibility($node->flags))
                 ->with(Data::ByReference(), $node->byRef)
