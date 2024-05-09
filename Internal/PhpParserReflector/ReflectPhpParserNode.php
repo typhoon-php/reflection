@@ -109,7 +109,7 @@ final class ReflectPhpParserNode implements ReflectionHook
 
             return $data
                 ->with(Data::ClassKind(), ClassKind::Enum)
-                ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->implements, backedEnum: $scalarType !== null))
+                ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->implements))
                 ->withAllFrom($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal(), true)
                 ->with(Data::NativeType(), $scalarType)
@@ -120,11 +120,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                         static fn(Node $node): bool => $node instanceof EnumCase,
                     )),
                 ])
-                ->with(Data::Properties(), $this->reflectEnumProperties($scalarType))
-                ->with(Data::Methods(), [
-                    ...$this->reflectMethods($typeContext, $node->getMethods()),
-                    ...$this->reflectEnumMethods($typeContext, $scalarType),
-                ]);
+                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
         }
 
         if ($node instanceof Trait_) {
@@ -155,20 +151,12 @@ final class ReflectPhpParserNode implements ReflectionHook
      * @param array<Name> $names
      * @return list<InheritedName>
      */
-    private function reflectInterfaces(array $names, ?bool $backedEnum = null): array
+    private function reflectInterfaces(array $names): array
     {
         $interfaces = [];
 
         foreach ($names as $name) {
             $interfaces[] = new InheritedName($name->toString());
-        }
-
-        if ($backedEnum !== null) {
-            $interfaces[] = new InheritedName(\UnitEnum::class);
-
-            if ($backedEnum) {
-                $interfaces[] = new InheritedName(\BackedEnum::class);
-            }
         }
 
         return $interfaces;
@@ -360,28 +348,6 @@ final class ReflectPhpParserNode implements ReflectionHook
     }
 
     /**
-     * @return array<non-empty-string, TypedMap>
-     */
-    private function reflectEnumProperties(?Type $enumType): array
-    {
-        $properties = [
-            'name' => (new TypedMap())
-                ->with(Data::NativeReadonly(), true)
-                ->with(Data::NativeType(), types::string)
-                ->with(Data::Visibility(), Visibility::Public),
-        ];
-
-        if ($enumType !== null) {
-            $properties['value'] = (new TypedMap())
-                ->with(Data::NativeReadonly(), true)
-                ->with(Data::NativeType(), $enumType)
-                ->with(Data::Visibility(), Visibility::Public);
-        }
-
-        return $properties;
-    }
-
-    /**
      * @param array<ClassMethod> $nodes
      * @return array<non-empty-string, TypedMap>
      */
@@ -400,37 +366,6 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::Generator(), IsGeneratorChecker::check($node))
                 ->with(Data::Attributes(), $this->reflectAttributes($node->attrGroups))
                 ->with(Data::Parameters(), $this->reflectParameters($typeContext, $node->params));
-        }
-
-        return $methods;
-    }
-
-    /**
-     * @return array<non-empty-string, TypedMap>
-     */
-    private function reflectEnumMethods(TypeContext $typeContext, ?Type $scalarType = null): array
-    {
-        $class = $typeContext->self;
-        \assert($class instanceof ClassId);
-
-        $methods = [];
-        $methods['cases'] = (new TypedMap())
-            ->with(Data::Static(), true)
-            ->with(Data::NativeType(), types::array)
-            ->with(Data::AnnotatedType(), types::list(types::static($class)))
-            ->with(Data::Visibility(), Visibility::Public)
-            ->with(Data::WrittenInC(), true);
-
-        if ($scalarType !== null) {
-            $methods['from'] = $methods['cases']
-                ->with(Data::NativeType(), types::static($class))
-                ->with(Data::Parameters(), [
-                    'value' => (new TypedMap())
-                        ->with(Data::NativeType(), types::arrayKey)
-                        ->with(Data::AnnotatedType(), $scalarType),
-                ]);
-            $methods['tryFrom'] = $methods['from']
-                ->with(Data::NativeType(), types::nullable(types::static($class)));
         }
 
         return $methods;

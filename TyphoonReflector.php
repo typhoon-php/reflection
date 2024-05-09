@@ -23,6 +23,7 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
+use Typhoon\Reflection\Internal\CompleteEnum;
 use Typhoon\Reflection\Internal\CleanUp;
 use Typhoon\Reflection\Internal\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\Data;
@@ -247,6 +248,7 @@ final class TyphoonReflector implements Reflector
             new ReflectPhpParserNode(),
             ...$hooks,
             new CopyPromotedParametersToProperties(),
+            new CompleteEnum(),
             new ResolveAttributesRepeated(),
             new ResolveParametersIndex(),
             new ResolveClassInheritance($this),
