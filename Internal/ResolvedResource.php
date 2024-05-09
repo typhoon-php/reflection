@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal;
 
 use Typhoon\ChangeDetector\FileChangeDetector;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\Reflection\Exception\FileNotReadable;
 use Typhoon\Reflection\Resource;
 use Typhoon\TypedMap\TypedMap;
@@ -16,28 +17,22 @@ use Typhoon\TypedMap\TypedMap;
 final class ResolvedResource
 {
     /**
+     * @param non-empty-string $file
      * @param list<ReflectionHook> $hooks
      */
     private function __construct(
+        public readonly string $file,
         public readonly string $code,
         public readonly TypedMap $baseData,
         public readonly array $hooks = [],
     ) {}
 
-    public static function fromAnonymousClassName(string $name): self
+    public static function fromAnonymousClassId(AnonymousClassId $id): self
     {
-        $matched = preg_match('/anonymous\x00(.+):(\d+)/', $name, $matches) === 1;
-        \assert($matched, sprintf('Invalid anonymous class name "%s"', $name));
-
-        $code = self::readFile($matches[1]);
-        $line = (int) $matches[2];
-        \assert($line > 0, 'Anonymous class line must be a positive int');
-
         return new self(
-            code: $code,
-            baseData: (new TypedMap())
-                ->with(Data::StartLine(), $line)
-                ->with(Data::File(), $matches[1]),
+            file: $id->file,
+            code: self::readFile($id->file),
+            baseData: (new TypedMap())->with(Data::File(), $id->file),
         );
     }
 
@@ -56,7 +51,12 @@ final class ResolvedResource
             ]);
         }
 
-        return new self($code, $baseData, $resource->hooks);
+        return new self(
+            file: $resource->file,
+            code: $code,
+            baseData: $baseData,
+            hooks: $resource->hooks,
+        );
     }
 
     /**

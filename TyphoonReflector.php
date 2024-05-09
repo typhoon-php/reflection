@@ -30,7 +30,6 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataStorage;
 use Typhoon\Reflection\Internal\EnsureInterfaceMethodsAreAbstract;
 use Typhoon\Reflection\Internal\EnsureReadonlyClassPropertiesAreReadonly;
-use Typhoon\Reflection\Internal\PhpParserReflector\FindAnonymousClassVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\FindTopLevelDeclarationsVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\FixNodeStartLineVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\ReflectPhpParserNode;
@@ -104,33 +103,8 @@ final class TyphoonReflector implements Reflector
      */
     public function reflectClass(string|object $nameOrObject): ClassReflection
     {
-        $name = \is_object($nameOrObject) ? $nameOrObject::class : $nameOrObject;
-
-        if (!str_contains($name, '@')) {
-            /** @var ClassReflection<T> */
-            return $this->reflect(classId($nameOrObject));
-        }
-
-        \assert(class_exists($name, false), 'Anonymous class must exist');
-
-        $resolvedResource = ResolvedResource::fromAnonymousClassName($name);
-
-        $line = $resolvedResource->baseData[Data::StartLine()];
-        \assert($line > 0);
-
-        $finder = new FindAnonymousClassVisitor($line);
-        $this->traverse($this->parse($resolvedResource->code), $finder);
-
-        if ($finder->node === null) {
-            throw new \LogicException('No anonymous class!');
-        }
-
-        $id = classId($name);
-        $data = $resolvedResource->baseData->with(Data::Node(), $finder->node);
-        $data = $this->buildHooks()->reflect($id, $data);
-
         /** @var ClassReflection<T> */
-        return new ClassReflection($id, $data, $this);
+        return $this->reflect(classId($nameOrObject));
     }
 
     /**
@@ -139,7 +113,7 @@ final class TyphoonReflector implements Reflector
     public function reflect(DeclarationId $id): Reflection
     {
         return match (true) {
-            $id instanceof ClassId => new ClassReflection(
+            $id instanceof ClassId, $id instanceof AnonymousClassId => new ClassReflection(
                 id: $id,
                 data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name),
                 reflector: $this,
@@ -148,7 +122,6 @@ final class TyphoonReflector implements Reflector
             $id instanceof ClassConstantId => $this->reflect($id->class)->constant($id->name) ?? throw new \LogicException('Does not exist'),
             $id instanceof MethodId => $this->reflect($id->class)->method($id->name) ?? throw new \LogicException('Does not exist'),
             $id instanceof ParameterId => $this->reflect($id->function)->parameter($id->name) ?? throw new \LogicException('Does not exist'),
-            $id instanceof AnonymousClassId => $this->reflectClass($id->name),
             default => throw new \LogicException($id->toString() . ' not supported yet'),
         };
     }
@@ -174,7 +147,7 @@ final class TyphoonReflector implements Reflector
         return $reflections;
     }
 
-    private function reflectData(ClassId $id): ?TypedMap
+    private function reflectData(ClassId|AnonymousClassId $id): ?TypedMap
     {
         $cachedData = $this->storage->get($id);
 
@@ -182,16 +155,20 @@ final class TyphoonReflector implements Reflector
             return $cachedData;
         }
 
-        $resource = $this->locator->locate($id);
+        if ($id instanceof AnonymousClassId) {
+            $resolvedResource = ResolvedResource::fromAnonymousClassId($id);
+        } else {
+            $resource = $this->locator->locate($id);
 
-        if ($resource === null) {
-            return null;
+            if ($resource === null) {
+                return null;
+            }
+
+            $resolvedResource = ResolvedResource::fromResource($resource);
         }
 
-        $resolvedResource = ResolvedResource::fromResource($resource);
-
         $finder = new FindTopLevelDeclarationsVisitor();
-        $this->traverse($this->parse($resolvedResource->code), $finder);
+        $this->traverse($this->parse($resolvedResource->code), $finder, $resolvedResource->file);
         $this->stageForCommit($finder->nodes, $resolvedResource->baseData, $resolvedResource->hooks);
 
         $data = $this->storage->get($id);
@@ -210,14 +187,15 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
+     * @param ?non-empty-string $file
      * @param array<Node> $nodes
      */
-    private function traverse(array $nodes, NodeVisitor $visitor): void
+    private function traverse(array $nodes, NodeVisitor $visitor, ?string $file = null): void
     {
         $traverser = new NodeTraverser();
 
         $nameResolver = new NameResolver();
-        $typeContextVisitor = new TypeContextVisitor($nameResolver->getNameContext());
+        $typeContextVisitor = new TypeContextVisitor($nameResolver->getNameContext(), file: $file);
         $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($typeContextVisitor);
@@ -228,7 +206,7 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
-     * @param DeclarationIdMap<ClassId, ClassLike> $nodes
+     * @param DeclarationIdMap<ClassId|AnonymousClassId, ClassLike> $nodes
      * @param list<ReflectionHook> $hooks
      */
     private function stageForCommit(DeclarationIdMap $nodes, TypedMap $baseData = new TypedMap(), array $hooks = []): void
