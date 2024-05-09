@@ -24,6 +24,7 @@ use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\CleanUp;
+use Typhoon\Reflection\Internal\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataStorage;
 use Typhoon\Reflection\Internal\PhpParserReflector\FindAnonymousClassVisitor;
@@ -245,6 +246,7 @@ final class TyphoonReflector implements Reflector
         return new ReflectionHooks([
             new ReflectPhpParserNode(),
             ...$hooks,
+            new CopyPromotedParametersToProperties(),
             new ResolveAttributesRepeated(),
             new ResolveParametersIndex(),
             new ResolveClassInheritance($this),

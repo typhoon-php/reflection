@@ -83,7 +83,7 @@ final class ReflectPhpParserNode implements ReflectionHook
             ->with(Data::Attributes(), $this->reflectAttributes($node->attrGroups));
 
         if ($node instanceof Class_) {
-            $data = $data
+            return $data
                 ->with(Data::ClassKind(), ClassKind::Class_)
                 ->with(Data::UnresolvedParent(), $node->extends === null ? null : new InheritedName($node->extends->toString()))
                 ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->implements))
@@ -94,8 +94,6 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties(), $node->isReadonly()))
                 ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
-
-            return $this->reflectPromotedProperties($data);
         }
 
         if ($node instanceof Interface_) {
@@ -130,14 +128,12 @@ final class ReflectPhpParserNode implements ReflectionHook
         }
 
         if ($node instanceof Trait_) {
-            $data = $data
+            return $data
                 ->with(Data::ClassKind(), ClassKind::Trait)
                 ->withAllFrom($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties()))
                 ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
-
-            return $this->reflectPromotedProperties($data);
         }
 
         return $data;
@@ -330,25 +326,6 @@ final class ReflectPhpParserNode implements ReflectionHook
         }
 
         return $cases;
-    }
-
-    private function reflectPromotedProperties(TypedMap $data): TypedMap
-    {
-        $methods = $data[Data::Methods()];
-
-        if (!isset($methods['__construct'])) {
-            return $data;
-        }
-
-        $properties = $data[Data::Properties()];
-
-        foreach ($methods['__construct'][Data::Parameters()] as $name => $parameter) {
-            if ($parameter[Data::Promoted()]) {
-                $properties[$name] = $parameter;
-            }
-        }
-
-        return $data->with(Data::Properties(), $properties);
     }
 
     /**
