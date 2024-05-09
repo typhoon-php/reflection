@@ -8,8 +8,8 @@ use PhpParser\Node;
 use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\Reflection\Internal\Expression\Expression;
+use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Type\Type;
-use Typhoon\TypeContext\TypeContext;
 use Typhoon\TypedMap\Key;
 use Typhoon\TypedMap\TypedMap;
 

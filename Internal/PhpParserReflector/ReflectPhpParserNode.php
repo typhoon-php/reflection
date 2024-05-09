@@ -39,11 +39,11 @@ use Typhoon\Reflection\Internal\Expression\Value;
 use Typhoon\Reflection\Internal\InheritedName;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TraitMethodAlias;
+use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Reflection\Internal\UsedName;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
-use Typhoon\TypeContext\TypeContext;
 use Typhoon\TypedMap\TypedMap;
 
 /**

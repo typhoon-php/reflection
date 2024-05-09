@@ -8,8 +8,8 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\NodeVisitorAbstract;
-use Typhoon\TypeContext\TypeContext;
-use Typhoon\TypeContext\TypeContextProvider;
+use Typhoon\Reflection\Internal\TypeContext\TypeContext;
+use Typhoon\Reflection\Internal\TypeContext\TypeContextProvider;
 
 /**
  * @internal

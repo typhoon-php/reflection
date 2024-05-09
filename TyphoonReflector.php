@@ -40,13 +40,12 @@ use Typhoon\Reflection\Internal\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\ResolvedResource;
 use Typhoon\Reflection\Internal\ResolveParametersIndex;
+use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
-use Typhoon\TypeContext\TypeContextVisitor;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\anonymousClassId;
 use function Typhoon\DeclarationId\classId;
 
 /**
