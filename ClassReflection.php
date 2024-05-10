@@ -10,8 +10,8 @@ use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classConstantId;
-use function Typhoon\DeclarationId\classId;
 use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\propertyId;
 
@@ -54,7 +54,7 @@ final class ClassReflection extends Reflection
     public function isInstanceOf(string|ClassId|AnonymousClassId $class): bool
     {
         if (\is_string($class)) {
-            $class = classId($class);
+            $class = anyClassId($class);
         }
 
         return $this->id->equals($class)
@@ -157,7 +157,7 @@ final class ClassReflection extends Reflection
             return null;
         }
 
-        return $this->reflector->reflect(classId($parentName));
+        return $this->reflector->reflect(anyClassId($parentName));
     }
 
     /**

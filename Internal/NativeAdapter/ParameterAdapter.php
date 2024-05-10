@@ -16,7 +16,7 @@ use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\Reflector;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\DefaultTypeVisitor;
-use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\anyClassId;
 
 /**
  * @internal
@@ -127,7 +127,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
                 public function closure(Type $self, array $parameters, Type $return): mixed
                 {
-                    return $this->reflector->reflect(classId(\Closure::class));
+                    return $this->reflector->reflect(anyClassId(\Closure::class));
                 }
 
                 protected function default(Type $self): mixed

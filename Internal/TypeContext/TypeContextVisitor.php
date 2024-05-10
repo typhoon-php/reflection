@@ -173,7 +173,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 nameContext: $this->nameContext,
                 id: $classId,
                 self: $classId,
-                parent: $this->resolveParent($node),
+                parent: $node->extends === null ? null : classId($node->extends->toString()),
                 templates: array_map(
                     static fn(string $name): TemplateId => templateId($classId, $name),
                     $typeDeclarations->templateNames,
@@ -183,7 +183,6 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
         \assert($node->namespacedName !== null);
         $classId = classId($node->namespacedName->toString());
-        \assert($classId instanceof ClassId);
         $aliases = array_map(
             static fn(string $name): AliasId => aliasId($classId, $name),
             $typeDeclarations->aliasNames,
@@ -208,7 +207,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 nameContext: $this->nameContext,
                 id: $classId,
                 self: $classId,
-                parent: $this->resolveParent($node),
+                parent: $node->extends === null ? null : classId($node->extends->toString()),
                 aliases: $aliases,
                 templates: $templates,
             );
@@ -222,17 +221,5 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             aliases: $aliases,
             templates: $templates,
         );
-    }
-
-    private function resolveParent(Class_ $node): ?ClassId
-    {
-        if ($node->extends === null) {
-            return null;
-        }
-
-        $parent = classId($node->extends->toString());
-        \assert($parent instanceof ClassId);
-
-        return $parent;
     }
 }

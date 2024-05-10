@@ -15,8 +15,8 @@ use Typhoon\Reflection\Internal\UsedName;
 use Typhoon\Reflection\Reflector;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classConstantId;
-use function Typhoon\DeclarationId\classId;
 use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\propertyId;
 
@@ -101,7 +101,7 @@ final class ClassInheritanceResolver
 
     private function oneUsed(UsedName $traitName): void
     {
-        $trait = $this->reflector->reflect(classId($traitName->name));
+        $trait = $this->reflector->reflect(anyClassId($traitName->name));
 
         $this->changeDetectors[] = $trait->changeDetector();
 
@@ -156,7 +156,7 @@ final class ClassInheritanceResolver
 
     private function oneInherited(InheritedName $className): void
     {
-        $class = $this->reflector->reflect(classId($className->name));
+        $class = $this->reflector->reflect(anyClassId($className->name));
 
         $this->changeDetectors[] = $class->changeDetector();
 

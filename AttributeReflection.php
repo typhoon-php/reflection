@@ -9,7 +9,7 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\anyClassId;
 
 /**
  * @api
@@ -32,7 +32,7 @@ final class AttributeReflection
 
     public function class(): ClassReflection
     {
-        return $this->reflector->reflect(classId($this->name));
+        return $this->reflector->reflect(anyClassId($this->name));
     }
 
     public function target(): Reflection

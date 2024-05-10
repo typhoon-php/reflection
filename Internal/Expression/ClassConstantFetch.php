@@ -11,7 +11,7 @@ use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
-use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\anyClassId;
 
 /**
  * @internal
@@ -44,7 +44,7 @@ final class ClassConstantFetch implements Expression
             };
         } else {
             /** @psalm-suppress MixedArgument */
-            $classReflection = $reflector->reflect(classId($this->class->evaluate($reflection, $reflector)));
+            $classReflection = $reflector->reflect(anyClassId($this->class->evaluate($reflection, $reflector)));
         }
 
         /** @psalm-suppress MixedArgument */

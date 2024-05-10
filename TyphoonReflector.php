@@ -46,7 +46,7 @@ use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\anyClassId;
 
 /**
  * @api
@@ -103,7 +103,7 @@ final class TyphoonReflector implements Reflector
     public function reflectClass(string|object $nameOrObject): ClassReflection
     {
         /** @var ClassReflection<T> */
-        return $this->reflect(classId($nameOrObject));
+        return $this->reflect(anyClassId($nameOrObject));
     }
 
     /**

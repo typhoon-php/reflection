@@ -9,7 +9,7 @@ use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\Reflector;
-use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\anyClassId;
 
 /**
  * @internal
@@ -149,7 +149,7 @@ final class ClassAdapter extends \ReflectionClass
         $interfaces = $this->getInterfaceNames();
 
         return array_combine($interfaces, array_map(
-            fn(string $name): \ReflectionClass => $this->reflector->reflect(classId($name))->toNative(),
+            fn(string $name): \ReflectionClass => $this->reflector->reflect(anyClassId($name))->toNative(),
             $interfaces,
         ));
     }
@@ -318,7 +318,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         if (\is_string($interface)) {
             try {
-                $interfaceId = classId($interface);
+                $interfaceId = anyClassId($interface);
             } catch (\AssertionError) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
             }
@@ -418,7 +418,7 @@ final class ClassAdapter extends \ReflectionClass
             }
 
             try {
-                $classId = classId($class);
+                $classId = anyClassId($class);
             } catch (\AssertionError) {
                 throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
             }
