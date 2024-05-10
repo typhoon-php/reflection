@@ -78,7 +78,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         $typeContext = SetTypeContextVisitor::getNodeTypeContext($node);
 
         $data = $data
-            ->withAllFrom($this->reflectNode($node))
+            ->merge($this->reflectNode($node))
             ->with(Data::TypeContext(), $typeContext)
             ->with(Data::Attributes(), $this->reflectAttributes($node->attrGroups));
 
@@ -87,7 +87,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::ClassKind(), ClassKind::Class_)
                 ->with(Data::UnresolvedParent(), $node->extends === null ? null : new InheritedName($node->extends->toString()))
                 ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->implements))
-                ->withAllFrom($this->reflectTraitUses($node->getTraitUses()))
+                ->merge($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::Abstract(), $node->isAbstract())
                 ->with(Data::NativeReadonly(), $node->isReadonly())
                 ->with(Data::NativeFinal(), $node->isFinal())
@@ -110,7 +110,7 @@ final class ReflectPhpParserNode implements ReflectionHook
             return $data
                 ->with(Data::ClassKind(), ClassKind::Enum)
                 ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->implements))
-                ->withAllFrom($this->reflectTraitUses($node->getTraitUses()))
+                ->merge($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal(), true)
                 ->with(Data::NativeType(), $scalarType)
                 ->with(Data::ClassConstants(), [
@@ -126,7 +126,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         if ($node instanceof Trait_) {
             return $data
                 ->with(Data::ClassKind(), ClassKind::Trait)
-                ->withAllFrom($this->reflectTraitUses($node->getTraitUses()))
+                ->merge($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties()))
                 ->with(Data::Methods(), $this->reflectMethods($node->getMethods()));
