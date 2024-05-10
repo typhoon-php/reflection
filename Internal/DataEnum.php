@@ -61,4 +61,5 @@ enum DataEnum implements Key
     case DeclarationId;
     case UnresolvedChangeDetectors;
     case ResolvedChangeDetector;
+    case ThrowsType;
 }

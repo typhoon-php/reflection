@@ -398,4 +398,12 @@ final class Data
     {
         return DataEnum::ResolvedChangeDetector;
     }
+
+    /**
+     * @return Key<?Type>
+     */
+    public static function ThrowsType(): Key
+    {
+        return DataEnum::ResolvedChangeDetector;
+    }
 }

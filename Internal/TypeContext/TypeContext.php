@@ -64,9 +64,6 @@ final class TypeContext
         return $this->nameContext->getNamespace();
     }
 
-    /**
-     * @psalm-suppress PossiblyUnusedMethod
-     */
     public function resolveClass(Name $name): Name
     {
         return $this->nameContext->getResolvedClassName($name);

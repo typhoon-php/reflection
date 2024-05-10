@@ -37,6 +37,7 @@ use Typhoon\Reflection\Internal\PhpParserReflector\ReflectPhpParserNode;
 use Typhoon\Reflection\Internal\PhpParserReflector\SetTypeContextVisitor;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHooks;
+use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\ResolvedResource;
 use Typhoon\Reflection\Internal\Storage\DataStorage;
@@ -226,6 +227,7 @@ final class TyphoonReflector implements Reflector
         return new ReflectionHooks([
             new ReflectPhpParserNode(),
             ...$hooks,
+            new ReflectPhpDocTypes(),
             new CopyPromotedParametersToProperties(),
             new CompleteEnumReflection(),
             new EnsureInterfaceMethodsAreAbstract(),

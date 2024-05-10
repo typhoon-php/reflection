@@ -93,7 +93,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::NativeFinal(), $node->isFinal())
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties()))
-                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
+                ->with(Data::Methods(), $this->reflectMethods($node->getMethods()));
         }
 
         if ($node instanceof Interface_) {
@@ -101,7 +101,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->with(Data::ClassKind(), ClassKind::Interface)
                 ->with(Data::UnresolvedInterfaces(), $this->reflectInterfaces($node->extends))
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
-                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
+                ->with(Data::Methods(), $this->reflectMethods($node->getMethods()));
         }
 
         if ($node instanceof Enum_) {
@@ -120,7 +120,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                         static fn(Node $node): bool => $node instanceof EnumCase,
                     )),
                 ])
-                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
+                ->with(Data::Methods(), $this->reflectMethods($node->getMethods()));
         }
 
         if ($node instanceof Trait_) {
@@ -129,7 +129,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->withAllFrom($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::ClassConstants(), $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties(), $this->reflectProperties($typeContext, $node->getProperties()))
-                ->with(Data::Methods(), $this->reflectMethods($typeContext, $node->getMethods()));
+                ->with(Data::Methods(), $this->reflectMethods($node->getMethods()));
         }
 
         return $data;
@@ -351,12 +351,14 @@ final class ReflectPhpParserNode implements ReflectionHook
      * @param array<ClassMethod> $nodes
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectMethods(TypeContext $typeContext, array $nodes): array
+    private function reflectMethods(array $nodes): array
     {
         $methods = [];
 
         foreach ($nodes as $node) {
+            $typeContext = SetTypeContextVisitor::getNodeTypeContext($node);
             $methods[$node->name->name] = $this->reflectNode($node)
+                ->with(Data::TypeContext(), $typeContext)
                 ->with(Data::Static(), $node->isStatic())
                 ->with(Data::NativeFinal(), $node->isFinal())
                 ->with(Data::Abstract(), $node->isAbstract())
