@@ -30,7 +30,7 @@ final class CompleteEnum implements ReflectionHook
         $interfaces = $data[Data::UnresolvedInterfaces()];
         $properties = [];
         $methods = $data[Data::Methods()];
-        $staticType = types::static($id->name);
+        $staticType = types::static($id);
 
         $interfaces[] = new InheritedName(\UnitEnum::class);
 
