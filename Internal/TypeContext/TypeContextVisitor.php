@@ -7,20 +7,26 @@ namespace Typhoon\Reflection\Internal\TypeContext;
 use PhpParser\NameContext;
 use PhpParser\Node;
 use PhpParser\Node\Const_;
-use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
+use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\PropertyProperty;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
+use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\TemplateId;
+use function Typhoon\DeclarationId\aliasId;
 use function Typhoon\DeclarationId\anonymousClassId;
 use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\classId;
 use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\propertyId;
+use function Typhoon\DeclarationId\templateId;
 
 /**
  * @internal
@@ -29,36 +35,9 @@ use function Typhoon\DeclarationId\propertyId;
 final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContextProvider
 {
     /**
-     * @var list<DeclarationId>
+     * @var list<TypeContext>
      */
-    private array $idsStack = [];
-
-    /**
-     * @var list<ClassId|AnonymousClassId>
-     */
-    private array $selfStack = [];
-
-    /**
-     * @var list<?ClassId>
-     */
-    private array $parentStack = [];
-
-    /**
-     * @var list<bool>
-     */
-    private array $traitStack = [];
-
-    /**
-     * @var list<non-empty-string>
-     */
-    private array $aliasNames = [];
-
-    /**
-     * @var list<list<non-empty-string>>
-     */
-    private array $templateNamesStack = [];
-
-    private ?TypeContext $typeContext = null;
+    private array $contextStack = [];
 
     /**
      * @param ?non-empty-string $file
@@ -69,71 +48,76 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         private readonly ?string $file = null,
     ) {}
 
+    public function beforeTraverse(array $nodes): ?array
+    {
+        $this->contextStack = [];
+
+        return null;
+    }
+
     public function enterNode(Node $node): ?int
     {
         if ($node instanceof ClassLike) {
-            $this->typeContext = null;
-
-            $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
-
-            if ($node->name === null) {
-                if ($this->file === null) {
-                    throw new \LogicException('Anonymous class file is null');
-                }
-
-                $classId = anonymousClassId($this->file, $node->getStartLine());
-            } else {
-                \assert($node->namespacedName !== null);
-                $classId = classId($node->namespacedName->toString());
-                $this->aliasNames = $typeDeclarations->aliasNames;
-            }
-
-            $this->idsStack[] = $classId;
-            $this->selfStack[] = $classId;
-            $this->parentStack[] = $this->resolveParent($node);
-            $this->traitStack[] = $node instanceof Trait_;
-            $this->templateNamesStack[] = $typeDeclarations->templateNames;
+            $this->contextStack[] = $this->buildClassContext($node);
 
             return null;
         }
 
         if ($node instanceof Const_) {
-            $this->typeContext = null;
+            $typeContext = $this->typeContext();
 
-            $self = end($this->selfStack);
-            \assert($self !== false);
+            if ($typeContext->id instanceof ClassId || $typeContext->id instanceof AnonymousClassId) {
+                $this->contextStack[] = new TypeContext(
+                    nameContext: $this->nameContext,
+                    id: classConstantId($typeContext->id, $node->name->name),
+                    self: $typeContext->self,
+                    parent: $typeContext->parent,
+                    aliases: $typeContext->aliases,
+                    templates: $typeContext->templates,
+                );
 
-            $this->idsStack[] = classConstantId($self, $node->name->name);
+                return null;
+            }
 
             return null;
         }
 
-        if ($node instanceof PropertyItem) {
-            $this->typeContext = null;
+        if ($node instanceof PropertyProperty) {
+            $typeContext = $this->typeContext();
+            \assert($typeContext->id instanceof ClassId || $typeContext->id instanceof AnonymousClassId);
 
-            $self = end($this->selfStack);
-            \assert($self !== false);
-
-            $this->idsStack[] = propertyId($self, $node->name->name);
+            $this->contextStack[] = new TypeContext(
+                nameContext: $this->nameContext,
+                id: propertyId($typeContext->id, $node->name->name),
+                self: $typeContext->self,
+                parent: $typeContext->parent,
+                aliases: $typeContext->aliases,
+                templates: $typeContext->templates,
+            );
 
             return null;
         }
 
         if ($node instanceof ClassMethod) {
-            $this->typeContext = null;
+            $typeContext = $this->typeContext();
+            \assert($typeContext->id instanceof ClassId || $typeContext->id instanceof AnonymousClassId);
+            $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
+            $methodId = methodId($typeContext->id, $node->name->name);
 
-            $self = end($this->selfStack);
-            \assert($self !== false);
-
-            $templateNames = end($this->templateNamesStack);
-            \assert($templateNames !== false);
-
-            $methodId = methodId($self, $node->name->name);
-            $this->idsStack[] = $methodId;
-            $this->templateNamesStack[] = [
-                ...$templateNames,
-                ...$this->reader->reflectTypeDeclarations($node)->templateNames,
-            ];
+            $this->contextStack[] = new TypeContext(
+                nameContext: $this->nameContext,
+                id: $methodId,
+                self: $typeContext->self,
+                parent: $typeContext->parent,
+                aliases: $typeContext->aliases,
+                templates: [
+                    ...$typeContext->templates,
+                    ...array_map(
+                        static fn(string $name): TemplateId => templateId($methodId, $name),
+                        $typeDeclarations->templateNames,
+                    ),
+                ],
+            );
 
             return null;
         }
@@ -141,37 +125,25 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         return null;
     }
 
-    public function leaveNode(Node $node): ?int
+    public function leaveNode(Node $node)
     {
-        if ($node instanceof ClassLike) {
-            $this->typeContext = null;
+        if ($node instanceof ClassLike || $node instanceof PropertyProperty || $node instanceof ClassMethod) {
+            array_pop($this->contextStack);
 
-            array_pop($this->idsStack);
-            array_pop($this->selfStack);
-            array_pop($this->parentStack);
-            array_pop($this->traitStack);
-            array_pop($this->templateNamesStack);
+            return null;
+        }
 
-            if ($node->name !== null) {
-                $this->aliasNames = [];
+        if ($node instanceof Const_) {
+            $typeContext = $this->typeContext();
+
+            if ($typeContext->id instanceof ClassConstantId
+                || $typeContext->id instanceof ClassId
+                || $typeContext->id instanceof AnonymousClassId
+            ) {
+                array_pop($this->contextStack);
+
+                return null;
             }
-
-            return null;
-        }
-
-        if ($node instanceof PropertyItem) {
-            $this->typeContext = null;
-
-            array_pop($this->idsStack);
-
-            return null;
-        }
-
-        if ($node instanceof ClassMethod) {
-            $this->typeContext = null;
-
-            array_pop($this->idsStack);
-            array_pop($this->templateNamesStack);
 
             return null;
         }
@@ -181,25 +153,86 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
     public function typeContext(): TypeContext
     {
-        return $this->typeContext ??= new TypeContext(
+        return end($this->contextStack) ?: new TypeContext($this->nameContext);
+    }
+
+    private function buildClassContext(ClassLike $node): TypeContext
+    {
+        $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
+
+        if ($node->name === null) {
+            \assert($node instanceof Class_);
+
+            if ($this->file === null) {
+                throw new \LogicException('No file for anonymous class');
+            }
+
+            $classId = anonymousClassId($this->file, $node->getStartLine());
+
+            return new TypeContext(
+                nameContext: $this->nameContext,
+                id: $classId,
+                self: $classId,
+                parent: $this->resolveParent($node),
+                templates: array_map(
+                    static fn(string $name): TemplateId => templateId($classId, $name),
+                    $typeDeclarations->templateNames,
+                ),
+            );
+        }
+
+        \assert($node->namespacedName !== null);
+        $classId = classId($node->namespacedName->toString());
+        \assert($classId instanceof ClassId);
+        $aliases = array_map(
+            static fn(string $name): AliasId => aliasId($classId, $name),
+            $typeDeclarations->aliasNames,
+        );
+        $templates = array_map(
+            static fn(string $name): TemplateId => templateId($classId, $name),
+            $typeDeclarations->templateNames,
+        );
+
+        if ($node instanceof Interface_ || $node instanceof Enum_) {
+            return new TypeContext(
+                nameContext: $this->nameContext,
+                id: $classId,
+                self: $classId,
+                aliases: $aliases,
+                templates: $templates,
+            );
+        }
+
+        if ($node instanceof Class_) {
+            return new TypeContext(
+                nameContext: $this->nameContext,
+                id: $classId,
+                self: $classId,
+                parent: $this->resolveParent($node),
+                aliases: $aliases,
+                templates: $templates,
+            );
+        }
+
+        \assert($node instanceof Trait_);
+
+        return new TypeContext(
             nameContext: $this->nameContext,
-            id: end($this->idsStack) ?: null,
-            self: end($this->selfStack) ?: null,
-            parent: end($this->parentStack) ?: null,
-            aliasNames: $this->aliasNames,
-            templateNames: $this->templateNamesStack === [] ? [] : end($this->templateNamesStack),
+            id: $classId,
+            aliases: $aliases,
+            templates: $templates,
         );
     }
 
-    private function resolveParent(ClassLike $node): ?ClassId
+    private function resolveParent(Class_ $node): ?ClassId
     {
-        if (!$node instanceof Class_ || $node->extends === null) {
+        if ($node->extends === null) {
             return null;
         }
 
-        $classId = classId($node->extends->toString());
-        \assert($classId instanceof ClassId);
+        $parent = classId($node->extends->toString());
+        \assert($parent instanceof ClassId);
 
-        return $classId;
+        return $parent;
     }
 }
