@@ -2,11 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\InheritedName;
+use Typhoon\Reflection\Internal\ReflectionHook;
+use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
 
@@ -14,7 +19,7 @@ use Typhoon\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class CompleteEnum implements ReflectionHook
+final class CompleteEnumReflection implements ReflectionHook
 {
     public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data): TypedMap
     {

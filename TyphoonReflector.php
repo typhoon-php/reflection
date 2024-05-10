@@ -23,23 +23,23 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Internal\CleanUp;
-use Typhoon\Reflection\Internal\CompleteEnum;
-use Typhoon\Reflection\Internal\CopyPromotedParametersToProperties;
+use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
+use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
+use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
+use Typhoon\Reflection\Internal\CompleteReflection\EnsureInterfaceMethodsAreAbstract;
+use Typhoon\Reflection\Internal\CompleteReflection\EnsureReadonlyClassPropertiesAreReadonly;
+use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
+use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\DataStorage;
-use Typhoon\Reflection\Internal\EnsureInterfaceMethodsAreAbstract;
-use Typhoon\Reflection\Internal\EnsureReadonlyClassPropertiesAreReadonly;
 use Typhoon\Reflection\Internal\PhpParserReflector\FindTopLevelDeclarationsVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\FixNodeStartLineVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\ReflectPhpParserNode;
 use Typhoon\Reflection\Internal\PhpParserReflector\SetTypeContextVisitor;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHooks;
-use Typhoon\Reflection\Internal\ResolveAttributesRepeated;
-use Typhoon\Reflection\Internal\ResolveClassInheritance;
+use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\ResolvedResource;
-use Typhoon\Reflection\Internal\ResolveParametersIndex;
+use Typhoon\Reflection\Internal\Storage\DataStorage;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\Locators;
@@ -227,7 +227,7 @@ final class TyphoonReflector implements Reflector
             new ReflectPhpParserNode(),
             ...$hooks,
             new CopyPromotedParametersToProperties(),
-            new CompleteEnum(),
+            new CompleteEnumReflection(),
             new EnsureInterfaceMethodsAreAbstract(),
             new EnsureReadonlyClassPropertiesAreReadonly(),
             new ResolveAttributesRepeated(),

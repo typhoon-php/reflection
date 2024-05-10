@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\TypedMap\TypedMap;
 
 /**

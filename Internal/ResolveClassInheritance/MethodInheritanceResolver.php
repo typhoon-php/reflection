@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\ClassInheritance;
+namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
@@ -12,7 +12,7 @@ use function Typhoon\DeclarationId\parameterId;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection\Internal\ClassInheritance
+ * @psalm-internal Typhoon\Reflection
  */
 final class MethodInheritanceResolver
 {

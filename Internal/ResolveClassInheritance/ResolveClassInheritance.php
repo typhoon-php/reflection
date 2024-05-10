@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
-use Typhoon\Reflection\Internal\ClassInheritance\ClassInheritanceResolver;
+use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Reflector;
 use Typhoon\TypedMap\TypedMap;
 

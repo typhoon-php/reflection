@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Cache;
 
 use Psr\SimpleCache\CacheInterface;
-use Typhoon\Reflection\Internal\DataCacheItem;
+use Typhoon\Reflection\Internal\Storage\DataCacheItem;
 
 /**
  * @api

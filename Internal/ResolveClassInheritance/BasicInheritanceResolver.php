@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\ClassInheritance;
+namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Visibility;
@@ -10,7 +10,7 @@ use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection\Internal\ClassInheritance
+ * @psalm-internal Typhoon\Reflection
  */
 final class BasicInheritanceResolver
 {

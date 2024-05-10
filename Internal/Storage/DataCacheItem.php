@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Internal\Storage;
 
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\TypedMap\TypedMap;
 
 /**

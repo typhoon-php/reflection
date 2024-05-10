@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\ClassInheritance;
+namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\ChangeDetectors;
