@@ -26,26 +26,26 @@ final class ResolveAttributesRepeated implements ReflectionHook
         $data = $this->resolveAttributesRepeated($data);
 
         if (isset($data[Data::ClassConstants()])) {
-            $data = $data->with(Data::ClassConstants(), array_map(
+            $data = $data->set(Data::ClassConstants(), array_map(
                 $this->resolveAttributesRepeated(...),
                 $data[Data::ClassConstants()],
             ));
         }
 
         if (isset($data[Data::Properties()])) {
-            $data = $data->with(Data::Properties(), array_map(
+            $data = $data->set(Data::Properties(), array_map(
                 $this->resolveAttributesRepeated(...),
                 $data[Data::Properties()],
             ));
         }
 
         if (isset($data[Data::Methods()])) {
-            $data = $data->with(Data::Methods(), array_map(
+            $data = $data->set(Data::Methods(), array_map(
                 function (TypedMap $data): TypedMap {
                     $data = $this->resolveAttributesRepeated($data);
 
                     if (isset($data[Data::Parameters()])) {
-                        $data = $data->with(Data::Parameters(), array_map(
+                        $data = $data->set(Data::Parameters(), array_map(
                             $this->resolveAttributesRepeated(...),
                             $data[Data::Parameters()],
                         ));
@@ -75,8 +75,8 @@ final class ResolveAttributesRepeated implements ReflectionHook
             $repeated[$className] = isset($repeated[$className]);
         }
 
-        return $data->with(Data::Attributes(), array_map(
-            static fn(TypedMap $attribute): TypedMap => $attribute->with(
+        return $data->set(Data::Attributes(), array_map(
+            static fn(TypedMap $attribute): TypedMap => $attribute->set(
                 Data::Repeated(),
                 $repeated[$attribute[Data::AttributeClass()]],
             ),

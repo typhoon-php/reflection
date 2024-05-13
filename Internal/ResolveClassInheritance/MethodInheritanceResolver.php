@@ -38,7 +38,7 @@ final class MethodInheritanceResolver
         $this->data = $data;
 
         foreach ($data[Data::Parameters()] ?? [] as $name => $parameter) {
-            ($this->parameters[$name] = new BasicInheritanceResolver())->setOwn($parameter->with(Data::DeclarationId(), parameterId($methodId, $name)));
+            ($this->parameters[$name] = new BasicInheritanceResolver())->setOwn($parameter->set(Data::DeclarationId(), parameterId($methodId, $name)));
         }
 
         $this->type->setOwn($data);
@@ -106,10 +106,10 @@ final class MethodInheritanceResolver
 
         return $this
             ->data
-            ->with(Data::Parameters(), array_filter(array_map(
+            ->set(Data::Parameters(), array_filter(array_map(
                 static fn(BasicInheritanceResolver $parameter): ?TypedMap => $parameter->resolve(),
                 $this->parameters,
             )))
-            ->with(Data::ResolvedType(), $this->type->resolve());
+            ->set(Data::ResolvedType(), $this->type->resolve());
     }
 }

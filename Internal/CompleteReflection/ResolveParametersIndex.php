@@ -24,7 +24,7 @@ final class ResolveParametersIndex implements ReflectionHook
         }
 
         if (isset($data[Data::Methods()])) {
-            return $data->with(Data::Methods(), array_map(
+            return $data->set(Data::Methods(), array_map(
                 $this->resolveParametersIndex(...),
                 $data[Data::Methods()],
             ));
@@ -45,9 +45,9 @@ final class ResolveParametersIndex implements ReflectionHook
         $index = 0;
 
         foreach ($parameters as $name => $parameter) {
-            $resolvedParameters[$name] = $parameter->with(Data::Index(), $index++);
+            $resolvedParameters[$name] = $parameter->set(Data::Index(), $index++);
         }
 
-        return $data->with(Data::Parameters(), $resolvedParameters);
+        return $data->set(Data::Parameters(), $resolvedParameters);
     }
 }

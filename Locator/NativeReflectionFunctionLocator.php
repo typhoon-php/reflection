@@ -40,7 +40,7 @@ final class NativeReflectionFunctionLocator implements Locator
         $baseData = new TypedMap();
 
         if ($extension !== false) {
-            $baseData = $baseData->with(Data::Extension(), $extension);
+            $baseData = $baseData->set(Data::Extension(), $extension);
         }
 
         return new Resource($file, $baseData);

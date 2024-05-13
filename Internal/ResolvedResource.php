@@ -32,7 +32,7 @@ final class ResolvedResource
         return new self(
             file: $id->file,
             code: self::readFile($id->file),
-            baseData: (new TypedMap())->with(Data::File(), $id->file),
+            baseData: (new TypedMap())->set(Data::File(), $id->file),
         );
     }
 
@@ -42,11 +42,11 @@ final class ResolvedResource
         $baseData = $resource->baseData;
 
         if (!($baseData[Data::WrittenInC()] ?? false)) {
-            $baseData = $baseData->with(Data::File(), $resource->file);
+            $baseData = $baseData->set(Data::File(), $resource->file);
         }
 
         if (!isset($baseData[Data::UnresolvedChangeDetectors()])) {
-            $baseData = $baseData->with(Data::UnresolvedChangeDetectors(), [
+            $baseData = $baseData->set(Data::UnresolvedChangeDetectors(), [
                 FileChangeDetector::fromFileAndContents($resource->file, $code),
             ]);
         }

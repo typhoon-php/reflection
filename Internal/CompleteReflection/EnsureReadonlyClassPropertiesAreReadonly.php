@@ -29,15 +29,15 @@ final class EnsureReadonlyClassPropertiesAreReadonly implements ReflectionHook
         }
 
         if ($data[Data::NativeReadonly()]) {
-            $data = $data->with(Data::Properties(), array_map(
-                static fn(TypedMap $property): TypedMap => $property->with(Data::NativeReadonly(), true),
+            $data = $data->set(Data::Properties(), array_map(
+                static fn(TypedMap $property): TypedMap => $property->set(Data::NativeReadonly(), true),
                 $data[Data::Properties()] ?? [],
             ));
         }
 
         if ($data[Data::AnnotatedReadonly()] ?? false) {
-            $data = $data->with(Data::Properties(), array_map(
-                static fn(TypedMap $property): TypedMap => $property->with(Data::AnnotatedReadonly(), true),
+            $data = $data->set(Data::Properties(), array_map(
+                static fn(TypedMap $property): TypedMap => $property->set(Data::AnnotatedReadonly(), true),
                 $data[Data::Properties()] ?? [],
             ));
         }

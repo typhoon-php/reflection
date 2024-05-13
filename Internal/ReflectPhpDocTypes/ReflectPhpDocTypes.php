@@ -37,25 +37,25 @@ final class ReflectPhpDocTypes implements ReflectionHook
 
         if ($phpDoc !== null) {
             if ($phpDoc->hasFinal()) {
-                $data = $data->with(Data::AnnotatedFinal(), true);
+                $data = $data->set(Data::AnnotatedFinal(), true);
             }
 
             if ($phpDoc->hasReadonly()) {
-                $data = $data->with(Data::AnnotatedReadonly(), true);
+                $data = $data->set(Data::AnnotatedReadonly(), true);
             }
         }
 
         $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext()]);
 
         if (isset($data[Data::Properties()])) {
-            $data = $data->with(Data::Properties(), array_map(
+            $data = $data->set(Data::Properties(), array_map(
                 fn(TypedMap $property): TypedMap => $this->reflectProperty($typeReflector, $property),
                 $data[Data::Properties()],
             ));
         }
 
         if (isset($data[Data::Methods()])) {
-            $data = $data->with(Data::Methods(), array_map($this->reflectFunction(...), $data[Data::Methods()]));
+            $data = $data->set(Data::Methods(), array_map($this->reflectFunction(...), $data[Data::Methods()]));
         }
 
         return $data;
@@ -77,23 +77,23 @@ final class ReflectPhpDocTypes implements ReflectionHook
         if ($parameters !== []) {
             foreach ($parameters as $name => &$parameter) {
                 if (isset($paramTypes[$name])) {
-                    $parameter = $parameter->with(Data::AnnotatedType(), $typeReflector->reflect($paramTypes[$name]));
+                    $parameter = $parameter->set(Data::AnnotatedType(), $typeReflector->reflect($paramTypes[$name]));
                 }
             }
 
-            $data = $data->with(Data::Parameters(), $parameters);
+            $data = $data->set(Data::Parameters(), $parameters);
         }
 
         $returnType = $phpDoc->returnType();
 
         if ($returnType !== null) {
-            $data = $data->with(Data::AnnotatedType(), $typeReflector->reflect($returnType));
+            $data = $data->set(Data::AnnotatedType(), $typeReflector->reflect($returnType));
         }
 
         $throwsTypes = $phpDoc->throwsTypes();
 
         if ($throwsTypes !== []) {
-            $data = $data->with(Data::ThrowsType(), types::union(...array_map($typeReflector->reflect(...), $throwsTypes)));
+            $data = $data->set(Data::ThrowsType(), types::union(...array_map($typeReflector->reflect(...), $throwsTypes)));
         }
 
         return $data;
@@ -108,13 +108,13 @@ final class ReflectPhpDocTypes implements ReflectionHook
         }
 
         if ($phpDoc->hasReadonly()) {
-            $data = $data->with(Data::AnnotatedReadonly(), true);
+            $data = $data->set(Data::AnnotatedReadonly(), true);
         }
 
         $type = $phpDoc->varType();
 
         if ($type !== null) {
-            $data = $data->with(Data::AnnotatedType(), $typeReflector->reflect($type));
+            $data = $data->set(Data::AnnotatedType(), $typeReflector->reflect($type));
         }
 
         return $data;

@@ -19,7 +19,7 @@ final class CleanUp implements ReflectionHook
 {
     public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
-        return $data->without(
+        return $data->unset(
             Data::TypeContext(),
             Data::UnresolvedChangeDetectors(),
             Data::UnresolvedInterfaces(),

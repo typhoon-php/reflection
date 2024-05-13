@@ -47,6 +47,6 @@ final class BasicInheritanceResolver
 
     public function resolve(): ?TypedMap
     {
-        return $this->data?->with(Data::ResolvedType(), $this->type->resolve());
+        return $this->data?->set(Data::ResolvedType(), $this->type->resolve());
     }
 }

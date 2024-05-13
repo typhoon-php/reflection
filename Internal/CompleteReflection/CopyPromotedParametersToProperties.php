@@ -44,6 +44,6 @@ final class CopyPromotedParametersToProperties implements ReflectionHook
             }
         }
 
-        return $data->with(Data::Properties(), $properties);
+        return $data->set(Data::Properties(), $properties);
     }
 }

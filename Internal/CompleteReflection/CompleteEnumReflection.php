@@ -40,40 +40,40 @@ final class CompleteEnumReflection implements ReflectionHook
         $interfaces[] = new InheritedName(\UnitEnum::class);
 
         $properties['name'] = (new TypedMap())
-            ->with(Data::NativeReadonly(), true)
-            ->with(Data::NativeType(), types::string)
-            ->with(Data::Visibility(), Visibility::Public);
+            ->set(Data::NativeReadonly(), true)
+            ->set(Data::NativeType(), types::string)
+            ->set(Data::Visibility(), Visibility::Public);
 
         $methods['cases'] = (new TypedMap())
-            ->with(Data::Static(), true)
-            ->with(Data::NativeType(), types::array)
-            ->with(Data::AnnotatedType(), types::list($staticType))
-            ->with(Data::Visibility(), Visibility::Public)
-            ->with(Data::WrittenInC(), true);
+            ->set(Data::Static(), true)
+            ->set(Data::NativeType(), types::array)
+            ->set(Data::AnnotatedType(), types::list($staticType))
+            ->set(Data::Visibility(), Visibility::Public)
+            ->set(Data::WrittenInC(), true);
 
         if ($scalarType !== null) {
             $interfaces[] = new InheritedName(\BackedEnum::class);
 
             $properties['value'] = (new TypedMap())
-                ->with(Data::NativeReadonly(), true)
-                ->with(Data::NativeType(), $scalarType)
-                ->with(Data::Visibility(), Visibility::Public);
+                ->set(Data::NativeReadonly(), true)
+                ->set(Data::NativeType(), $scalarType)
+                ->set(Data::Visibility(), Visibility::Public);
 
             $methods['from'] = $methods['cases']
-                ->with(Data::NativeType(), $staticType)
-                ->with(Data::Parameters(), [
+                ->set(Data::NativeType(), $staticType)
+                ->set(Data::Parameters(), [
                     'value' => (new TypedMap())
-                        ->with(Data::NativeType(), types::arrayKey)
-                        ->with(Data::AnnotatedType(), $scalarType),
+                        ->set(Data::NativeType(), types::arrayKey)
+                        ->set(Data::AnnotatedType(), $scalarType),
                 ]);
 
             $methods['tryFrom'] = $methods['from']
-                ->with(Data::NativeType(), types::nullable($staticType));
+                ->set(Data::NativeType(), types::nullable($staticType));
         }
 
         return $data
-            ->with(Data::UnresolvedInterfaces(), $interfaces)
-            ->with(Data::Properties(), $properties)
-            ->with(Data::Methods(), $methods);
+            ->set(Data::UnresolvedInterfaces(), $interfaces)
+            ->set(Data::Properties(), $properties)
+            ->set(Data::Methods(), $methods);
     }
 }
