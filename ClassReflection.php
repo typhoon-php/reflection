@@ -58,8 +58,8 @@ final class ClassReflection extends Reflection
         }
 
         return $this->id->equals($class)
-            || \array_key_exists($class->name, $this->data[Data::ResolvedParents()] ?? [])
-            || \array_key_exists($class->name, $this->data[Data::ResolvedInterfaces()] ?? []);
+            || \array_key_exists($class->name, $this->data[Data::ResolvedParents])
+            || \array_key_exists($class->name, $this->data[Data::ResolvedInterfaces]);
     }
 
     public function isAbstract(): bool
@@ -69,8 +69,8 @@ final class ClassReflection extends Reflection
         }
 
         if ($this->isInterface() || $this->isTrait()) {
-            foreach ($this->data[Data::Methods()] ?? [] as $method) {
-                if ($method[Data::Abstract()] ?? false) {
+            foreach ($this->data[Data::Methods] as $method) {
+                if ($method[Data::Abstract]) {
                     return true;
                 }
             }
@@ -83,7 +83,7 @@ final class ClassReflection extends Reflection
 
     public function isAbstractClass(): bool
     {
-        return $this->data[Data::Abstract()] ?? false;
+        return $this->data[Data::Abstract];
     }
 
     public function isAnonymous(): bool
@@ -94,47 +94,47 @@ final class ClassReflection extends Reflection
     public function isCloneable(): bool
     {
         return !$this->isAbstract()
-            && $this->data[Data::ClassKind()] === ClassKind::Class_
+            && $this->data[Data::ClassKind] === ClassKind::Class_
             && ($this->method('__clone')?->isPublic() ?? true);
     }
 
     public function isTrait(): bool
     {
-        return $this->data[Data::ClassKind()] === ClassKind::Trait;
+        return $this->data[Data::ClassKind] === ClassKind::Trait;
     }
 
     public function isEnum(): bool
     {
-        return $this->data[Data::ClassKind()] === ClassKind::Enum;
+        return $this->data[Data::ClassKind] === ClassKind::Enum;
     }
 
     public function isFinal(Kind $kind = Kind::Resolved): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeFinal()] ?? false,
-            Kind::Annotated => $this->data[Data::AnnotatedFinal()] ?? false,
-            Kind::Resolved => $this->data[Data::NativeFinal()] ?? $this->data[Data::AnnotatedFinal()] ?? false,
+            Kind::Native => $this->data[Data::NativeFinal],
+            Kind::Annotated => $this->data[Data::AnnotatedFinal],
+            Kind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
     }
 
     public function isInstantiable(): bool
     {
         return !$this->isAbstract()
-            && $this->data[Data::ClassKind()] === ClassKind::Class_
+            && $this->data[Data::ClassKind] === ClassKind::Class_
             && ($this->method('__construct')?->isPublic() ?? true);
     }
 
     public function isInterface(): bool
     {
-        return $this->data[Data::ClassKind()] === ClassKind::Interface;
+        return $this->data[Data::ClassKind] === ClassKind::Interface;
     }
 
     public function isReadonly(Kind $kind = Kind::Resolved): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeReadonly()] ?? false,
-            Kind::Annotated => $this->data[Data::AnnotatedReadonly()] ?? false,
-            Kind::Resolved => $this->data[Data::NativeReadonly()] ?? $this->data[Data::AnnotatedReadonly()] ?? false,
+            Kind::Native => $this->data[Data::NativeReadonly],
+            Kind::Annotated => $this->data[Data::AnnotatedReadonly],
+            Kind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
         };
     }
 
@@ -165,7 +165,7 @@ final class ClassReflection extends Reflection
      */
     public function parentName(): ?string
     {
-        return array_key_first($this->data[Data::ResolvedParents()] ?? []);
+        return array_key_first($this->data[Data::ResolvedParents]);
     }
 
     /**
@@ -201,7 +201,7 @@ final class ClassReflection extends Reflection
 
         $this->constants = [];
 
-        foreach ($this->data[Data::ClassConstants()] ?? [] as $name => $data) {
+        foreach ($this->data[Data::ClassConstants] as $name => $data) {
             $this->constants[$name] = new ClassConstantReflection(
                 id: classConstantId($this->id, $name),
                 data: $data,
@@ -228,7 +228,7 @@ final class ClassReflection extends Reflection
 
         $this->properties = [];
 
-        foreach ($this->data[Data::Properties()] ?? [] as $name => $data) {
+        foreach ($this->data[Data::Properties] as $name => $data) {
             $this->properties[$name] = new PropertyReflection(
                 id: propertyId($this->id, $name),
                 data: $data,
@@ -255,7 +255,7 @@ final class ClassReflection extends Reflection
 
         $this->methods = [];
 
-        foreach ($this->data[Data::Methods()] ?? [] as $name => $data) {
+        foreach ($this->data[Data::Methods] as $name => $data) {
             $this->methods[$name] = new MethodReflection(
                 id: methodId($this->id, $name),
                 data: $data,
@@ -271,7 +271,7 @@ final class ClassReflection extends Reflection
      */
     public function extension(): ?string
     {
-        return $this->data[Data::Extension()] ?? null;
+        return $this->data[Data::PhpExtension];
     }
 
     /**
@@ -279,12 +279,12 @@ final class ClassReflection extends Reflection
      */
     public function file(): ?string
     {
-        return $this->data[Data::File()] ?? null;
+        return $this->data[Data::File];
     }
 
     public function isWrittenInC(): bool
     {
-        return $this->data[Data::WrittenInC()] ?? false;
+        return $this->data[Data::WrittenInC];
     }
 
     /**

@@ -41,7 +41,7 @@ abstract class Reflection
                 data: $data,
                 reflector: $this->reflector,
             ),
-            $this->data[Data::Attributes()] ?? [],
+            $this->data[Data::Attributes],
         );
     }
 
@@ -50,7 +50,7 @@ abstract class Reflection
      */
     final public function declarationId(): DeclarationId
     {
-        $declarationId = $this->data[Data::DeclarationId()];
+        $declarationId = $this->data[Data::DeclarationId];
         \assert($declarationId instanceof $this->id);
 
         /** @var TId */
@@ -62,7 +62,7 @@ abstract class Reflection
      */
     final public function startLine(): ?int
     {
-        return $this->data[Data::StartLine()] ?? null;
+        return $this->data[Data::StartLine];
     }
 
     /**
@@ -70,7 +70,7 @@ abstract class Reflection
      */
     final public function endLine(): ?int
     {
-        return $this->data[Data::EndLine()] ?? null;
+        return $this->data[Data::EndLine];
     }
 
     /**
@@ -78,11 +78,11 @@ abstract class Reflection
      */
     final public function phpDoc(): ?string
     {
-        return $this->data[Data::PhpDoc()] ?? null;
+        return $this->data[Data::PhpDoc];
     }
 
     final public function changeDetector(): ChangeDetector
     {
-        return $this->data[Data::ResolvedChangeDetector()] ?? new IfSerializedChangeDetector();
+        return $this->data[Data::ResolvedChangeDetector] ?? new IfSerializedChangeDetector();
     }
 }

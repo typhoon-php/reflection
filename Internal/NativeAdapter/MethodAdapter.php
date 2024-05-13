@@ -201,7 +201,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getTentativeReturnType(): ?\ReflectionType
     {
-        return ($this->reflection->data[Data::TentativeType()] ?? null)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->data[Data::Type]->tentative?->accept(new ToNativeTypeConverter());
     }
 
     /**
@@ -225,7 +225,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function hasTentativeReturnType(): bool
     {
-        return isset($this->reflection->data[Data::TentativeType()]);
+        return $this->reflection->data[Data::Type]->tentative !== null;
     }
 
     public function inNamespace(): bool

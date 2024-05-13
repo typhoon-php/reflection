@@ -238,7 +238,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function isDefaultValueConstant(): bool
     {
-        $expression = $this->reflection->data[Data::DefaultValueExpression()] ?? null;
+        $expression = $this->reflection->data[Data::DefaultValueExpression];
 
         return $expression instanceof ConstantFetch || $expression instanceof ClassConstantFetch;
     }

@@ -9,7 +9,6 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
-use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\parameterId;
 
@@ -51,7 +50,7 @@ final class MethodReflection extends Reflection
      */
     public function file(): ?string
     {
-        if ($this->data[Data::WrittenInC()] ?? false) {
+        if ($this->data[Data::WrittenInC]) {
             return null;
         }
 
@@ -60,48 +59,48 @@ final class MethodReflection extends Reflection
 
     public function isWrittenInC(): bool
     {
-        return ($this->data[Data::WrittenInC()] ?? false) || $this->declaringClass()->isWrittenInC();
+        return $this->data[Data::WrittenInC] || $this->declaringClass()->isWrittenInC();
     }
 
     public function isAbstract(): bool
     {
-        return $this->data[Data::Abstract()] ?? false;
+        return $this->data[Data::Abstract];
     }
 
     public function isFinal(Kind $kind = Kind::Resolved): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeFinal()] ?? false,
-            Kind::Annotated => $this->data[Data::AnnotatedFinal()] ?? false,
-            Kind::Resolved => $this->data[Data::NativeFinal()] ?? $this->data[Data::AnnotatedFinal()] ?? false,
+            Kind::Native => $this->data[Data::NativeFinal],
+            Kind::Annotated => $this->data[Data::AnnotatedFinal],
+            Kind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
     }
 
     public function isGenerator(): bool
     {
-        return $this->data[Data::Generator()] ?? false;
+        return $this->data[Data::Generator];
     }
 
     public function isPrivate(): bool
     {
-        return $this->data[Data::Visibility()] === Visibility::Private;
+        return $this->data[Data::Visibility] === Visibility::Private;
     }
 
     public function isProtected(): bool
     {
-        return $this->data[Data::Visibility()] === Visibility::Protected;
+        return $this->data[Data::Visibility] === Visibility::Protected;
     }
 
     public function isPublic(): bool
     {
-        $visibility = $this->data[Data::Visibility()];
+        $visibility = $this->data[Data::Visibility];
 
         return $visibility === null || $visibility === Visibility::Public;
     }
 
     public function isStatic(): bool
     {
-        return $this->data[Data::Static()];
+        return $this->data[Data::Static];
     }
 
     public function isVariadic(): bool
@@ -138,7 +137,7 @@ final class MethodReflection extends Reflection
 
     public function returnsReference(): bool
     {
-        return $this->data[Data::ByReference()] ?? false;
+        return $this->data[Data::ByReference];
     }
 
     /**
@@ -146,14 +145,12 @@ final class MethodReflection extends Reflection
      */
     public function returnType(Kind $kind = Kind::Resolved): ?Type
     {
-        return match ($kind) {
-            Kind::Native => $this->data[Data::NativeType()] ?? null,
-            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
-            Kind::Resolved => $this->data[Data::ResolvedType()]
-                ?? $this->data[Data::AnnotatedType()]
-                ?? $this->data[Data::NativeType()]
-                ?? types::mixed,
-        };
+        return $this->data[Data::Type]->byKind($kind);
+    }
+
+    public function throwsType(): ?Type
+    {
+        return $this->data[Data::ThrowsType];
     }
 
     public function parameter(int|string $indexOrName): ?ParameterReflection
@@ -176,7 +173,7 @@ final class MethodReflection extends Reflection
 
         $this->parameters = [];
 
-        foreach ($this->data[Data::Parameters()] as $name => $data) {
+        foreach ($this->data[Data::Parameters] as $name => $data) {
             $this->parameters[$name] = new ParameterReflection(
                 id: parameterId($this->id, $name),
                 data: $data,

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Type\Type;
-use Typhoon\Type\types;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
@@ -15,10 +13,10 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class TypeInheritanceResolver
 {
-    private ?TypedMap $own = null;
+    private ?TypeData $own = null;
 
     /**
-     * @var list<array{TypedMap, TypeProcessor}>
+     * @var list<array{TypeData, TypeProcessor}>
      */
     private array $inherited = [];
 
@@ -30,66 +28,57 @@ final class TypeInheritanceResolver
         return $a == $b;
     }
 
-    public function setOwn(TypedMap $data): void
+    public function setOwn(TypeData $data): void
     {
         $this->own = $data;
     }
 
-    public function addInherited(TypedMap $data, TypeProcessor $typeProcessor): void
+    public function addInherited(TypeData $data, TypeProcessor $typeProcessor): void
     {
         $this->inherited[] = [$data, $typeProcessor];
     }
 
-    public function resolve(): Type
+    public function resolve(): TypeData
     {
         if ($this->own !== null) {
-            $ownAnnotated = $this->own[Data::AnnotatedType()] ?? null;
-
-            if ($ownAnnotated !== null) {
-                return $ownAnnotated;
+            if ($this->own->annotated !== null) {
+                return $this->own;
             }
 
-            $ownNative = $this->own[Data::TentativeType()] ?? $this->own[Data::NativeType()];
-
-            foreach ($this->inherited as [$inheritedData, $typeProcessor]) {
+            foreach ($this->inherited as [$inherited, $typeProcessor]) {
                 // If own type is different (weakened parameter type or strengthened return type), we want to keep it.
                 // This should be compared according to variance with a proper type comparator,
                 // but for now simple inequality check should do the job 90% of the time.
-                if (!self::typesEqual($inheritedData[Data::NativeType()] ?? null, $ownNative)) {
+                if (!self::typesEqual($inherited->native, $this->own->native)) {
                     continue;
                 }
-
-                $inheritedResolved = $inheritedData[Data::ResolvedType()] ?? null;
 
                 // If inherited type resolves to same native type, we should continue to look for something more interesting.
-                if ($inheritedResolved === null || self::typesEqual($inheritedResolved, $ownNative)) {
+                if (self::typesEqual($inherited->resolved(), $this->own->native)) {
                     continue;
                 }
 
-                return $typeProcessor->process($inheritedResolved);
+                return $inherited->withResolved($typeProcessor->process($inherited->resolved()));
             }
 
-            return $ownNative ?? types::mixed;
+            return $this->own;
         }
 
         \assert($this->inherited !== []);
 
         if (\count($this->inherited) !== 1) {
-            foreach ($this->inherited as [$inheritedData, $typeProcessor]) {
-                $inheritedNative = $inheritedData[Data::NativeType()] ?? null;
-                $inheritedResolved = $inheritedData[Data::ResolvedType()] ?? null;
-
+            foreach ($this->inherited as [$inherited, $typeProcessor]) {
                 // If inherited type resolves to its native type, we should continue to look for something more interesting.
-                if ($inheritedResolved === null || self::typesEqual($inheritedNative, $inheritedResolved)) {
+                if (self::typesEqual($inherited->resolved(), $inherited->native)) {
                     continue;
                 }
 
-                return $typeProcessor->process($inheritedResolved);
+                return $inherited->withResolved($typeProcessor->process($inherited->resolved()));
             }
         }
 
-        [$inheritedData, $typeProcessor] = $this->inherited[0];
+        [$inherited, $typeProcessor] = $this->inherited[0];
 
-        return $typeProcessor->process($inheritedData[Data::ResolvedType()] ?? types::mixed);
+        return $inherited->withResolved($typeProcessor->process($inherited->resolved()));
     }
 }

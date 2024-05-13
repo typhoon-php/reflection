@@ -9,7 +9,6 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\PropertyAdapter;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
-use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -33,7 +32,7 @@ final class PropertyReflection extends Reflection
 
     public function file(): ?string
     {
-        if ($this->data[Data::WrittenInC()] ?? false) {
+        if ($this->data[Data::WrittenInC]) {
             return null;
         }
 
@@ -52,37 +51,37 @@ final class PropertyReflection extends Reflection
 
     public function isStatic(): bool
     {
-        return $this->data[Data::Static()] ?? false;
+        return $this->data[Data::Static];
     }
 
     public function isPromoted(): bool
     {
-        return $this->data[Data::Promoted()] ?? false;
+        return $this->data[Data::Promoted];
     }
 
     public function defaultValue(): mixed
     {
-        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this, $this->reflector);
+        return $this->data[Data::DefaultValueExpression]?->evaluate($this, $this->reflector);
     }
 
     public function hasDefaultValue(): bool
     {
-        return ($this->data[Data::DefaultValueExpression()] ?? null)  !== null;
+        return $this->data[Data::DefaultValueExpression] !== null;
     }
 
     public function isPrivate(): bool
     {
-        return $this->data[Data::Visibility()] === Visibility::Private;
+        return $this->data[Data::Visibility] === Visibility::Private;
     }
 
     public function isProtected(): bool
     {
-        return $this->data[Data::Visibility()] === Visibility::Protected;
+        return $this->data[Data::Visibility] === Visibility::Protected;
     }
 
     public function isPublic(): bool
     {
-        $visibility = $this->data[Data::Visibility()];
+        $visibility = $this->data[Data::Visibility];
 
         return $visibility === null || $visibility === Visibility::Public;
     }
@@ -90,9 +89,9 @@ final class PropertyReflection extends Reflection
     public function isReadonly(Kind $kind = Kind::Resolved): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeReadonly()] ?? false,
-            Kind::Annotated => $this->data[Data::AnnotatedReadonly()] ?? false,
-            Kind::Resolved => $this->data[Data::NativeReadonly()] ?? $this->data[Data::AnnotatedReadonly()] ?? false,
+            Kind::Native => $this->data[Data::NativeReadonly],
+            Kind::Annotated => $this->data[Data::AnnotatedReadonly],
+            Kind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
         };
     }
 
@@ -101,14 +100,7 @@ final class PropertyReflection extends Reflection
      */
     public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        return match ($kind) {
-            Kind::Native => $this->data[Data::NativeType()] ?? null,
-            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
-            Kind::Resolved => $this->data[Data::ResolvedType()]
-                ?? $this->data[Data::AnnotatedType()]
-                ?? $this->data[Data::NativeType()]
-                ?? types::mixed,
-        };
+        return $this->data[Data::Type]->byKind($kind);
     }
 
     public function toNative(): \ReflectionProperty

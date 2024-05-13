@@ -20,17 +20,13 @@ final class EnsureInterfaceMethodsAreAbstract implements ReflectionHook
 {
     public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
-        if ($id instanceof FunctionId) {
+        if (($data[Data::ClassKind] ?? null) !== ClassKind::Interface) {
             return $data;
         }
 
-        if ($data[Data::ClassKind()] !== ClassKind::Interface) {
-            return $data;
-        }
-
-        return $data->set(Data::Methods(), array_map(
-            static fn(TypedMap $method): TypedMap => $method->set(Data::Abstract(), true),
-            $data[Data::Methods()] ?? [],
+        return $data->modify(Data::Methods, static fn(array $methods): array => array_map(
+            static fn(TypedMap $method): TypedMap => $method->set(Data::Abstract, true),
+            $methods,
         ));
     }
 }

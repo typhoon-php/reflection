@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\parameterId;
@@ -23,31 +24,35 @@ final class MethodInheritanceResolver
      */
     private array $parameters = [];
 
-    private readonly TypeInheritanceResolver $type;
+    private readonly TypeInheritanceResolver $returnType;
+
+    private readonly TypeInheritanceResolver $throwsType;
 
     public function __construct()
     {
-        $this->type = new TypeInheritanceResolver();
+        $this->returnType = new TypeInheritanceResolver();
+        $this->throwsType = new TypeInheritanceResolver();
     }
 
     public function setOwn(TypedMap $data): void
     {
-        $methodId = $data[Data::DeclarationId()];
+        $methodId = $data[Data::DeclarationId];
         \assert($methodId instanceof MethodId);
 
         $this->data = $data;
 
-        foreach ($data[Data::Parameters()] ?? [] as $name => $parameter) {
-            ($this->parameters[$name] = new BasicInheritanceResolver())->setOwn($parameter->set(Data::DeclarationId(), parameterId($methodId, $name)));
+        foreach ($data[Data::Parameters] as $name => $parameter) {
+            ($this->parameters[$name] = new BasicInheritanceResolver())->setOwn($parameter->set(Data::DeclarationId, parameterId($methodId, $name)));
         }
 
-        $this->type->setOwn($data);
+        $this->returnType->setOwn($data[Data::Type]);
+        $this->throwsType->setOwn(new TypeData(annotated: $data[Data::ThrowsType]));
     }
 
     public function addUsed(TypedMap $data, TypeProcessor $typeProcessor): void
     {
         if ($this->data !== null) {
-            $usedParameters = array_values($data[Data::Parameters()]);
+            $usedParameters = array_values($data[Data::Parameters]);
 
             foreach (array_values($this->parameters) as $index => $parameter) {
                 if (isset($usedParameters[$index])) {
@@ -55,28 +60,29 @@ final class MethodInheritanceResolver
                 }
             }
 
-            $this->type->addInherited($data, $typeProcessor);
+            $this->returnType->addInherited($data[Data::Type], $typeProcessor);
 
             return;
         }
 
         $this->data = $data;
 
-        foreach ($data[Data::Parameters()] ?? [] as $name => $parameter) {
+        foreach ($data[Data::Parameters] as $name => $parameter) {
             ($this->parameters[$name] = new BasicInheritanceResolver())->addInherited($parameter, $typeProcessor);
         }
 
-        $this->type->addInherited($data, $typeProcessor);
+        $this->returnType->addInherited($data[Data::Type], $typeProcessor);
+        $this->throwsType->addInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeProcessor);
     }
 
     public function addInherited(TypedMap $data, TypeProcessor $typeProcessor): void
     {
-        if ($data[Data::Visibility()] === Visibility::Private) {
+        if ($data[Data::Visibility] === Visibility::Private) {
             return;
         }
 
         if ($this->data !== null) {
-            $usedParameters = array_values($data[Data::Parameters()]);
+            $usedParameters = array_values($data[Data::Parameters]);
 
             foreach (array_values($this->parameters) as $index => $parameter) {
                 if (isset($usedParameters[$index])) {
@@ -84,32 +90,31 @@ final class MethodInheritanceResolver
                 }
             }
 
-            $this->type->addInherited($data, $typeProcessor);
+            $this->returnType->addInherited($data[Data::Type], $typeProcessor);
+            $this->throwsType->addInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeProcessor);
 
             return;
         }
 
         $this->data = $data;
 
-        foreach ($data[Data::Parameters()] as $name => $parameter) {
+        foreach ($data[Data::Parameters] as $name => $parameter) {
             ($this->parameters[$name] = new BasicInheritanceResolver())->addInherited($parameter, $typeProcessor);
         }
 
-        $this->type->addInherited($data, $typeProcessor);
+        $this->returnType->addInherited($data[Data::Type], $typeProcessor);
+        $this->throwsType->addInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeProcessor);
     }
 
     public function resolve(): ?TypedMap
     {
-        if ($this->data === null) {
-            return null;
-        }
-
         return $this
             ->data
-            ->set(Data::Parameters(), array_filter(array_map(
+            ?->set(Data::Parameters, array_filter(array_map(
                 static fn(BasicInheritanceResolver $parameter): ?TypedMap => $parameter->resolve(),
                 $this->parameters,
             )))
-            ->set(Data::ResolvedType(), $this->type->resolve());
+            ->set(Data::Type, $this->returnType->resolve())
+            ->set(Data::ThrowsType, $this->throwsType->resolve()->annotated);
     }
 }

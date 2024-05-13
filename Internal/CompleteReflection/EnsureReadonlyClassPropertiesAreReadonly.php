@@ -20,25 +20,21 @@ final class EnsureReadonlyClassPropertiesAreReadonly implements ReflectionHook
 {
     public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
-        if ($id instanceof FunctionId) {
+        if (($data[Data::ClassKind] ?? null) !== ClassKind::Class_) {
             return $data;
         }
 
-        if ($data[Data::ClassKind()] !== ClassKind::Class_) {
-            return $data;
-        }
-
-        if ($data[Data::NativeReadonly()]) {
-            $data = $data->set(Data::Properties(), array_map(
-                static fn(TypedMap $property): TypedMap => $property->set(Data::NativeReadonly(), true),
-                $data[Data::Properties()] ?? [],
+        if ($data[Data::NativeReadonly]) {
+            $data = $data->modify(Data::Properties, static fn(array $properties): array => array_map(
+                static fn(TypedMap $property): TypedMap => $property->set(Data::NativeReadonly, true),
+                $properties,
             ));
         }
 
-        if ($data[Data::AnnotatedReadonly()] ?? false) {
-            $data = $data->set(Data::Properties(), array_map(
-                static fn(TypedMap $property): TypedMap => $property->set(Data::AnnotatedReadonly(), true),
-                $data[Data::Properties()] ?? [],
+        if ($data[Data::AnnotatedReadonly]) {
+            $data = $data->modify(Data::Properties, static fn(array $properties): array => array_map(
+                static fn(TypedMap $property): TypedMap => $property->set(Data::AnnotatedReadonly, true),
+                $properties,
             ));
         }
 

@@ -27,7 +27,7 @@ final class AttributeReflection
         public readonly TypedMap $data,
         private readonly Reflector $reflector,
     ) {
-        $this->name = $this->data[Data::AttributeClass()];
+        $this->name = $this->data[Data::AttributeClass];
     }
 
     public function class(): ClassReflection
@@ -42,14 +42,14 @@ final class AttributeReflection
 
     public function isRepeated(): bool
     {
-        return $this->data[Data::Repeated()];
+        return $this->data[Data::AttributeRepeated];
     }
 
     public function arguments(): array
     {
         return array_map(
             fn(Expression $expression): mixed => $expression->evaluate($this->target(), $this->reflector),
-            $this->data[Data::ArgumentExpressions()],
+            $this->data[Data::ArgumentExpressions],
         );
     }
 

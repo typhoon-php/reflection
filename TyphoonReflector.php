@@ -214,7 +214,7 @@ final class TyphoonReflector implements Reflector
         $hook = $this->buildHooks($hooks);
 
         foreach ($nodes as $declarationId => $node) {
-            $data = $baseData->set(Data::Node(), $node);
+            $data = $baseData->set(Data::Node, $node);
             $this->storage->stageForCommit($declarationId, static fn(): TypedMap => $hook->reflect($declarationId, $data));
         }
     }

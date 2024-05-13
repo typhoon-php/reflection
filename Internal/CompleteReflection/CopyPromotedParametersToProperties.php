@@ -24,26 +24,26 @@ final class CopyPromotedParametersToProperties implements ReflectionHook
             return $data;
         }
 
-        $classKind = $data[Data::ClassKind()];
+        $classKind = $data[Data::ClassKind];
 
         if ($classKind === ClassKind::Enum || $classKind === ClassKind::Interface) {
             return $data;
         }
 
-        $methods = $data[Data::Methods()];
+        $methods = $data[Data::Methods];
 
         if (!isset($methods['__construct'])) {
             return $data;
         }
 
-        $properties = $data[Data::Properties()];
+        $properties = $data[Data::Properties];
 
-        foreach ($methods['__construct'][Data::Parameters()] as $name => $parameter) {
-            if ($parameter[Data::Promoted()]) {
+        foreach ($methods['__construct'][Data::Parameters] as $name => $parameter) {
+            if ($parameter[Data::Promoted]) {
                 $properties[$name] = $parameter;
             }
         }
 
-        return $data->set(Data::Properties(), $properties);
+        return $data->set(Data::Properties, $properties);
     }
 }

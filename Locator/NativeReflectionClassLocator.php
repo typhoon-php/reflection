@@ -51,7 +51,7 @@ final class NativeReflectionClassLocator implements Locator
         $extension = $reflection->getExtensionName();
 
         if ($extension !== false) {
-            $baseData = $baseData->set(Data::Extension(), $extension);
+            $baseData = $baseData->set(Data::PhpExtension, $extension);
         }
 
         return new Resource($file, $baseData);

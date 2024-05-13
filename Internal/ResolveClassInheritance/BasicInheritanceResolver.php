@@ -26,27 +26,27 @@ final class BasicInheritanceResolver
     public function setOwn(TypedMap $data): void
     {
         $this->data = $data;
-        $this->type->setOwn($data);
+        $this->type->setOwn($data[Data::Type]);
     }
 
     public function addUsed(TypedMap $data, TypeProcessor $typeProcessor): void
     {
         $this->data ??= $data;
-        $this->type->addInherited($data, $typeProcessor);
+        $this->type->addInherited($data[Data::Type], $typeProcessor);
     }
 
     public function addInherited(TypedMap $data, TypeProcessor $typeProcessor): void
     {
-        if ($data[Data::Visibility()] === Visibility::Private) {
+        if ($data[Data::Visibility] === Visibility::Private) {
             return;
         }
 
         $this->data ??= $data;
-        $this->type->addInherited($data, $typeProcessor);
+        $this->type->addInherited($data[Data::Type], $typeProcessor);
     }
 
     public function resolve(): ?TypedMap
     {
-        return $this->data?->set(Data::ResolvedType(), $this->type->resolve());
+        return $this->data?->set(Data::Type, $this->type->resolve());
     }
 }

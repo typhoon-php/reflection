@@ -79,22 +79,22 @@ final class ClassInheritanceResolver
 
     private function own(): void
     {
-        foreach ($this->data[Data::ClassConstants()] ?? [] as $name => $constant) {
-            $this->constant($name)->setOwn($constant->set(Data::DeclarationId(), classConstantId($this->id, $name)));
+        foreach ($this->data[Data::ClassConstants] as $name => $constant) {
+            $this->constant($name)->setOwn($constant->set(Data::DeclarationId, classConstantId($this->id, $name)));
         }
 
-        foreach ($this->data[Data::Properties()] ?? [] as $name => $property) {
-            $this->property($name)->setOwn($property->set(Data::DeclarationId(), propertyId($this->id, $name)));
+        foreach ($this->data[Data::Properties] as $name => $property) {
+            $this->property($name)->setOwn($property->set(Data::DeclarationId, propertyId($this->id, $name)));
         }
 
-        foreach ($this->data[Data::Methods()] ?? [] as $name => $method) {
-            $this->method($name)->setOwn($method->set(Data::DeclarationId(), methodId($this->id, $name)));
+        foreach ($this->data[Data::Methods] as $name => $method) {
+            $this->method($name)->setOwn($method->set(Data::DeclarationId, methodId($this->id, $name)));
         }
     }
 
     private function used(): void
     {
-        foreach ($this->data[Data::UnresolvedTraits()] ?? [] as $traitName) {
+        foreach ($this->data[Data::UnresolvedTraits] as $traitName) {
             $this->oneUsed($traitName);
         }
     }
@@ -108,22 +108,22 @@ final class ClassInheritanceResolver
         // $typeResolver = $this->typeResolver($trait, $arguments);
         $typeResolver = new TypeProcessor([]);
 
-        foreach ($trait->data[Data::ClassConstants()] as $name => $constant) {
+        foreach ($trait->data[Data::ClassConstants] as $name => $constant) {
             $this->constant($name)->addUsed($constant, $typeResolver);
         }
 
-        foreach ($trait->data[Data::Properties()] as $name => $property) {
+        foreach ($trait->data[Data::Properties] as $name => $property) {
             $this->property($name)->addUsed($property, $typeResolver);
         }
 
-        foreach ($trait->data[Data::Methods()] as $name => $method) {
-            $precedence = $this->data[Data::TraitMethodPrecedence()][$name] ?? null;
+        foreach ($trait->data[Data::Methods] as $name => $method) {
+            $precedence = $this->data[Data::UsedMethodPrecedence][$name] ?? null;
 
             if ($precedence !== null && $precedence !== $traitName->name) {
                 continue;
             }
 
-            foreach ($this->data[Data::TraitMethodAliases()] ?? [] as $alias) {
+            foreach ($this->data[Data::UsedMethodAliases] as $alias) {
                 if ($alias->trait !== $traitName->name || $alias->method !== $name) {
                     continue;
                 }
@@ -131,7 +131,7 @@ final class ClassInheritanceResolver
                 $methodToUse = $method;
 
                 if ($alias->newVisibility !== null) {
-                    $methodToUse = $methodToUse->set(Data::Visibility(), $alias->newVisibility);
+                    $methodToUse = $methodToUse->set(Data::Visibility, $alias->newVisibility);
                 }
 
                 $this->method($alias->newName ?? $name)->addUsed($methodToUse, $typeResolver);
@@ -143,13 +143,13 @@ final class ClassInheritanceResolver
 
     private function inherited(): void
     {
-        $parent = $this->data[Data::UnresolvedParent()] ?? null;
+        $parent = $this->data[Data::UnresolvedParent] ?? null;
 
         if ($parent !== null) {
             $this->oneInherited($parent);
         }
 
-        foreach ($this->data[Data::UnresolvedInterfaces()] ?? [] as $interface) {
+        foreach ($this->data[Data::UnresolvedInterfaces] as $interface) {
             $this->oneInherited($interface);
         }
     }
@@ -162,7 +162,7 @@ final class ClassInheritanceResolver
 
         $this->resolvedUpstreamInterfaces = [
             ...$this->resolvedUpstreamInterfaces,
-            ...($class->data[Data::ResolvedInterfaces()] ?? []),
+            ...$class->data[Data::ResolvedInterfaces],
         ];
 
         if ($class->isInterface()) {
@@ -170,22 +170,22 @@ final class ClassInheritanceResolver
         } else {
             $this->resolvedParents = [
                 $class->name => $className->arguments,
-                ...($class->data[Data::ResolvedParents()] ?? []),
+                ...$class->data[Data::ResolvedParents],
             ];
         }
 
         // $typeResolver = $this->typeResolver($class, $arguments);
         $typeResolver = new TypeProcessor([]);
 
-        foreach ($class->data[Data::ClassConstants()] as $name => $constant) {
+        foreach ($class->data[Data::ClassConstants] as $name => $constant) {
             $this->constant($name)->addInherited($constant, $typeResolver);
         }
 
-        foreach ($class->data[Data::Properties()] as $name => $property) {
+        foreach ($class->data[Data::Properties] as $name => $property) {
             $this->property($name)->addInherited($property, $typeResolver);
         }
 
-        foreach ($class->data[Data::Methods()] as $name => $method) {
+        foreach ($class->data[Data::Methods] as $name => $method) {
             $this->method($name)->addInherited($method, $typeResolver);
         }
     }
@@ -194,7 +194,7 @@ final class ClassInheritanceResolver
     {
         return ChangeDetectors::from([
             ...$this->changeDetectors,
-            ...($this->data[Data::UnresolvedChangeDetectors()] ?? []),
+            ...$this->data[Data::UnresolvedChangeDetectors],
         ]) ?? new IfSerializedChangeDetector();
     }
 
@@ -202,18 +202,18 @@ final class ClassInheritanceResolver
     {
         return $this
             ->data
-            ->set(Data::ResolvedChangeDetector(), $this->resolveChangeDetector())
-            ->set(Data::ResolvedParents(), $this->resolvedParents)
-            ->set(Data::ResolvedInterfaces(), [...$this->resolvedOwnInterfaces, ...$this->resolvedUpstreamInterfaces])
-            ->set(Data::ClassConstants(), array_filter(array_map(
+            ->set(Data::ResolvedChangeDetector, $this->resolveChangeDetector())
+            ->set(Data::ResolvedParents, $this->resolvedParents)
+            ->set(Data::ResolvedInterfaces, [...$this->resolvedOwnInterfaces, ...$this->resolvedUpstreamInterfaces])
+            ->set(Data::ClassConstants, array_filter(array_map(
                 static fn(BasicInheritanceResolver $resolver): ?TypedMap => $resolver->resolve(),
                 $this->constants,
             )))
-            ->set(Data::Properties(), array_filter(array_map(
+            ->set(Data::Properties, array_filter(array_map(
                 static fn(BasicInheritanceResolver $resolver): ?TypedMap => $resolver->resolve(),
                 $this->properties,
             )))
-            ->set(Data::Methods(), array_filter(array_map(
+            ->set(Data::Methods, array_filter(array_map(
                 static fn(MethodInheritanceResolver $resolver): ?TypedMap => $resolver->resolve(),
                 $this->methods,
             )));

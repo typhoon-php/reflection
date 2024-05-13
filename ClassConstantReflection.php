@@ -9,7 +9,6 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassConstantAdapter;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
-use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -48,22 +47,22 @@ final class ClassConstantReflection extends Reflection
             return \constant($this->id->class->name . '::' . $this->name);
         }
 
-        return $this->data[Data::ValueExpression()]->evaluate($this, $this->reflector);
+        return $this->data[Data::ValueExpression]->evaluate($this, $this->reflector);
     }
 
     public function isPrivate(): bool
     {
-        return $this->data[Data::Visibility()] === Visibility::Private;
+        return $this->data[Data::Visibility] === Visibility::Private;
     }
 
     public function isProtected(): bool
     {
-        return $this->data[Data::Visibility()] === Visibility::Protected;
+        return $this->data[Data::Visibility] === Visibility::Protected;
     }
 
     public function isPublic(): bool
     {
-        $visibility = $this->data[Data::Visibility()];
+        $visibility = $this->data[Data::Visibility];
 
         return $visibility === null || $visibility === Visibility::Public;
     }
@@ -71,15 +70,15 @@ final class ClassConstantReflection extends Reflection
     public function isFinal(Kind $kind = Kind::Resolved): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeFinal()] ?? false,
-            Kind::Annotated => $this->data[Data::AnnotatedFinal()] ?? false,
-            Kind::Resolved => $this->data[Data::NativeFinal()] ?? $this->data[Data::AnnotatedFinal()] ?? false,
+            Kind::Native => $this->data[Data::NativeFinal],
+            Kind::Annotated => $this->data[Data::AnnotatedFinal],
+            Kind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
     }
 
     public function isEnumCase(): bool
     {
-        return $this->data[Data::EnumCase()] ?? false;
+        return $this->data[Data::EnumCase];
     }
 
     /**
@@ -87,7 +86,10 @@ final class ClassConstantReflection extends Reflection
      */
     public function backingValue(): int|string
     {
-        return $this->data[Data::BackingValueExpression()]->evaluate($this, $this->reflector);
+        $expression = $this->data[Data::EnumBackingValueExpression] ?? throw new \LogicException('Not a backed enum');
+
+        /** @psalm-suppress PossiblyNullReference */
+        return $expression->evaluate($this, $this->reflector);
     }
 
     /**
@@ -95,14 +97,7 @@ final class ClassConstantReflection extends Reflection
      */
     public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        return match ($kind) {
-            Kind::Native => $this->data[Data::NativeType()] ?? null,
-            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
-            Kind::Resolved => $this->data[Data::ResolvedType()]
-                ?? $this->data[Data::AnnotatedType()]
-                ?? $this->data[Data::NativeType()]
-                ?? types::mixed,
-        };
+        return $this->data[Data::Type]->byKind($kind);
     }
 
     public function toNative(): \ReflectionClassConstant

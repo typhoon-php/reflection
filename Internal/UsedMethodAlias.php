@@ -8,7 +8,7 @@ namespace Typhoon\Reflection\Internal;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class TraitMethodAlias
+final class UsedMethodAlias
 {
     /**
      * @param non-empty-string $trait

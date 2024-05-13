@@ -9,7 +9,6 @@ use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
 use Typhoon\Type\Type;
-use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -32,7 +31,7 @@ final class ParameterReflection extends Reflection
     public function __construct(ParameterId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
-        $this->index = $data[Data::Index()];
+        $this->index = $data[Data::ParameterIndex];
 
         parent::__construct($id, $data, $reflector);
     }
@@ -69,12 +68,12 @@ final class ParameterReflection extends Reflection
 
     public function hasDefaultValue(): bool
     {
-        return ($this->data[Data::DefaultValueExpression()] ?? null) !== null;
+        return $this->data[Data::DefaultValueExpression] !== null;
     }
 
     public function defaultValue(): mixed
     {
-        return ($this->data[Data::DefaultValueExpression()] ?? null)?->evaluate($this, $this->reflector);
+        return $this->data[Data::DefaultValueExpression]?->evaluate($this, $this->reflector);
     }
 
     public function isOptional(): bool
@@ -84,17 +83,17 @@ final class ParameterReflection extends Reflection
 
     public function isPassedByReference(): bool
     {
-        return $this->data[Data::ByReference()] ?? false;
+        return $this->data[Data::ByReference];
     }
 
     public function isPromoted(): bool
     {
-        return $this->data[Data::Promoted()] ?? false;
+        return $this->data[Data::Promoted];
     }
 
     public function isVariadic(): bool
     {
-        return $this->data[Data::Variadic()] ?? false;
+        return $this->data[Data::Variadic];
     }
 
     /**
@@ -102,14 +101,7 @@ final class ParameterReflection extends Reflection
      */
     public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        return match ($kind) {
-            Kind::Native => $this->data[Data::NativeType()] ?? null,
-            Kind::Annotated => $this->data[Data::AnnotatedType()] ?? null,
-            Kind::Resolved => $this->data[Data::ResolvedType()]
-                ?? $this->data[Data::AnnotatedType()]
-                ?? $this->data[Data::NativeType()]
-                ?? types::mixed,
-        };
+        return $this->data[Data::Type]->byKind($kind);
     }
 
     public function toNative(): \ReflectionParameter

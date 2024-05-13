@@ -4,406 +4,56 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal;
 
-use PhpParser\Node;
-use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\DeclarationId\DeclarationId;
-use Typhoon\Reflection\Internal\Expression\Expression;
-use Typhoon\Reflection\Internal\TypeContext\TypeContext;
-use Typhoon\Type\Type;
-use Typhoon\TypedMap\Key;
-use Typhoon\TypedMap\TypedMap;
-
 /**
  * @internal
  * @psalm-internal Typhoon
- * @psalm-type MethodName = non-empty-string
- * @psalm-type TraitName = non-empty-string
  */
-final class Data
+enum Data
 {
-    private function __construct() {}
-
-    /**
-     * @return Key<bool>
-     */
-    public static function Abstract(): Key
-    {
-        return DataEnum::Abstract;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function NativeReadonly(): Key
-    {
-        return DataEnum::NativeReadonly;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function AnnotatedReadonly(): Key
-    {
-        return DataEnum::AnnotatedReadonly;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function NativeFinal(): Key
-    {
-        return DataEnum::NativeFinal;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function AnnotatedFinal(): Key
-    {
-        return DataEnum::AnnotatedFinal;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function Promoted(): Key
-    {
-        return DataEnum::Promoted;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function Static(): Key
-    {
-        return DataEnum::Static;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function ByReference(): Key
-    {
-        return DataEnum::ByReference;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function Generator(): Key
-    {
-        return DataEnum::Generator;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function WrittenInC(): Key
-    {
-        return DataEnum::WrittenInC;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function Variadic(): Key
-    {
-        return DataEnum::Variadic;
-    }
-
-    /**
-     * @return Key<Node>
-     */
-    public static function Node(): Key
-    {
-        return DataEnum::Node;
-    }
-
-    /**
-     * @return Key<ClassKind>
-     */
-    public static function ClassKind(): Key
-    {
-        return DataEnum::ClassKind;
-    }
-
-    /**
-     * @return Key<?positive-int>
-     */
-    public static function StartLine(): Key
-    {
-        return DataEnum::StartLine;
-    }
-
-    /**
-     * @return Key<?positive-int>
-     */
-    public static function EndLine(): Key
-    {
-        return DataEnum::EndLine;
-    }
-
-    /**
-     * @return Key<list<TypedMap>>
-     */
-    public static function Attributes(): Key
-    {
-        return DataEnum::Attributes;
-    }
-
-    /**
-     * @return Key<array<non-empty-string, TypedMap>>
-     */
-    public static function ClassConstants(): Key
-    {
-        return DataEnum::ClassConstants;
-    }
-
-    /**
-     * @return Key<array<non-empty-string, TypedMap>>
-     */
-    public static function Properties(): Key
-    {
-        return DataEnum::Properties;
-    }
-
-    /**
-     * @return Key<array<non-empty-string, TypedMap>>
-     */
-    public static function Methods(): Key
-    {
-        return DataEnum::Methods;
-    }
-
-    /**
-     * @return Key<array<non-empty-string, TypedMap>>
-     */
-    public static function Parameters(): Key
-    {
-        return DataEnum::Parameters;
-    }
-
-    /**
-     * @return Key<?non-empty-string>
-     */
-    public static function File(): Key
-    {
-        return DataEnum::File;
-    }
-
-    /**
-     * @return Key<?non-empty-string>
-     */
-    public static function Extension(): Key
-    {
-        return DataEnum::Extension;
-    }
-
-    /**
-     * @return Key<?non-empty-string>
-     */
-    public static function PhpDoc(): Key
-    {
-        return DataEnum::PhpDoc;
-    }
-
-    /**
-     * @return Key<?Visibility>
-     */
-    public static function Visibility(): Key
-    {
-        return DataEnum::Visibility;
-    }
-
-    /**
-     * @return Key<?Expression>
-     */
-    public static function DefaultValueExpression(): Key
-    {
-        return DataEnum::DefaultValueExpression;
-    }
-
-    /**
-     * @return Key<Expression>
-     */
-    public static function ValueExpression(): Key
-    {
-        return DataEnum::ValueExpression;
-    }
-
-    /**
-     * @return Key<Expression>
-     */
-    public static function BackingValueExpression(): Key
-    {
-        return DataEnum::BackingValueExpression;
-    }
-
-    /**
-     * @return Key<?Type>
-     */
-    public static function NativeType(): Key
-    {
-        return DataEnum::NativeType;
-    }
-
-    /**
-     * @return Key<Type>
-     */
-    public static function TentativeType(): Key
-    {
-        return DataEnum::TentativeType;
-    }
-
-    /**
-     * @return Key<Type>
-     */
-    public static function AnnotatedType(): Key
-    {
-        return DataEnum::AnnotatedType;
-    }
-
-    /**
-     * @return Key<Type>
-     */
-    public static function ResolvedType(): Key
-    {
-        return DataEnum::ResolvedType;
-    }
-
-    /**
-     * @return Key<TypeContext>
-     */
-    public static function TypeContext(): Key
-    {
-        return DataEnum::TypeContext;
-    }
-
-    /**
-     * @return Key<?InheritedName>
-     */
-    public static function UnresolvedParent(): Key
-    {
-        return DataEnum::UnresolvedParent;
-    }
-
-    /**
-     * @return Key<list<InheritedName>>
-     */
-    public static function UnresolvedInterfaces(): Key
-    {
-        return DataEnum::UnresolvedInterfaces;
-    }
-
-    /**
-     * @return Key<list<UsedName>>
-     */
-    public static function UnresolvedTraits(): Key
-    {
-        return DataEnum::UnresolvedTraits;
-    }
-
-    /**
-     * @return Key<non-empty-string>
-     */
-    public static function AttributeClass(): Key
-    {
-        return DataEnum::AttributeClass;
-    }
-
-    /**
-     * @return Key<non-negative-int>
-     */
-    public static function Index(): Key
-    {
-        return DataEnum::Index;
-    }
-
-    /**
-     * @return Key<array<Expression>>
-     */
-    public static function ArgumentExpressions(): Key
-    {
-        return DataEnum::ArgumentExpressions;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function Repeated(): Key
-    {
-        return DataEnum::Repeated;
-    }
-
-    /**
-     * @return Key<bool>
-     */
-    public static function EnumCase(): Key
-    {
-        return DataEnum::EnumCase;
-    }
-
-    /**
-     * @return Key<list<TraitMethodAlias>>
-     */
-    public static function TraitMethodAliases(): Key
-    {
-        return DataEnum::TraitMethodAliases;
-    }
-
-    /**
-     * @return Key<array<MethodName, TraitName>>
-     */
-    public static function TraitMethodPrecedence(): Key
-    {
-        return DataEnum::TraitMethodPrecedence;
-    }
-
-    /**
-     * @return Key<array<class-string, list<Type>>>
-     */
-    public static function ResolvedInterfaces(): Key
-    {
-        return DataEnum::ResolvedInterfaces;
-    }
-
-    /**
-     * @return Key<array<class-string, list<Type>>>
-     */
-    public static function ResolvedParents(): Key
-    {
-        return DataEnum::ResolvedParents;
-    }
-
-    /**
-     * @return Key<DeclarationId>
-     */
-    public static function DeclarationId(): Key
-    {
-        return DataEnum::DeclarationId;
-    }
-
-    /**
-     * @return Key<list<ChangeDetector>>
-     */
-    public static function UnresolvedChangeDetectors(): Key
-    {
-        return DataEnum::UnresolvedChangeDetectors;
-    }
-
-    /**
-     * @return Key<ChangeDetector>
-     */
-    public static function ResolvedChangeDetector(): Key
-    {
-        return DataEnum::ResolvedChangeDetector;
-    }
-
-    /**
-     * @return Key<?Type>
-     */
-    public static function ThrowsType(): Key
-    {
-        return DataEnum::ResolvedChangeDetector;
-    }
+    public const Node = Data\NodeKey::Key;
+    public const ArgumentExpressions = Data\ArgumentExpressions::Key;
+    public const AttributeClass = Data\AttributeClass::Key;
+    public const AttributeRepeated = Data\AttributeRepeated::Key;
+    public const Attributes = Data\Attributes::Key;
+    public const ClassConstants = Data\ClassConstants::Key;
+    public const ClassKind = Data\ClassKindKey::Key;
+    public const DeclarationId = Data\DeclarationIdKey::Key;
+    public const DefaultValueExpression = Data\DefaultValueExpression::Key;
+    public const StartLine = Data\StartLine::Key;
+    public const EndLine = Data\EndLine::Key;
+    public const EnumCase = Data\IsEnumCase::Key;
+    public const EnumBackingValueExpression = Data\EnumBackingValueExpression::Key;
+    public const EnumScalarType = Data\EnumScalarType::Key;
+    public const File = Data\File::Key;
+    public const ParameterIndex = Data\ParameterIndex::Key;
+    public const Abstract = Data\IsAbstract::Key;
+    public const AnnotatedFinal = Data\IsAnnotatedFinal::Key;
+    public const AnnotatedReadonly = Data\IsAnnotatedReadonly::Key;
+    public const ByReference = Data\IsByReference::Key;
+    public const Generator = Data\IsGenerator::Key;
+    public const NativeFinal = Data\IsNativeFinal::Key;
+    public const NativeReadonly = Data\IsNativeReadonly::Key;
+    public const Promoted = Data\IsPromoted::Key;
+    public const Static = Data\IsStatic::Key;
+    public const Variadic = Data\IsVariadic::Key;
+    public const WrittenInC = Data\IsWrittenInC::Key;
+    public const Methods = Data\Methods::Key;
+    public const Parameters = Data\Parameters::Key;
+    public const PhpDoc = Data\PhpDoc::Key;
+    public const PhpExtension = Data\PhpExtension::Key;
+    public const Properties = Data\Properties::Key;
+    public const ResolvedChangeDetector = Data\ResolvedChangeDetector::Key;
+    public const ResolvedInterfaces = Data\ResolvedInterfaces::Key;
+    public const ResolvedParents = Data\ResolvedParents::Key;
+    public const ThrowsType = Data\ThrowsType::Key;
+    public const UsedMethodAliases = Data\UsedMethodAliases::Key;
+    public const UsedMethodPrecedence = Data\UsedMethodPrecedence::Key;
+    public const TypeContext = Data\TypeContextKey::Key;
+    public const UnresolvedChangeDetectors = Data\UnresolvedChangeDetectors::Key;
+    public const UnresolvedInterfaces = Data\UnresolvedInterfaces::Key;
+    public const UnresolvedParent = Data\UnresolvedParent::Key;
+    public const UnresolvedTraits = Data\UnresolvedTraits::Key;
+    public const ValueExpression = Data\ValueExpression::Key;
+    public const Visibility = Data\VisibilityKey::Key;
+    public const Type = Data\Type::Key;
 }

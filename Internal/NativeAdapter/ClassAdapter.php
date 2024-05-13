@@ -141,7 +141,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getInterfaceNames(): array
     {
-        return array_keys($this->reflection->data[Data::ResolvedInterfaces()]);
+        return array_keys($this->reflection->data[Data::ResolvedInterfaces]);
     }
 
     public function getInterfaces(): array

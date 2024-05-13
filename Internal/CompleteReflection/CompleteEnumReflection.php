@@ -11,6 +11,7 @@ use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\InheritedName;
 use Typhoon\Reflection\Internal\ReflectionHook;
+use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
@@ -27,53 +28,51 @@ final class CompleteEnumReflection implements ReflectionHook
             return $data;
         }
 
-        if ($data[Data::ClassKind()] !== ClassKind::Enum) {
+        if ($data[Data::ClassKind] !== ClassKind::Enum) {
             return $data;
         }
 
-        $scalarType = $data[Data::NativeType()];
-        $interfaces = $data[Data::UnresolvedInterfaces()];
+        $scalarType = $data[Data::EnumScalarType];
+        $interfaces = $data[Data::UnresolvedInterfaces];
         $properties = [];
-        $methods = $data[Data::Methods()];
+        $methods = $data[Data::Methods];
         $staticType = types::static($id);
 
         $interfaces[] = new InheritedName(\UnitEnum::class);
 
         $properties['name'] = (new TypedMap())
-            ->set(Data::NativeReadonly(), true)
-            ->set(Data::NativeType(), types::string)
-            ->set(Data::Visibility(), Visibility::Public);
+            ->set(Data::NativeReadonly, true)
+            ->set(Data::Type, new TypeData(types::string))
+            ->set(Data::Visibility, Visibility::Public);
 
         $methods['cases'] = (new TypedMap())
-            ->set(Data::Static(), true)
-            ->set(Data::NativeType(), types::array)
-            ->set(Data::AnnotatedType(), types::list($staticType))
-            ->set(Data::Visibility(), Visibility::Public)
-            ->set(Data::WrittenInC(), true);
+            ->set(Data::Static, true)
+            ->set(Data::Type, new TypeData(types::array, types::list($staticType)))
+            ->set(Data::Visibility, Visibility::Public)
+            ->set(Data::WrittenInC, true);
 
         if ($scalarType !== null) {
             $interfaces[] = new InheritedName(\BackedEnum::class);
 
             $properties['value'] = (new TypedMap())
-                ->set(Data::NativeReadonly(), true)
-                ->set(Data::NativeType(), $scalarType)
-                ->set(Data::Visibility(), Visibility::Public);
+                ->set(Data::NativeReadonly, true)
+                ->set(Data::Type, new TypeData($scalarType))
+                ->set(Data::Visibility, Visibility::Public);
 
             $methods['from'] = $methods['cases']
-                ->set(Data::NativeType(), $staticType)
-                ->set(Data::Parameters(), [
+                ->set(Data::Type, new TypeData($staticType))
+                ->set(Data::Parameters, [
                     'value' => (new TypedMap())
-                        ->set(Data::NativeType(), types::arrayKey)
-                        ->set(Data::AnnotatedType(), $scalarType),
+                        ->set(Data::Type, new TypeData(types::arrayKey, $scalarType)),
                 ]);
 
             $methods['tryFrom'] = $methods['from']
-                ->set(Data::NativeType(), types::nullable($staticType));
+                ->set(Data::Type, new TypeData(types::nullable($staticType)));
         }
 
         return $data
-            ->set(Data::UnresolvedInterfaces(), $interfaces)
-            ->set(Data::Properties(), $properties)
-            ->set(Data::Methods(), $methods);
+            ->set(Data::UnresolvedInterfaces, $interfaces)
+            ->set(Data::Properties, $properties)
+            ->set(Data::Methods, $methods);
     }
 }
