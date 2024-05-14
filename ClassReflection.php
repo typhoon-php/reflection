@@ -12,6 +12,7 @@ use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\aliasId;
 use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\methodId;
@@ -52,6 +53,11 @@ final class ClassReflection extends Reflection
     private ?array $attributes = null;
 
     /**
+     * @var ?array<non-empty-string, AliasReflection>
+     */
+    private ?array $aliases = null;
+
+    /**
      * @var ?array<non-empty-string, TemplateReflection>
      */
     private ?array $templates = null;
@@ -77,6 +83,34 @@ final class ClassReflection extends Reflection
             ),
             $this->data[Data::Attributes],
         );
+    }
+
+    /**
+     * @return array<non-empty-string, AliasReflection>
+     */
+    public function aliases(): array
+    {
+        if ($this->aliases !== null) {
+            return $this->aliases;
+        }
+
+        $this->aliases = [];
+
+        if ($this->id instanceof AnonymousClassId) {
+            \assert($this->data[Data::Aliases] === []);
+
+            return $this->aliases = [];
+        }
+
+        foreach ($this->data[Data::Aliases] as $name => $data) {
+            $this->aliases[$name] = new AliasReflection(
+                id: aliasId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->aliases;
     }
 
     /**

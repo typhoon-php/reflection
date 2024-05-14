@@ -38,33 +38,41 @@ use Typhoon\Type\types;
 final class PhpDocTypeReflector
 {
     public function __construct(
-        private TypeContext $typeContext = new TypeContext(),
+        private readonly TypeContext $typeContext = new TypeContext(),
     ) {}
+
+    /**
+     * @return non-empty-string
+     */
+    public function resolveClass(IdentifierTypeNode $node): string
+    {
+        return $this->typeContext->resolveClass(NameParser::parse($node->name))->toString();
+    }
 
     /**
      * @return ($node is null ? null : Type)
      * @throws InvalidPhpDocType
      */
-    public function reflect(?TypeNode $node): ?Type
+    public function reflectType(?TypeNode $node): ?Type
     {
         if ($node === null) {
             return null;
         }
 
         if ($node instanceof NullableTypeNode) {
-            return types::nullable($this->reflect($node->type));
+            return types::nullable($this->reflectType($node->type));
         }
 
         if ($node instanceof UnionTypeNode) {
-            return types::union(...array_map($this->reflect(...), $node->types));
+            return types::union(...array_map($this->reflectType(...), $node->types));
         }
 
         if ($node instanceof IntersectionTypeNode) {
-            return types::intersection(...array_map($this->reflect(...), $node->types));
+            return types::intersection(...array_map($this->reflectType(...), $node->types));
         }
 
         if ($node instanceof ArrayTypeNode) {
-            return types::array(value: $this->reflect($node->type));
+            return types::array(value: $this->reflectType($node->type));
         }
 
         if ($node instanceof ArrayShapeNode) {
@@ -121,7 +129,7 @@ final class PhpDocTypeReflector
                 ),
                 default => throw new InvalidPhpDocType(sprintf('int range type should have 2 arguments, got %d', \count($genericTypes)))
             },
-            'int-mask', 'int-mask-of' => types::intMask(types::union(...array_map($this->reflect(...), $genericTypes))),
+            'int-mask', 'int-mask-of' => types::intMask(types::union(...array_map($this->reflectType(...), $genericTypes))),
             'numeric' => types::numeric,
             'non-empty-string' => types::nonEmptyString,
             'string' => types::string,
@@ -129,16 +137,16 @@ final class PhpDocTypeReflector
             'numeric-string' => types::numericString,
             'class-string' => match (\count($genericTypes)) {
                 0 => types::classString,
-                1 => types::classString($this->reflect($genericTypes[0])),
+                1 => types::classString($this->reflectType($genericTypes[0])),
                 default => throw new InvalidPhpDocType(),
             },
             'array-key' => types::arrayKey,
             'key-of' => match ($number = \count($genericTypes)) {
-                1 => types::key($this->reflect($genericTypes[0])),
+                1 => types::key($this->reflectType($genericTypes[0])),
                 default => throw new InvalidPhpDocType(sprintf('key-of type should have 1 argument, got %d', $number)),
             },
             'value-of' => match ($number = \count($genericTypes)) {
-                1 => types::value($this->reflect($genericTypes[0])),
+                1 => types::value($this->reflectType($genericTypes[0])),
                 default => throw new InvalidPhpDocType(sprintf('value-of type should have 1 argument, got %d', $number)),
             },
             'literal-int' => types::literalInt,
@@ -149,19 +157,19 @@ final class PhpDocTypeReflector
             'resource', 'closed-resource', 'open-resource' => types::resource,
             'list' => match ($number = \count($genericTypes)) {
                 0 => types::list(),
-                1 => types::list($this->reflect($genericTypes[0])),
+                1 => types::list($this->reflectType($genericTypes[0])),
                 default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 argument, got %d', $number)),
             },
             'array' => match ($number = \count($genericTypes)) {
                 0 => types::array,
-                1 => types::array(value: $this->reflect($genericTypes[0])),
-                2 => types::array($this->reflect($genericTypes[0]), $this->reflect($genericTypes[1])),
+                1 => types::array(value: $this->reflectType($genericTypes[0])),
+                2 => types::array($this->reflectType($genericTypes[0]), $this->reflectType($genericTypes[1])),
                 default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 arguments, got %d', $number)),
             },
             'iterable' => match ($number = \count($genericTypes)) {
                 0 => types::iterable,
-                1 => types::iterable(value: $this->reflect($genericTypes[0])),
-                2 => types::iterable(...array_map($this->reflect(...), $genericTypes)),
+                1 => types::iterable(value: $this->reflectType($genericTypes[0])),
+                2 => types::iterable(...array_map($this->reflectType(...), $genericTypes)),
                 default => throw new InvalidPhpDocType(sprintf('iterable type should have at most 2 arguments, got %d', $number)),
             },
             'object' => types::object,
@@ -172,7 +180,7 @@ final class PhpDocTypeReflector
             'never' => types::never,
             default => match (true) {
                 str_starts_with($name, 'non-empty-') => types::nonEmpty($this->reflectIdentifier(substr($name, 10), $genericTypes)),
-                default => $this->typeContext->resolveType(NameParser::parse($name), array_map($this->reflect(...), $genericTypes))
+                default => $this->typeContext->resolveType(NameParser::parse($name), array_map($this->reflectType(...), $genericTypes))
             },
         };
     }
@@ -202,7 +210,7 @@ final class PhpDocTypeReflector
         $elements = [];
 
         foreach ($node->items as $item) {
-            $type = types::arrayElement($this->reflect($item->valueType), $item->optional);
+            $type = types::arrayElement($this->reflectType($item->valueType), $item->optional);
 
             if ($item->keyName === null) {
                 $elements[] = $type;
@@ -238,7 +246,7 @@ final class PhpDocTypeReflector
                 default => throw new InvalidPhpDocType(sprintf('%s is not supported', $keyName::class)),
             };
 
-            $properties[$name] = types::prop($this->reflect($item->valueType), $item->optional);
+            $properties[$name] = types::prop($this->reflectType($item->valueType), $item->optional);
         }
 
         return types::objectShape($properties);
@@ -294,16 +302,16 @@ final class PhpDocTypeReflector
         if ($node->identifier->name === 'callable') {
             return types::callable(
                 parameters: $this->reflectCallableParameters($node->parameters),
-                return: $this->reflect($node->returnType),
+                return: $this->reflectType($node->returnType),
             );
         }
 
-        $class = $this->typeContext->resolveClass(NameParser::parse($node->identifier->name));
+        $class = $this->resolveClass($node->identifier);
 
-        if ($class->toString() === \Closure::class) {
+        if ($class === \Closure::class) {
             return types::closure(
                 parameters: $this->reflectCallableParameters($node->parameters),
-                return: $this->reflect($node->returnType),
+                return: $this->reflectType($node->returnType),
             );
         }
 
@@ -318,7 +326,7 @@ final class PhpDocTypeReflector
     {
         return array_map(
             fn(CallableTypeParameterNode $parameter): Parameter => types::param(
-                type: $this->reflect($parameter->type),
+                type: $this->reflectType($parameter->type),
                 hasDefault: $parameter->isOptional,
                 variadic: $parameter->isVariadic,
                 byReference: $parameter->isReference,
@@ -331,7 +339,7 @@ final class PhpDocTypeReflector
     private function reflectConditional(ConditionalTypeNode|ConditionalTypeForParameterNode $node): Type
     {
         if ($node instanceof ConditionalTypeNode) {
-            $subject = $this->reflect($node->subjectType);
+            $subject = $this->reflectType($node->subjectType);
         } else {
             $name = ltrim($node->parameterName, '$');
             \assert($name !== '');
@@ -341,17 +349,17 @@ final class PhpDocTypeReflector
         if ($node->negated) {
             return types::conditional(
                 subject: $subject,
-                if: $this->reflect($node->targetType),
-                then: $this->reflect($node->else),
-                else: $this->reflect($node->if),
+                if: $this->reflectType($node->targetType),
+                then: $this->reflectType($node->else),
+                else: $this->reflectType($node->if),
             );
         }
 
         return types::conditional(
             subject: $subject,
-            if: $this->reflect($node->targetType),
-            then: $this->reflect($node->if),
-            else: $this->reflect($node->else),
+            if: $this->reflectType($node->targetType),
+            then: $this->reflectType($node->if),
+            else: $this->reflectType($node->else),
         );
     }
 }

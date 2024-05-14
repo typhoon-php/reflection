@@ -15,11 +15,11 @@ use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
-use Typhoon\Reflection\Internal\TypeContext\NameParser;
 use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
 use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\aliasId;
 
 /**
  * @internal
@@ -75,9 +75,10 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
             }
 
             $data = $data->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc));
-            $data = $this->reflectParent($data, $phpDoc);
-            $data = $this->reflectInterfaces($data, $phpDoc);
-            $data = $this->reflectUses($data);
+            $data = $data->set(Data::Aliases, $this->reflectAliases($typeReflector, $phpDoc));
+            $data = $this->reflectParent($typeReflector, $data, $phpDoc);
+            $data = $this->reflectInterfaces($typeReflector, $data, $phpDoc);
+            $data = $this->reflectUses($typeReflector, $data);
         }
 
         return $data
@@ -100,7 +101,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
             });
     }
 
-    private function reflectParent(TypedMap $data, PhpDoc $phpDoc): TypedMap
+    private function reflectParent(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): TypedMap
     {
         $parent = $data[Data::UnresolvedParent];
 
@@ -108,19 +109,16 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
             return $data;
         }
 
-        $typeContext = $data[Data::TypeContext];
-        $typeReflector = new PhpDocTypeReflector($typeContext);
-
         foreach ($phpDoc->extendedTypes() as $type) {
-            if ($parent[0] === $typeContext->resolveClass(NameParser::parse($type->type->name))->toString()) {
-                $parent[1] = array_map($typeReflector->reflect(...), $type->genericTypes);
+            if ($parent[0] === $typeReflector->resolveClass($type->type)) {
+                $parent[1] = array_map($typeReflector->reflectType(...), $type->genericTypes);
             }
         }
 
         return $data->set(Data::UnresolvedParent, $parent);
     }
 
-    private function reflectInterfaces(TypedMap $data, PhpDoc $phpDoc): TypedMap
+    private function reflectInterfaces(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): TypedMap
     {
         $interfaces = $data[Data::UnresolvedInterfaces];
 
@@ -128,22 +126,20 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
             return $data;
         }
 
-        $typeContext = $data[Data::TypeContext];
-        $typeReflector = new PhpDocTypeReflector($typeContext);
         $types = $data[Data::ClassKind] === ClassKind::Interface ? $phpDoc->extendedTypes() : $phpDoc->implementedTypes();
 
         foreach ($types as $type) {
-            $name = $typeContext->resolveClass(NameParser::parse($type->type->name))->toString();
+            $name = $typeReflector->resolveClass($type->type);
 
             if (isset($interfaces[$name])) {
-                $interfaces[$name] = array_map($typeReflector->reflect(...), $type->genericTypes);
+                $interfaces[$name] = array_map($typeReflector->reflectType(...), $type->genericTypes);
             }
         }
 
         return $data->set(Data::UnresolvedInterfaces, $interfaces);
     }
 
-    private function reflectUses(TypedMap $data): TypedMap
+    private function reflectUses(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $uses = $data[Data::UnresolvedUses];
 
@@ -151,22 +147,40 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
             return $data;
         }
 
-        $typeContext = $data[Data::TypeContext];
-        $typeReflector = new PhpDocTypeReflector($typeContext);
-
         foreach ($data[Data::UsePhpDocs] as $phpDocText) {
             $phpDoc = $this->parsePhpDoc($phpDocText);
 
             foreach ($phpDoc->usedTypes() as $type) {
-                $name = $typeContext->resolveClass(NameParser::parse($type->type->name))->toString();
+                $name = $typeReflector->resolveClass($type->type);
 
                 if (isset($uses[$name])) {
-                    $uses[$name] = array_map($typeReflector->reflect(...), $type->genericTypes);
+                    $uses[$name] = array_map($typeReflector->reflectType(...), $type->genericTypes);
                 }
             }
         }
 
         return $data->set(Data::UnresolvedUses, $uses);
+    }
+
+    /**
+     * @return array<non-empty-string, TypedMap>
+     */
+    private function reflectAliases(PhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    {
+        $aliases = [];
+
+        foreach ($phpDoc->typeAliases() as $alias) {
+            $aliases[$alias->alias] = (new TypedMap())->set(Data::AliasType, $typeReflector->reflectType($alias->type));
+        }
+
+        foreach ($phpDoc->typeAliasImports() as $aliasImport) {
+            $aliases[$aliasImport->importedAs ?? $aliasImport->importedAlias] = (new TypedMap())->set(
+                Data::AliasType,
+                types::alias(aliasId($typeReflector->resolveClass($aliasImport->importedFrom), $aliasImport->importedAlias)),
+            );
+        }
+
+        return $aliases;
     }
 
     /**
@@ -179,7 +193,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         foreach ($phpDoc->templates() as $index => $template) {
             $templates[$template->name] = (new TypedMap())
                 ->set(Data::Index, $index)
-                ->set(Data::Constraint, $typeReflector->reflect($template->bound) ?? types::mixed)
+                ->set(Data::Constraint, $typeReflector->reflectType($template->bound) ?? types::mixed)
                 ->set(Data::Variance, PhpDoc::templateTagVariance($template));
         }
 
@@ -219,7 +233,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         $throwsTypes = $phpDoc->throwsTypes();
 
         if ($throwsTypes !== []) {
-            $data = $data->set(Data::ThrowsType, types::union(...array_map($typeReflector->reflect(...), $throwsTypes)));
+            $data = $data->set(Data::ThrowsType, types::union(...array_map($typeReflector->reflectType(...), $throwsTypes)));
         }
 
         return $data;
@@ -283,7 +297,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
 
     private function setAnnotatedType(PhpDocTypeReflector $typeReflector, TypeNode $node, TypedMap $data): TypedMap
     {
-        return $data->modify(Data::Type, static fn(TypeData $type): TypeData => $type->withAnnotated($typeReflector->reflect($node)));
+        return $data->modify(Data::Type, static fn(TypeData $type): TypeData => $type->withAnnotated($typeReflector->reflectType($node)));
     }
 
     /**

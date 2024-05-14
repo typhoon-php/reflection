@@ -42,11 +42,13 @@ enum Data
     public const PhpDoc = Data\PhpDoc::Key;
     public const PhpExtension = Data\PhpExtension::Key;
     public const Templates = Data\Templates::Key;
+    public const Aliases = Data\Aliases::Key;
     public const Properties = Data\Properties::Key;
     public const ResolvedChangeDetector = Data\ResolvedChangeDetector::Key;
     public const ResolvedInterfaces = Data\ResolvedInterfaces::Key;
     public const ResolvedParents = Data\ResolvedParents::Key;
     public const ThrowsType = Data\ThrowsType::Key;
+    public const AliasType = Data\AliasType::Key;
     public const UsedMethodAliases = Data\UsedMethodAliases::Key;
     public const UsedMethodPrecedence = Data\UsedMethodPrecedence::Key;
     public const TypeContext = Data\TypeContextKey::Key;
