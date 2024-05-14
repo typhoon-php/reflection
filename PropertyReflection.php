@@ -60,7 +60,7 @@ final class PropertyReflection extends Reflection
 
     public function file(): ?string
     {
-        if ($this->data[Data::WrittenInC]) {
+        if ($this->data[Data::InternallyDefined]) {
             return null;
         }
 

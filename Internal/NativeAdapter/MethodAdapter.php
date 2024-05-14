@@ -284,7 +284,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function isInternal(): bool
     {
-        return $this->reflection->isWrittenInC();
+        return $this->reflection->isInternallyDefined();
     }
 
     public function isPrivate(): bool

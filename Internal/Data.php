@@ -36,7 +36,7 @@ enum Data
     public const Promoted = Data\IsPromoted::Key;
     public const Static = Data\IsStatic::Key;
     public const Variadic = Data\IsVariadic::Key;
-    public const WrittenInC = Data\IsWrittenInC::Key;
+    public const InternallyDefined = Data\InternallyDefined::Key;
     public const Methods = Data\Methods::Key;
     public const Parameters = Data\Parameters::Key;
     public const PhpDoc = Data\PhpDoc::Key;

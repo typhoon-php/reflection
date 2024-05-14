@@ -12,7 +12,7 @@ use Typhoon\TypedMap\TypedMap;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements OptionalKey<bool>
  */
-enum IsWrittenInC implements OptionalKey
+enum InternallyDefined implements OptionalKey
 {
     case Key;
 

@@ -41,7 +41,7 @@ final class ResolvedResource
         $code = self::readFile($resource->file);
         $baseData = $resource->baseData;
 
-        if (!$baseData[Data::WrittenInC]) {
+        if (!$baseData[Data::InternallyDefined]) {
             $baseData = $baseData->set(Data::File, $resource->file);
         }
 

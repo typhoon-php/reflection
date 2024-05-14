@@ -380,9 +380,9 @@ final class ClassReflection extends Reflection
         return $this->data[Data::File];
     }
 
-    public function isWrittenInC(): bool
+    public function isInternallyDefined(): bool
     {
-        return $this->data[Data::WrittenInC];
+        return $this->data[Data::InternallyDefined];
     }
 
     /**

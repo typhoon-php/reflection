@@ -44,7 +44,7 @@ final class CompleteEnumReflection implements ReflectionHook
             ->set(Data::Static, true)
             ->set(Data::Type, new TypeData(types::array, types::list($staticType)))
             ->set(Data::Visibility, Visibility::Public)
-            ->set(Data::WrittenInC, true);
+            ->set(Data::InternallyDefined, true);
 
         if ($scalarType !== null) {
             $interfaces[\BackedEnum::class] = [];

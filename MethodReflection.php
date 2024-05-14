@@ -106,16 +106,16 @@ final class MethodReflection extends Reflection
      */
     public function file(): ?string
     {
-        if ($this->data[Data::WrittenInC]) {
+        if ($this->data[Data::InternallyDefined]) {
             return null;
         }
 
         return $this->declaringClass()->file();
     }
 
-    public function isWrittenInC(): bool
+    public function isInternallyDefined(): bool
     {
-        return $this->data[Data::WrittenInC] || $this->declaringClass()->isWrittenInC();
+        return $this->data[Data::InternallyDefined] || $this->declaringClass()->isInternallyDefined();
     }
 
     public function isAbstract(): bool

@@ -390,7 +390,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isInternal(): bool
     {
-        return $this->reflection->isWrittenInC();
+        return $this->reflection->isInternallyDefined();
     }
 
     public function isIterable(): bool
