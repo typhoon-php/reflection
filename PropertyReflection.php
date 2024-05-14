@@ -23,11 +23,39 @@ final class PropertyReflection extends Reflection
      */
     public readonly string $name;
 
+    /**
+     * @var ?list<AttributeReflection>
+     */
+    private ?array $attributes = null;
+
     public function __construct(PropertyId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
 
         parent::__construct($id, $data, $reflector);
+    }
+
+    /**
+     * @return list<AttributeReflection>
+     */
+    public function attributes(): array
+    {
+        return $this->attributes ??= array_map(
+            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
+                targetId: $this->id,
+                data: $data,
+                reflector: $this->reflector,
+            ),
+            $this->data[Data::Attributes],
+        );
+    }
+
+    /**
+     * @return ?non-empty-string
+     */
+    public function phpDoc(): ?string
+    {
+        return $this->data[Data::PhpDoc];
     }
 
     public function file(): ?string

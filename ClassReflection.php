@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
+use Typhoon\ChangeDetector\ChangeDetector;
+use Typhoon\ChangeDetector\IfSerializedChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\Reflection\Internal\ClassKind;
@@ -14,6 +16,7 @@ use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\propertyId;
+use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -43,12 +46,72 @@ final class ClassReflection extends Reflection
      */
     private ?array $methods = null;
 
+    /**
+     * @var ?list<AttributeReflection>
+     */
+    private ?array $attributes = null;
+
+    /**
+     * @var ?array<non-empty-string, TemplateReflection>
+     */
+    private ?array $templates = null;
+
     public function __construct(ClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector)
     {
         /** @psalm-suppress PropertyTypeCoercion */
         $this->name = $id->name;
 
         parent::__construct($id, $data, $reflector);
+    }
+
+    /**
+     * @return list<AttributeReflection>
+     */
+    public function attributes(): array
+    {
+        return $this->attributes ??= array_map(
+            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
+                targetId: $this->id,
+                data: $data,
+                reflector: $this->reflector,
+            ),
+            $this->data[Data::Attributes],
+        );
+    }
+
+    /**
+     * @return array<non-empty-string, TemplateReflection>
+     */
+    public function templates(): array
+    {
+        if ($this->templates !== null) {
+            return $this->templates;
+        }
+
+        $this->templates = [];
+
+        foreach ($this->data[Data::Templates] as $name => $data) {
+            $this->templates[$name] = new TemplateReflection(
+                id: templateId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->templates;
+    }
+
+    /**
+     * @return ?non-empty-string
+     */
+    public function phpDoc(): ?string
+    {
+        return $this->data[Data::PhpDoc];
+    }
+
+    public function changeDetector(): ChangeDetector
+    {
+        return $this->data[Data::ResolvedChangeDetector] ?? new IfSerializedChangeDetector();
     }
 
     public function isInstanceOf(string|ClassId|AnonymousClassId $class): bool

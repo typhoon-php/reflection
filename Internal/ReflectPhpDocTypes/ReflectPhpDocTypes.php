@@ -35,6 +35,7 @@ final class ReflectPhpDocTypes implements ReflectionHook
 
     private function reflectClass(TypedMap $data): TypedMap
     {
+        $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
         $phpDoc = $this->parsePhpDoc($data);
 
         if ($phpDoc !== null) {
@@ -45,9 +46,9 @@ final class ReflectPhpDocTypes implements ReflectionHook
             if ($phpDoc->hasReadonly()) {
                 $data = $data->set(Data::AnnotatedReadonly, true);
             }
-        }
 
-        $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
+            $data = $data->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc));
+        }
 
         return $data
             ->modify(Data::ClassConstants, fn(array $constants): array => array_map(
@@ -69,6 +70,23 @@ final class ReflectPhpDocTypes implements ReflectionHook
             });
     }
 
+    /**
+     * @return array<non-empty-string, TypedMap>
+     */
+    private function reflectTemplates(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    {
+        $templates = [];
+
+        foreach ($phpDoc->templates() as $index => $template) {
+            $templates[$template->name] = (new TypedMap())
+                ->set(Data::Index, $index)
+                ->set(Data::Constraint, $typeReflector->reflect($template->bound) ?? types::mixed)
+                ->set(Data::Variance, PhpDoc::templateTagVariance($template));
+        }
+
+        return $templates;
+    }
+
     private function reflectFunction(TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data);
@@ -79,17 +97,19 @@ final class ReflectPhpDocTypes implements ReflectionHook
 
         $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
 
-        $data = $data->modify(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
-            $types = $phpDoc->paramTypes();
+        $data = $data
+            ->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc))
+            ->modify(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
+                $types = $phpDoc->paramTypes();
 
-            foreach ($types as $name => $type) {
-                if (isset($parameters[$name])) {
-                    $parameters[$name] = $this->setAnnotatedType($typeReflector, $type, $parameters[$name]);
+                foreach ($types as $name => $type) {
+                    if (isset($parameters[$name])) {
+                        $parameters[$name] = $this->setAnnotatedType($typeReflector, $type, $parameters[$name]);
+                    }
                 }
-            }
 
-            return $parameters;
-        });
+                return $parameters;
+            });
 
         $returnType = $phpDoc->returnType();
 

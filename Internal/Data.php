@@ -25,7 +25,7 @@ enum Data
     public const EnumBackingValueExpression = Data\EnumBackingValueExpression::Key;
     public const EnumScalarType = Data\EnumScalarType::Key;
     public const File = Data\File::Key;
-    public const ParameterIndex = Data\ParameterIndex::Key;
+    public const Index = Data\ParameterIndex::Key;
     public const Abstract = Data\IsAbstract::Key;
     public const AnnotatedFinal = Data\IsAnnotatedFinal::Key;
     public const AnnotatedReadonly = Data\IsAnnotatedReadonly::Key;
@@ -41,6 +41,7 @@ enum Data
     public const Parameters = Data\Parameters::Key;
     public const PhpDoc = Data\PhpDoc::Key;
     public const PhpExtension = Data\PhpExtension::Key;
+    public const Templates = Data\Templates::Key;
     public const Properties = Data\Properties::Key;
     public const ResolvedChangeDetector = Data\ResolvedChangeDetector::Key;
     public const ResolvedInterfaces = Data\ResolvedInterfaces::Key;
@@ -56,4 +57,6 @@ enum Data
     public const ValueExpression = Data\ValueExpression::Key;
     public const Visibility = Data\VisibilityKey::Key;
     public const Type = Data\Type::Key;
+    public const Variance = Data\VarianceKey::Key;
+    public const Constraint = Data\Constraint::Key;
 }

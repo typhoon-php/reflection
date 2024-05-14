@@ -28,12 +28,40 @@ final class ParameterReflection extends Reflection
      */
     public readonly int $index;
 
+    /**
+     * @var ?list<AttributeReflection>
+     */
+    private ?array $attributes = null;
+
     public function __construct(ParameterId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
-        $this->index = $data[Data::ParameterIndex];
+        $this->index = $data[Data::Index];
 
         parent::__construct($id, $data, $reflector);
+    }
+
+    /**
+     * @return list<AttributeReflection>
+     */
+    public function attributes(): array
+    {
+        return $this->attributes ??= array_map(
+            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
+                targetId: $this->id,
+                data: $data,
+                reflector: $this->reflector,
+            ),
+            $this->data[Data::Attributes],
+        );
+    }
+
+    /**
+     * @return ?non-empty-string
+     */
+    public function phpDoc(): ?string
+    {
+        return $this->data[Data::PhpDoc];
     }
 
     public function function(): MethodReflection

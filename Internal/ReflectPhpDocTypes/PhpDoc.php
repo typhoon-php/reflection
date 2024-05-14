@@ -52,9 +52,6 @@ final class PhpDoc
         );
     }
 
-    /**
-     * @psalm-suppress PossiblyUnusedMethod
-     */
     public static function templateTagVariance(TemplateTagValueNode $tag): Variance
     {
         $attribute = $tag->getAttribute(self::VARIANCE_ATTRIBUTE);
@@ -182,7 +179,6 @@ final class PhpDoc
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @return list<TemplateTagValueNode>
      */
     public function templates(): array

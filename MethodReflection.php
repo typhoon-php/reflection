@@ -11,6 +11,7 @@ use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\parameterId;
+use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -28,11 +29,66 @@ final class MethodReflection extends Reflection
      */
     private ?array $parameters = null;
 
+    /**
+     * @var ?list<AttributeReflection>
+     */
+    private ?array $attributes = null;
+
+    /**
+     * @var ?array<non-empty-string, TemplateReflection>
+     */
+    private ?array $templates = null;
+
     public function __construct(MethodId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
 
         parent::__construct($id, $data, $reflector);
+    }
+
+    /**
+     * @return list<AttributeReflection>
+     */
+    public function attributes(): array
+    {
+        return $this->attributes ??= array_map(
+            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
+                targetId: $this->id,
+                data: $data,
+                reflector: $this->reflector,
+            ),
+            $this->data[Data::Attributes],
+        );
+    }
+
+    /**
+     * @return array<non-empty-string, TemplateReflection>
+     */
+    public function templates(): array
+    {
+        if ($this->templates !== null) {
+            return $this->templates;
+        }
+
+        $this->templates = [];
+
+        foreach ($this->data[Data::Templates] as $name => $data) {
+            $this->templates[$name] = new TemplateReflection(
+                id: templateId($this->id, $name),
+                data: $data,
+                reflector: $this->reflector,
+            );
+        }
+
+        return $this->templates;
+    }
+
+    /**
+     * @return ?non-empty-string
+     */
+    public function phpDoc(): ?string
+    {
+        return $this->data[Data::PhpDoc];
     }
 
     public function class(): ClassReflection

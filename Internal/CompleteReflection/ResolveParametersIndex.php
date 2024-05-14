@@ -36,7 +36,7 @@ final class ResolveParametersIndex implements ReflectionHook
                 /** @var non-negative-int */
                 static $index = 0;
 
-                return $parameter->set(Data::ParameterIndex, $index++);
+                return $parameter->set(Data::Index, $index++);
             },
             $parameters,
         ));
