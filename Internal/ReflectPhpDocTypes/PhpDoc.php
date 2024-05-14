@@ -211,7 +211,6 @@ final class PhpDoc
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @return list<GenericTypeNode>
      */
     public function extendedTypes(): array
@@ -238,7 +237,6 @@ final class PhpDoc
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @return list<GenericTypeNode>
      */
     public function implementedTypes(): array
@@ -265,7 +263,6 @@ final class PhpDoc
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @return list<GenericTypeNode>
      */
     public function usedTypes(): array
@@ -292,7 +289,6 @@ final class PhpDoc
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @return list<TypeAliasTagValueNode>
      */
     public function typeAliases(): array
@@ -314,7 +310,6 @@ final class PhpDoc
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @return list<TypeAliasImportTagValueNode>
      */
     public function typeAliasImports(): array

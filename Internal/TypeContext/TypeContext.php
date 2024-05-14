@@ -88,7 +88,7 @@ final class TypeContext
             return types::alias($this->aliases[$stringName], ...$arguments);
         }
 
-        if (isset($this->templateNames[$stringName])) {
+        if (isset($this->templates[$stringName])) {
             if ($arguments !== []) {
                 throw new \LogicException('Template type arguments are not supported');
             }

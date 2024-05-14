@@ -11,14 +11,14 @@ use Typhoon\TypedMap\TypedMap;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<?array{non-empty-string, list<Type>}>
+ * @implements OptionalKey<array<non-empty-string, list<Type>>>
  */
-enum UnresolvedParent implements OptionalKey
+enum UnresolvedUses implements OptionalKey
 {
     case Key;
 
     public function default(TypedMap $map): mixed
     {
-        return null;
+        return [];
     }
 }

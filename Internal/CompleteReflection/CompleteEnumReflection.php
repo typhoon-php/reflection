@@ -9,7 +9,6 @@ use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\InheritedName;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Reflection\Internal\Visibility;
@@ -38,7 +37,7 @@ final class CompleteEnumReflection implements ReflectionHook
         $methods = $data[Data::Methods];
         $staticType = types::static($id);
 
-        $interfaces[] = new InheritedName(\UnitEnum::class);
+        $interfaces[\UnitEnum::class] = [];
 
         $properties['name'] = (new TypedMap())
             ->set(Data::NativeReadonly, true)
@@ -52,7 +51,7 @@ final class CompleteEnumReflection implements ReflectionHook
             ->set(Data::WrittenInC, true);
 
         if ($scalarType !== null) {
-            $interfaces[] = new InheritedName(\BackedEnum::class);
+            $interfaces[\BackedEnum::class] = [];
 
             $properties['value'] = (new TypedMap())
                 ->set(Data::NativeReadonly, true)

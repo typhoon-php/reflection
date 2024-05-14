@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\Internal\UsedName;
 use Typhoon\TypedMap\OptionalKey;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<list<UsedName>>
+ * @implements OptionalKey<list<non-empty-string>>
  */
-enum UnresolvedTraits implements OptionalKey
+enum UsePhpDocs implements OptionalKey
 {
     case Key;
 

@@ -195,7 +195,7 @@ final class TyphoonReflector implements Reflector
         $traverser = new NodeTraverser();
 
         $nameResolver = new NameResolver();
-        $typeContextVisitor = new TypeContextVisitor($nameResolver->getNameContext(), file: $file);
+        $typeContextVisitor = new TypeContextVisitor($nameResolver->getNameContext(), new ReflectPhpDocTypes(), file: $file);
         $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($typeContextVisitor);

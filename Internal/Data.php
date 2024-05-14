@@ -53,10 +53,11 @@ enum Data
     public const UnresolvedChangeDetectors = Data\UnresolvedChangeDetectors::Key;
     public const UnresolvedInterfaces = Data\UnresolvedInterfaces::Key;
     public const UnresolvedParent = Data\UnresolvedParent::Key;
-    public const UnresolvedTraits = Data\UnresolvedTraits::Key;
+    public const UnresolvedUses = Data\UnresolvedUses::Key;
     public const ValueExpression = Data\ValueExpression::Key;
     public const Visibility = Data\VisibilityKey::Key;
     public const Type = Data\Type::Key;
     public const Variance = Data\VarianceKey::Key;
     public const Constraint = Data\Constraint::Key;
+    public const UsePhpDocs = Data\UsePhpDocs::Key;
 }

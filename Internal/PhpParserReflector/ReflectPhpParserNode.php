@@ -36,12 +36,10 @@ use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\Expression\ExpressionCompiler;
 use Typhoon\Reflection\Internal\Expression\MagicClass;
 use Typhoon\Reflection\Internal\Expression\Value;
-use Typhoon\Reflection\Internal\InheritedName;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Reflection\Internal\UsedMethodAlias;
-use Typhoon\Reflection\Internal\UsedName;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
@@ -86,7 +84,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         if ($node instanceof Class_) {
             return $data
                 ->set(Data::ClassKind, ClassKind::Class_)
-                ->set(Data::UnresolvedParent, $node->extends === null ? null : new InheritedName($node->extends->toString()))
+                ->set(Data::UnresolvedParent, $node->extends === null ? null : [$node->extends->toString(), []])
                 ->set(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->implements))
                 ->merge($this->reflectTraitUses($node->getTraitUses()))
                 ->set(Data::Abstract, $node->isAbstract())
@@ -145,19 +143,19 @@ final class ReflectPhpParserNode implements ReflectionHook
         return (new TypedMap())
             ->set(Data::StartLine, $startLine > 0 ? $startLine : null)
             ->set(Data::EndLine, $endLine > 0 ? $endLine : null)
-            ->set(Data::PhpDoc, $phpDoc === null || $phpDoc === '' ? null : $phpDoc);
+            ->set(Data::PhpDoc, $phpDoc === '' ? null : $phpDoc);
     }
 
     /**
      * @param array<Name> $names
-     * @return list<InheritedName>
+     * @return array<non-empty-string, list<Type>>
      */
     private function reflectInterfaces(array $names): array
     {
         $interfaces = [];
 
         foreach ($names as $name) {
-            $interfaces[] = new InheritedName($name->toString());
+            $interfaces[$name->toString()] = [];
         }
 
         return $interfaces;
@@ -168,12 +166,19 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectTraitUses(array $nodes): TypedMap
     {
-        $traits = [];
+        $uses = [];
         $precedence = [];
+        $phpDocs = [];
 
         foreach ($nodes as $node) {
+            $phpDoc = $node->getDocComment()?->getText() ?? '';
+
+            if ($phpDoc !== '') {
+                $phpDocs[] = $phpDoc;
+            }
+
             foreach ($node->traits as $name) {
-                $traits[] = $name->toString();
+                $uses[$name->toString()] = [];
             }
 
             foreach ($node->adaptations as $adaptation) {
@@ -185,12 +190,10 @@ final class ReflectPhpParserNode implements ReflectionHook
         }
 
         return (new TypedMap())
-            ->set(Data::UnresolvedTraits, array_map(
-                static fn(string $name): UsedName => new UsedName($name),
-                $traits,
-            ))
+            ->set(Data::UnresolvedUses, $uses)
             ->set(Data::UsedMethodPrecedence, $precedence)
-            ->set(Data::UsedMethodAliases, $this->reflectTraitAliases($nodes, $traits));
+            ->set(Data::UsedMethodAliases, $this->reflectTraitAliases($nodes, array_keys($uses)))
+            ->set(Data::UsePhpDocs, $phpDocs);
     }
 
     /**
