@@ -15,6 +15,7 @@ use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\aliasId;
 use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classConstantId;
+use function Typhoon\DeclarationId\classId;
 use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\propertyId;
 use function Typhoon\DeclarationId\templateId;
@@ -254,11 +255,11 @@ final class ClassReflection extends Reflection
             return null;
         }
 
-        return $this->reflector->reflect(anyClassId($parentName));
+        return $this->reflector->reflect(classId($parentName));
     }
 
     /**
-     * @return ?non-empty-string
+     * @return ?class-string
      */
     public function parentName(): ?string
     {
