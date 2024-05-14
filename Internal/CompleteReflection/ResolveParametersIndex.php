@@ -23,7 +23,7 @@ final class ResolveParametersIndex implements ReflectionHook
             return $this->resolveParametersIndex($data);
         }
 
-        return $data->modify(Data::Methods, fn(array $methods): array => array_map(
+        return $data->modifyIfSet(Data::Methods, fn(array $methods): array => array_map(
             $this->resolveParametersIndex(...),
             $methods,
         ));
@@ -31,7 +31,7 @@ final class ResolveParametersIndex implements ReflectionHook
 
     private function resolveParametersIndex(TypedMap $data): TypedMap
     {
-        return $data->modify(Data::Parameters, static fn(array $parameters): array => array_map(
+        return $data->modifyIfSet(Data::Parameters, static fn(array $parameters): array => array_map(
             static function (TypedMap $parameter): TypedMap {
                 /** @var non-negative-int */
                 static $index = 0;

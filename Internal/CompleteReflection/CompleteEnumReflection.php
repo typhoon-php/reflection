@@ -23,17 +23,13 @@ final class CompleteEnumReflection implements ReflectionHook
 {
     public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data): TypedMap
     {
-        if ($id instanceof FunctionId) {
-            return $data;
-        }
-
-        if ($data[Data::ClassKind] !== ClassKind::Enum) {
+        if ($id instanceof FunctionId || $data[Data::ClassKind] !== ClassKind::Enum) {
             return $data;
         }
 
         $scalarType = $data[Data::EnumScalarType];
         $interfaces = $data[Data::UnresolvedInterfaces];
-        $properties = [];
+        $properties = $data[Data::Properties];
         $methods = $data[Data::Methods];
         $staticType = types::static($id);
 
@@ -61,8 +57,7 @@ final class CompleteEnumReflection implements ReflectionHook
             $methods['from'] = $methods['cases']
                 ->set(Data::Type, new TypeData($staticType))
                 ->set(Data::Parameters, [
-                    'value' => (new TypedMap())
-                        ->set(Data::Type, new TypeData(types::arrayKey, $scalarType)),
+                    'value' => (new TypedMap())->set(Data::Type, new TypeData(types::arrayKey, $scalarType)),
                 ]);
 
             $methods['tryFrom'] = $methods['from']

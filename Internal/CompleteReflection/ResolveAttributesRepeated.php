@@ -25,18 +25,18 @@ final class ResolveAttributesRepeated implements ReflectionHook
 
         return $this
             ->resolveAttributesRepeated($data)
-            ->modify(Data::ClassConstants, fn(array $constants): array => array_map(
+            ->modifyIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
                 $this->resolveAttributesRepeated(...),
                 $constants,
             ))
-            ->modify(Data::Properties, fn(array $properties): array => array_map(
+            ->modifyIfSet(Data::Properties, fn(array $properties): array => array_map(
                 $this->resolveAttributesRepeated(...),
                 $properties,
             ))
-            ->modify(Data::Methods, fn(array $methods): array => array_map(
+            ->modifyIfSet(Data::Methods, fn(array $methods): array => array_map(
                 fn(TypedMap $data): TypedMap => $this
                     ->resolveAttributesRepeated($data)
-                    ->modify(Data::Parameters, fn(array $parameters): array => array_map(
+                    ->modifyIfSet(Data::Parameters, fn(array $parameters): array => array_map(
                         $this->resolveAttributesRepeated(...),
                         $parameters,
                     )),

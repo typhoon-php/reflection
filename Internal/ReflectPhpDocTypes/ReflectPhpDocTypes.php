@@ -82,15 +82,15 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         }
 
         return $data
-            ->modify(Data::ClassConstants, fn(array $constants): array => array_map(
+            ->modifyIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
                 fn(TypedMap $constant): TypedMap => $this->reflectConstant($typeReflector, $constant),
                 $constants,
             ))
-            ->modify(Data::Properties, fn(array $properties): array => array_map(
+            ->modifyIfSet(Data::Properties, fn(array $properties): array => array_map(
                 fn(TypedMap $property): TypedMap => $this->reflectProperty($typeReflector, $property),
                 $properties,
             ))
-            ->modify(Data::Methods, function (array $methods) use ($typeReflector): array {
+            ->modifyIfSet(Data::Methods, function (array $methods) use ($typeReflector): array {
                 $methods = array_map($this->reflectFunction(...), $methods);
 
                 if (isset($methods['__construct'])) {
@@ -212,7 +212,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
 
         $data = $data
             ->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc))
-            ->modify(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
+            ->modifyIfSet(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
                 $types = $phpDoc->paramTypes();
 
                 foreach ($types as $name => $type) {
@@ -283,21 +283,18 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
 
     private function reflectPromotedProperties(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
-        return $data->modify(Data::Parameters, fn(array $parameters): array => array_map(
-            function (TypedMap $parameter) use ($typeReflector): TypedMap {
-                if (!$parameter[Data::Promoted]) {
-                    return $parameter;
-                }
-
-                return $this->reflectProperty($typeReflector, $parameter);
-            },
+        return $data->modifyIfSet(Data::Parameters, fn(array $parameters): array => array_map(
+            fn(TypedMap $parameter): TypedMap => $parameter[Data::Promoted] ? $this->reflectProperty($typeReflector, $parameter) : $parameter,
             $parameters,
         ));
     }
 
     private function setAnnotatedType(PhpDocTypeReflector $typeReflector, TypeNode $node, TypedMap $data): TypedMap
     {
-        return $data->modify(Data::Type, static fn(TypeData $type): TypeData => $type->withAnnotated($typeReflector->reflectType($node)));
+        return $data->modify(
+            Data::Type,
+            static fn(TypeData $type): TypeData => $type->withAnnotated($typeReflector->reflectType($node)),
+        );
     }
 
     /**
