@@ -9,7 +9,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
-use Typhoon\DeclarationId\DeclarationIdMap;
+use Typhoon\Reflection\Internal\DeclarationIdMap;
 
 /**
  * @internal
