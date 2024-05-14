@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\ChangeDetector\ChangeDetectors;
-use Typhoon\ChangeDetector\IfSerializedChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\Reflection\ClassReflection;
@@ -63,13 +61,15 @@ final class ClassInheritanceResolver
     /**
      * @var list<ChangeDetector>
      */
-    private array $changeDetectors = [];
+    private array $changeDetectors;
 
     private function __construct(
         private readonly Reflector $reflector,
         private readonly ClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
-    ) {}
+    ) {
+        $this->changeDetectors = $data[Data::UnresolvedChangeDetectors];
+    }
 
     public static function resolve(Reflector $reflector, ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
@@ -200,14 +200,6 @@ final class ClassInheritanceResolver
         }
     }
 
-    private function resolveChangeDetector(): ChangeDetector
-    {
-        return ChangeDetectors::from([
-            ...$this->changeDetectors,
-            ...$this->data[Data::UnresolvedChangeDetectors],
-        ]) ?? new IfSerializedChangeDetector();
-    }
-
     /**
      * @param list<Type> $arguments
      */
@@ -238,7 +230,7 @@ final class ClassInheritanceResolver
     {
         return $this
             ->data
-            ->set(Data::ResolvedChangeDetector, $this->resolveChangeDetector())
+            ->set(Data::UnresolvedChangeDetectors, $this->changeDetectors)
             ->set(Data::ResolvedParents, $this->resolvedParents)
             ->set(Data::ResolvedInterfaces, [...$this->resolvedOwnInterfaces, ...$this->resolvedUpstreamInterfaces])
             ->set(Data::ClassConstants, array_filter(array_map(

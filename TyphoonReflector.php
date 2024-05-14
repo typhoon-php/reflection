@@ -29,6 +29,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToPrope
 use Typhoon\Reflection\Internal\CompleteReflection\EnsureInterfaceMethodsAreAbstract;
 use Typhoon\Reflection\Internal\CompleteReflection\EnsureReadonlyClassPropertiesAreReadonly;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
+use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\PhpParserReflector\FindTopLevelDeclarationsVisitor;
@@ -230,11 +231,12 @@ final class TyphoonReflector implements Reflector
             new ReflectPhpDocTypes(),
             new CopyPromotedParametersToProperties(),
             new CompleteEnumReflection(),
+            new ResolveClassInheritance($this),
             new EnsureInterfaceMethodsAreAbstract(),
             new EnsureReadonlyClassPropertiesAreReadonly(),
             new ResolveAttributesRepeated(),
             new ResolveParametersIndex(),
-            new ResolveClassInheritance($this),
+            new ResolveChangeDetector(),
             new CleanUp(),
         ]);
     }

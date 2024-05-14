@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\CompleteReflection;
 
+use Typhoon\ChangeDetector\ChangeDetectors;
+use Typhoon\ChangeDetector\IfSerializedChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
@@ -15,19 +17,12 @@ use Typhoon\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class CleanUp implements ReflectionHook
+final class ResolveChangeDetector implements ReflectionHook
 {
     public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
-        return $data->unset(
-            Data::TypeContext,
-            Data::UnresolvedChangeDetectors,
-            Data::UnresolvedInterfaces,
-            Data::UnresolvedUses,
-            Data::UnresolvedParent,
-            Data::UsePhpDocs,
-            Data::UsedMethodAliases,
-            Data::UsedMethodPrecedence,
-        );
+        $changeDetector = ChangeDetectors::from($data[Data::UnresolvedChangeDetectors]) ?? new IfSerializedChangeDetector();
+
+        return $data->set(Data::ResolvedChangeDetector, $changeDetector);
     }
 }
