@@ -247,7 +247,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         foreach ($attributeGroups as $attributeGroup) {
             foreach ($attributeGroup->attrs as $attr) {
                 $attributes[] = $this->reflectNode($attr)
-                    ->set(Data::AttributeClass, $attr->name->toString())
+                    ->set(Data::AttributeClassName, $attr->name->toString())
                     ->set(Data::ArgumentExpressions, $this->reflectArguments($attr->args));
             }
         }

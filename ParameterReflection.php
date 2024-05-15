@@ -29,31 +29,19 @@ final class ParameterReflection extends Reflection
     public readonly int $index;
 
     /**
-     * @var ?list<AttributeReflection>
+     * @var AttributeReflection[]
+     * @psalm-var AttributeReflections
+     * @phpstan-var AttributeReflections
      */
-    private ?array $attributes = null;
+    public readonly AttributeReflections $attributes;
 
     public function __construct(ParameterId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
         $this->index = $data[Data::Index];
+        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
         parent::__construct($id, $data, $reflector);
-    }
-
-    /**
-     * @return list<AttributeReflection>
-     */
-    public function attributes(): array
-    {
-        return $this->attributes ??= array_map(
-            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
-                targetId: $this->id,
-                data: $data,
-                reflector: $this->reflector,
-            ),
-            $this->data[Data::Attributes],
-        );
     }
 
     /**

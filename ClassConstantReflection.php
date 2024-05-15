@@ -24,13 +24,16 @@ final class ClassConstantReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var ?list<AttributeReflection>
+     * @var AttributeReflection[]
+     * @psalm-var AttributeReflections
+     * @phpstan-var AttributeReflections
      */
-    private ?array $attributes = null;
+    public readonly AttributeReflections $attributes;
 
     public function __construct(ClassConstantId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
+        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
         parent::__construct($id, $data, $reflector);
     }
@@ -50,21 +53,6 @@ final class ClassConstantReflection extends Reflection
     public function isInternallyDefined(): bool
     {
         return $this->data[Data::InternallyDefined] || $this->declaringClass()->isInternallyDefined();
-    }
-
-    /**
-     * @return list<AttributeReflection>
-     */
-    public function attributes(): array
-    {
-        return $this->attributes ??= array_map(
-            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
-                targetId: $this->id,
-                data: $data,
-                reflector: $this->reflector,
-            ),
-            $this->data[Data::Attributes],
-        );
     }
 
     /**

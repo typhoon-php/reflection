@@ -9,7 +9,7 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\anyClassId;
+use function Typhoon\DeclarationId\classId;
 
 /**
  * @api
@@ -17,22 +17,23 @@ use function Typhoon\DeclarationId\anyClassId;
  */
 final class AttributeReflection
 {
-    /**
-     * @var non-empty-string
-     */
-    public readonly string $name;
-
     public function __construct(
         public readonly DeclarationId $targetId,
         public readonly TypedMap $data,
         private readonly Reflector $reflector,
-    ) {
-        $this->name = $this->data[Data::AttributeClass];
+    ) {}
+
+    /**
+     * @return non-empty-string
+     */
+    public function className(): string
+    {
+        return $this->data[Data::AttributeClassName];
     }
 
     public function class(): ClassReflection
     {
-        return $this->reflector->reflect(anyClassId($this->name));
+        return $this->reflector->reflect(classId($this->className()));
     }
 
     public function target(): Reflection
@@ -56,7 +57,7 @@ final class AttributeReflection
     public function newInstance(): object
     {
         /** @psalm-suppress InvalidStringClass */
-        return new ($this->name)(...$this->arguments());
+        return new ($this->className())(...$this->arguments());
     }
 
     public function toNative(): \ReflectionAttribute

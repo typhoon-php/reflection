@@ -12,7 +12,7 @@ enum Data
 {
     public const Node = Data\NodeKey::Key;
     public const ArgumentExpressions = Data\ArgumentExpressions::Key;
-    public const AttributeClass = Data\AttributeClass::Key;
+    public const AttributeClassName = Data\AttributeClassName::Key;
     public const AttributeRepeated = Data\AttributeRepeated::Key;
     public const Attributes = Data\Attributes::Key;
     public const ClassConstants = Data\ClassConstants::Key;

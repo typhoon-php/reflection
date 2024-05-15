@@ -55,14 +55,14 @@ final class ResolveAttributesRepeated implements ReflectionHook
         $repeated = [];
 
         foreach ($attributes as $attribute) {
-            $class = $attribute[Data::AttributeClass];
+            $class = $attribute[Data::AttributeClassName];
             $repeated[$class] = isset($repeated[$class]);
         }
 
         return $data->set(Data::Attributes, array_map(
             static fn(TypedMap $attribute): TypedMap => $attribute->set(
                 Data::AttributeRepeated,
-                $repeated[$attribute[Data::AttributeClass]],
+                $repeated[$attribute[Data::AttributeClassName]],
             ),
             $attributes,
         ));

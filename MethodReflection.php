@@ -37,32 +37,20 @@ final class MethodReflection extends Reflection
     public readonly ParameterReflections $parameters;
 
     /**
-     * @var ?list<AttributeReflection>
+     * @var AttributeReflection[]
+     * @psalm-var AttributeReflections
+     * @phpstan-var AttributeReflections
      */
-    private ?array $attributes = null;
+    public readonly AttributeReflections $attributes;
 
     public function __construct(MethodId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
         $this->templates = new TemplateReflections($id, $data[Data::Templates], $reflector);
         $this->parameters = new ParameterReflections($id, $data[Data::Parameters], $reflector);
+        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
         parent::__construct($id, $data, $reflector);
-    }
-
-    /**
-     * @return list<AttributeReflection>
-     */
-    public function attributes(): array
-    {
-        return $this->attributes ??= array_map(
-            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
-                targetId: $this->id,
-                data: $data,
-                reflector: $this->reflector,
-            ),
-            $this->data[Data::Attributes],
-        );
     }
 
     /**

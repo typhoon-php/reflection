@@ -99,7 +99,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::from($this->reflection->attributes(), $name, $flags);
+        return AttributeAdapter::from($this->reflection->attributes, $name, $flags);
     }
 
     public function getClass(): ?\ReflectionClass

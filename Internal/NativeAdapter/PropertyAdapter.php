@@ -54,7 +54,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::from($this->reflection->attributes(), $name, $flags);
+        return AttributeAdapter::from($this->reflection->attributes, $name, $flags);
     }
 
     public function getDeclaringClass(): \ReflectionClass

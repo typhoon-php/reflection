@@ -11,7 +11,7 @@ use Typhoon\TypedMap\Key;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements Key<non-empty-string>
  */
-enum AttributeClass implements Key
+enum AttributeClassName implements Key
 {
     case Key;
 }

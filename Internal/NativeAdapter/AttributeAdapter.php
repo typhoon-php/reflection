@@ -12,6 +12,7 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\AttributeReflection;
+use Typhoon\Reflection\AttributeReflections;
 
 /**
  * @internal
@@ -26,29 +27,19 @@ final class AttributeAdapter extends \ReflectionAttribute
     ) {}
 
     /**
-     * @param list<AttributeReflection> $attributes
      * @return list<\ReflectionAttribute>
      */
-    public static function from(array $attributes, ?string $name = null, int $flags = 0): array
+    public static function from(AttributeReflections $attributes, ?string $name = null, int $flags = 0): array
     {
         if ($name !== null) {
             if ($flags & \ReflectionAttribute::IS_INSTANCEOF) {
-                $attributes = array_values(array_filter(
-                    $attributes,
-                    static fn(AttributeReflection $attribute): bool => $attribute->class()->isInstanceOf($name),
-                ));
+                $attributes = $attributes->instanceOf($name);
             } else {
-                $attributes = array_values(array_filter(
-                    $attributes,
-                    static fn(AttributeReflection $attribute): bool => $attribute->name === $name,
-                ));
+                $attributes = $attributes->class($name);
             }
         }
 
-        return array_map(
-            static fn(AttributeReflection $attribute): \ReflectionAttribute => $attribute->toNative(),
-            $attributes,
-        );
+        return $attributes->map(static fn(AttributeReflection $attribute): \ReflectionAttribute => $attribute->toNative());
     }
 
     public function __toString(): string
@@ -64,7 +55,7 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function getName(): string
     {
-        return $this->reflection->name;
+        return $this->reflection->className();
     }
 
     public function getTarget(): int

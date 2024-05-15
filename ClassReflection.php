@@ -64,9 +64,11 @@ final class ClassReflection extends Reflection
     public readonly MethodReflections $methods;
 
     /**
-     * @var ?list<AttributeReflection>
+     * @var AttributeReflection[]
+     * @psalm-var AttributeReflections
+     * @phpstan-var AttributeReflections
      */
-    private ?array $attributes = null;
+    public readonly AttributeReflections $attributes;
 
     public function __construct(ClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector)
     {
@@ -77,23 +79,9 @@ final class ClassReflection extends Reflection
         $this->constants = new ClassConstantReflections($id, $data[Data::ClassConstants], $reflector);
         $this->properties = new PropertyReflections($id, $data[Data::Properties], $reflector);
         $this->methods = new MethodReflections($id, $data[Data::Methods], $reflector);
+        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
         parent::__construct($id, $data, $reflector);
-    }
-
-    /**
-     * @return list<AttributeReflection>
-     */
-    public function attributes(): array
-    {
-        return $this->attributes ??= array_map(
-            fn(TypedMap $data): AttributeReflection => new AttributeReflection(
-                targetId: $this->id,
-                data: $data,
-                reflector: $this->reflector,
-            ),
-            $this->data[Data::Attributes],
-        );
     }
 
     /**
