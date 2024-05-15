@@ -23,6 +23,6 @@ final class ResolveChangeDetector implements ReflectionHook
     {
         $changeDetector = ChangeDetectors::from($data[Data::UnresolvedChangeDetectors]) ?? new IfSerializedChangeDetector();
 
-        return $data->set(Data::ResolvedChangeDetector, $changeDetector);
+        return $data->set(Data::ChangeDetector, $changeDetector);
     }
 }

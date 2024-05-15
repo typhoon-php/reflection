@@ -23,11 +23,11 @@ final class CleanUp implements ReflectionHook
             Data::TypeContext,
             Data::UnresolvedChangeDetectors,
             Data::UnresolvedInterfaces,
-            Data::UnresolvedUses,
             Data::UnresolvedParent,
+            Data::UnresolvedTraits,
             Data::UsePhpDocs,
-            Data::UsedMethodAliases,
-            Data::UsedMethodPrecedence,
+            Data::TraitMethodAliases,
+            Data::TraitMethodPrecedence,
         );
     }
 }

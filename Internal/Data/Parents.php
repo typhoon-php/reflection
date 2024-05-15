@@ -13,7 +13,7 @@ use Typhoon\TypedMap\TypedMap;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements OptionalKey<array<class-string, list<Type>>>
  */
-enum ResolvedInterfaces implements OptionalKey
+enum Parents implements OptionalKey
 {
     case Key;
 

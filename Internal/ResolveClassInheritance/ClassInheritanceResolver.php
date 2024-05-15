@@ -98,7 +98,7 @@ final class ClassInheritanceResolver
 
     private function used(): void
     {
-        foreach ($this->data[Data::UnresolvedUses] as $traitName => $arguments) {
+        foreach ($this->data[Data::UnresolvedTraits] as $traitName => $arguments) {
             $this->oneUsed($traitName, $arguments);
         }
     }
@@ -124,13 +124,13 @@ final class ClassInheritanceResolver
         }
 
         foreach ($trait->data[Data::Methods] as $name => $method) {
-            $precedence = $this->data[Data::UsedMethodPrecedence][$name] ?? null;
+            $precedence = $this->data[Data::TraitMethodPrecedence][$name] ?? null;
 
             if ($precedence !== null && $precedence !== $traitName) {
                 continue;
             }
 
-            foreach ($this->data[Data::UsedMethodAliases] as $alias) {
+            foreach ($this->data[Data::TraitMethodAliases] as $alias) {
                 if ($alias->trait !== $traitName || $alias->method !== $name) {
                     continue;
                 }
@@ -173,7 +173,7 @@ final class ClassInheritanceResolver
 
         $this->resolvedUpstreamInterfaces = [
             ...$this->resolvedUpstreamInterfaces,
-            ...$class->data[Data::ResolvedInterfaces],
+            ...$class->data[Data::Interfaces],
         ];
 
         if ($class->isInterface()) {
@@ -181,7 +181,7 @@ final class ClassInheritanceResolver
         } else {
             $this->resolvedParents = [
                 $class->name => $arguments,
-                ...$class->data[Data::ResolvedParents],
+                ...$class->data[Data::Parents],
             ];
         }
 
@@ -229,8 +229,8 @@ final class ClassInheritanceResolver
         return $this
             ->data
             ->set(Data::UnresolvedChangeDetectors, $this->changeDetectors)
-            ->set(Data::ResolvedParents, $this->resolvedParents)
-            ->set(Data::ResolvedInterfaces, [...$this->resolvedOwnInterfaces, ...$this->resolvedUpstreamInterfaces])
+            ->set(Data::Parents, $this->resolvedParents)
+            ->set(Data::Interfaces, [...$this->resolvedOwnInterfaces, ...$this->resolvedUpstreamInterfaces])
             ->set(Data::ClassConstants, array_filter(array_map(
                 static fn(BasicInheritanceResolver $resolver): ?TypedMap => $resolver->resolve(),
                 $this->constants,

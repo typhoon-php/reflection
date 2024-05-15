@@ -31,7 +31,7 @@ final class DataCacheItem
 
     public function changed(): bool
     {
-        return ($this->get()[Data::ResolvedChangeDetector] ?? null)?->changed() ?? true;
+        return ($this->get()[Data::ChangeDetector] ?? null)?->changed() ?? true;
     }
 
     public function __serialize(): array

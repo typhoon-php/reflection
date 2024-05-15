@@ -14,7 +14,7 @@ use Typhoon\TypedMap\TypedMap;
  * @psalm-type TraitName = non-empty-string
  * @implements OptionalKey<array<MethodName, TraitName>>
  */
-enum UsedMethodPrecedence implements OptionalKey
+enum TraitMethodPrecedence implements OptionalKey
 {
     case Key;
 

@@ -141,7 +141,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
 
     private function reflectUses(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
-        $uses = $data[Data::UnresolvedUses];
+        $uses = $data[Data::UnresolvedTraits];
 
         if ($uses === []) {
             return $data;
@@ -159,7 +159,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
             }
         }
 
-        return $data->set(Data::UnresolvedUses, $uses);
+        return $data->set(Data::UnresolvedTraits, $uses);
     }
 
     /**

@@ -36,10 +36,12 @@ use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\Expression\ExpressionCompiler;
 use Typhoon\Reflection\Internal\Expression\MagicClass;
 use Typhoon\Reflection\Internal\Expression\Value;
+use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
+use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
 use Typhoon\Reflection\Internal\ReflectionHook;
+use Typhoon\Reflection\Internal\TraitMethodAlias;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Reflection\Internal\TypeData;
-use Typhoon\Reflection\Internal\UsedMethodAlias;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
@@ -166,7 +168,8 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectTraitUses(array $nodes): TypedMap
     {
-        $uses = [];
+        $allNames = [];
+        $traits = [];
         $precedence = [];
         $phpDocs = [];
 
@@ -178,7 +181,8 @@ final class ReflectPhpParserNode implements ReflectionHook
             }
 
             foreach ($node->traits as $name) {
-                $uses[$name->toString()] = [];
+                $traits[$name->toString()] = [];
+                $allNames[] = $name->toString();
             }
 
             foreach ($node->adaptations as $adaptation) {
@@ -189,17 +193,20 @@ final class ReflectPhpParserNode implements ReflectionHook
             }
         }
 
+        $aliases = $this->reflectTraitAliases($nodes, array_keys($traits));
+
         return (new TypedMap())
-            ->set(Data::UnresolvedUses, $uses)
-            ->set(Data::UsedMethodPrecedence, $precedence)
-            ->set(Data::UsedMethodAliases, $this->reflectTraitAliases($nodes, array_keys($uses)))
-            ->set(Data::UsePhpDocs, $phpDocs);
+            ->set(Data::UnresolvedTraits, $traits)
+            ->set(Data::TraitMethodPrecedence, $precedence)
+            ->set(Data::TraitMethodAliases, $aliases)
+            ->set(Data::UsePhpDocs, $phpDocs)
+            ->set(NativeTraitInfoKey::Key, new NativeTraitInfo($allNames, $aliases));
     }
 
     /**
      * @param array<TraitUse> $nodes
      * @param list<non-empty-string> $traits
-     * @return list<UsedMethodAlias>
+     * @return list<TraitMethodAlias>
      */
     private function reflectTraitAliases(array $nodes, array $traits): array
     {
@@ -215,7 +222,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                     }
 
                     foreach ($aliasTraits as $aliasTrait) {
-                        $aliases[] = new UsedMethodAlias(
+                        $aliases[] = new TraitMethodAlias(
                             trait: $aliasTrait,
                             method: $adaptation->method->name,
                             newName: $adaptation->newName?->name,

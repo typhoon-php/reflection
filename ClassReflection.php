@@ -106,7 +106,7 @@ final class ClassReflection extends Reflection
 
     public function changeDetector(): ChangeDetector
     {
-        return $this->data[Data::ResolvedChangeDetector] ?? new IfSerializedChangeDetector();
+        return $this->data[Data::ChangeDetector] ?? new IfSerializedChangeDetector();
     }
 
     public function isInstanceOf(string|ClassId|AnonymousClassId $class): bool
@@ -116,8 +116,8 @@ final class ClassReflection extends Reflection
         }
 
         return $this->id->equals($class)
-            || \array_key_exists($class->name, $this->data[Data::ResolvedParents])
-            || \array_key_exists($class->name, $this->data[Data::ResolvedInterfaces]);
+            || \array_key_exists($class->name, $this->data[Data::Parents])
+            || \array_key_exists($class->name, $this->data[Data::Interfaces]);
     }
 
     public function isAbstract(): bool
@@ -223,7 +223,7 @@ final class ClassReflection extends Reflection
      */
     public function parentName(): ?string
     {
-        return array_key_first($this->data[Data::ResolvedParents]);
+        return array_key_first($this->data[Data::Parents]);
     }
 
     /**

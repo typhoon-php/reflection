@@ -10,6 +10,7 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\Reflector;
 use function Typhoon\DeclarationId\anyClassId;
+use function Typhoon\DeclarationId\classId;
 
 /**
  * @internal
@@ -141,7 +142,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getInterfaceNames(): array
     {
-        return array_keys($this->reflection->data[Data::ResolvedInterfaces]);
+        return array_keys($this->reflection->data[Data::Interfaces]);
     }
 
     public function getInterfaces(): array
@@ -276,26 +277,24 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getTraitAliases(): array
     {
-        $this->loadNative();
-
-        // todo
-        return parent::getTraitAliases();
+        return $this->reflection->data[NativeTraitInfoKey::Key]->aliases;
     }
 
     public function getTraitNames(): array
     {
-        $this->loadNative();
-
-        // todo
-        return parent::getTraitNames();
+        /** @var list<trait-string> */
+        return $this->reflection->data[NativeTraitInfoKey::Key]->names;
     }
 
     public function getTraits(): array
     {
-        $this->loadNative();
+        $traits = [];
 
-        // todo
-        return parent::getTraits();
+        foreach ($this->getTraitNames() as $name) {
+            $traits[$name] = $this->reflector->reflect(classId($name))->toNative();
+        }
+
+        return $traits;
     }
 
     public function hasConstant(string $name): bool

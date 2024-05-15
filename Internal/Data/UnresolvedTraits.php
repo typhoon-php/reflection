@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\Internal\UsedMethodAlias;
+use Typhoon\Type\Type;
 use Typhoon\TypedMap\OptionalKey;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<list<UsedMethodAlias>>
+ * @implements OptionalKey<array<non-empty-string, list<Type>>>
  */
-enum UsedMethodAliases implements OptionalKey
+enum UnresolvedTraits implements OptionalKey
 {
     case Key;
 

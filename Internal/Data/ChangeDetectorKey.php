@@ -12,7 +12,7 @@ use Typhoon\TypedMap\Key;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements Key<ChangeDetector>
  */
-enum ResolvedChangeDetector implements Key
+enum ChangeDetectorKey implements Key
 {
     case Key;
 }
