@@ -61,7 +61,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::from($this->reflection->attributes, $name, $flags);
+        return $this->reflection->attributes->toNative($name, $flags);
     }
 
     public function getConstant(string $name): mixed

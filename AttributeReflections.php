@@ -115,4 +115,22 @@ final class AttributeReflections implements \IteratorAggregate, \Countable
     {
         return \count($this->reflections);
     }
+
+    /**
+     * @return list<\ReflectionAttribute>
+     */
+    public function toNative(?string $name = null, int $flags = 0): array
+    {
+        $attributes = $this;
+
+        if ($name !== null) {
+            if ($flags & \ReflectionAttribute::IS_INSTANCEOF) {
+                $attributes = $attributes->instanceOf($name);
+            } else {
+                $attributes = $attributes->class($name);
+            }
+        }
+
+        return $attributes->map(static fn(AttributeReflection $attribute): \ReflectionAttribute => $attribute->toNative());
+    }
 }
