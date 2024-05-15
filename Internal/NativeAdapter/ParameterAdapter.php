@@ -175,10 +175,17 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getDefaultValueConstantName(): ?string
     {
-        // TODO
-        $this->loadNative();
+        $expression = $this->reflection->data[Data::DefaultValueExpression];
 
-        return parent::getDefaultValueConstantName();
+        if ($expression instanceof ConstantFetch) {
+            return $expression->name($this->reflector);
+        }
+
+        if ($expression instanceof ClassConstantFetch) {
+            return $expression->name($this->reflection, $this->reflector);
+        }
+
+        return null;
     }
 
     public function getName(): string

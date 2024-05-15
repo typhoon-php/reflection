@@ -15,19 +15,28 @@ final class ConstantFetch implements Expression
 {
     /**
      * @param non-empty-string $namespacedName
+     * @param ?non-empty-string $globalName
      */
     public function __construct(
         private readonly string $namespacedName,
         private readonly ?string $globalName,
     ) {}
 
+    /**
+     * @return non-empty-string
+     */
+    public function name(Reflector $_reflector): string
+    {
+        if ($this->globalName === null || \defined($this->namespacedName)) {
+            return $this->namespacedName;
+        }
+
+        return $this->globalName;
+    }
+
     public function evaluate(Reflection $reflection, Reflector $reflector): mixed
     {
         // todo via reflection
-        if ($this->globalName === null || \defined($this->namespacedName)) {
-            return \constant($this->namespacedName);
-        }
-
-        return \constant($this->globalName);
+        return \constant($this->name($reflector));
     }
 }
