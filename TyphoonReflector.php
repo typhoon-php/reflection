@@ -12,6 +12,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use Psr\SimpleCache\CacheInterface;
+use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
@@ -19,6 +20,7 @@ use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
+use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
@@ -109,7 +111,7 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
-     * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, UndefinedMethod
+     * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, UndefinedPropertyFetch, MixedArrayAccess
      */
     public function reflect(DeclarationId $id): Reflection
     {
@@ -119,10 +121,12 @@ final class TyphoonReflector implements Reflector
                 data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name),
                 reflector: $this,
             ),
-            $id instanceof PropertyId => $this->reflect($id->class)->property($id->name) ?? throw new \LogicException('Does not exist'),
-            $id instanceof ClassConstantId => $this->reflect($id->class)->constant($id->name) ?? throw new \LogicException('Does not exist'),
-            $id instanceof MethodId => $this->reflect($id->class)->method($id->name) ?? throw new \LogicException('Does not exist'),
-            $id instanceof ParameterId => $this->reflect($id->function)->parameter($id->name) ?? throw new \LogicException('Does not exist'),
+            $id instanceof PropertyId => $this->reflect($id->class)->properties[$id->name],
+            $id instanceof ClassConstantId => $this->reflect($id->class)->constants[$id->name],
+            $id instanceof MethodId => $this->reflect($id->class)->methods[$id->name],
+            $id instanceof ParameterId => $this->reflect($id->function)->parameters[$id->name],
+            $id instanceof AliasId => $this->reflect($id->class)->aliases[$id->name],
+            $id instanceof TemplateId => $this->reflect($id->declaredAt)->templates[$id->name],
             default => throw new \LogicException($id->toString() . ' not supported yet'),
         };
     }

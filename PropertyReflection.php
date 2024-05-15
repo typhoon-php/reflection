@@ -133,6 +133,6 @@ final class PropertyReflection extends Reflection
 
     public function toNative(): \ReflectionProperty
     {
-        return new PropertyAdapter($this);
+        return new PropertyAdapter($this, $this->reflector);
     }
 }

@@ -36,6 +36,23 @@ final class ClassConstantReflection extends Reflection
     }
 
     /**
+     * @return ?non-empty-string
+     */
+    public function file(): ?string
+    {
+        if ($this->data[Data::InternallyDefined]) {
+            return null;
+        }
+
+        return $this->declaringClass()->file();
+    }
+
+    public function isInternallyDefined(): bool
+    {
+        return $this->data[Data::InternallyDefined] || $this->declaringClass()->isInternallyDefined();
+    }
+
+    /**
      * @return list<AttributeReflection>
      */
     public function attributes(): array
@@ -61,11 +78,6 @@ final class ClassConstantReflection extends Reflection
     public function class(): ClassReflection
     {
         return $this->reflector->reflect($this->id->class);
-    }
-
-    public function declaringClass(): ClassReflection
-    {
-        return $this->reflector->reflect($this->declarationId()->class);
     }
 
     public function value(): mixed
@@ -130,6 +142,11 @@ final class ClassConstantReflection extends Reflection
 
     public function toNative(): \ReflectionClassConstant
     {
-        return new ClassConstantAdapter($this);
+        return new ClassConstantAdapter($this, $this->reflector);
+    }
+
+    private function declaringClass(): ClassReflection
+    {
+        return $this->reflector->reflect($this->declarationId()->class);
     }
 }

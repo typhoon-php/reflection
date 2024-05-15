@@ -206,15 +206,13 @@ final class ClassInheritanceResolver
     private function typeProcessor(ClassReflection $class, array $arguments): TypeProcessor
     {
         $processors = [];
-        $templates = $class->templates();
 
-        if ($templates !== []) {
-            $processors[] = new TemplateTypeResolver(array_map(
+        if (!$class->templates->isEmpty()) {
+            $processors[] = new TemplateTypeResolver($class->templates->map(
                 static fn(TemplateReflection $template): array => [
                     $template->id,
                     $arguments[$template->index] ?? $template->constraint(),
                 ],
-                $templates,
             ));
         }
 

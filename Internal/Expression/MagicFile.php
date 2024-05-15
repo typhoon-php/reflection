@@ -22,9 +22,9 @@ enum MagicFile implements Expression
     public function evaluate(Reflection $reflection, Reflector $reflector): string
     {
         return match (true) {
-            $reflection instanceof ClassReflection => $reflection->file() ?? '',
-            $reflection instanceof ClassConstantReflection => $reflection->class()->file() ?? '',
-            $reflection instanceof PropertyReflection => $reflection->file() ?? '',
+            $reflection instanceof ClassReflection,
+            $reflection instanceof ClassConstantReflection,
+            $reflection instanceof PropertyReflection,
             $reflection instanceof MethodReflection => $reflection->file() ?? '',
             default => '',
         };

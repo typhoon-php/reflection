@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
@@ -140,11 +141,14 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getDeclaringClass(): ?\ReflectionClass
     {
-        $declaringClass = $this->reflection->declaringClass();
+        $declarationId = $this->reflection->data[Data::DeclarationId];
+        \assert($declarationId instanceof ParameterId);
 
-        if ($declaringClass === null) {
+        if ($declarationId->function instanceof FunctionId) {
             return null;
         }
+
+        $declaringClass = $this->reflector->reflect($declarationId->function->class);
 
         if ($declaringClass->isTrait()) {
             return $this->reflection->class()?->toNative();

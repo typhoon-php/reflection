@@ -10,8 +10,6 @@ use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\parameterId;
-use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -25,23 +23,29 @@ final class MethodReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var ?array<non-empty-string, ParameterReflection>
+     * @var TemplateReflection[]
+     * @psalm-var TemplateReflections
+     * @phpstan-var TemplateReflections
      */
-    private ?array $parameters = null;
+    public readonly TemplateReflections $templates;
+
+    /**
+     * @var ParameterReflection[]
+     * @psalm-var ParameterReflections
+     * @phpstan-var ParameterReflections
+     */
+    public readonly ParameterReflections $parameters;
 
     /**
      * @var ?list<AttributeReflection>
      */
     private ?array $attributes = null;
 
-    /**
-     * @var ?array<non-empty-string, TemplateReflection>
-     */
-    private ?array $templates = null;
-
     public function __construct(MethodId $id, TypedMap $data, Reflector $reflector)
     {
         $this->name = $id->name;
+        $this->templates = new TemplateReflections($id, $data[Data::Templates], $reflector);
+        $this->parameters = new ParameterReflections($id, $data[Data::Parameters], $reflector);
 
         parent::__construct($id, $data, $reflector);
     }
@@ -62,28 +66,6 @@ final class MethodReflection extends Reflection
     }
 
     /**
-     * @return array<non-empty-string, TemplateReflection>
-     */
-    public function templates(): array
-    {
-        if ($this->templates !== null) {
-            return $this->templates;
-        }
-
-        $this->templates = [];
-
-        foreach ($this->data[Data::Templates] as $name => $data) {
-            $this->templates[$name] = new TemplateReflection(
-                id: templateId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->templates;
-    }
-
-    /**
      * @return ?non-empty-string
      */
     public function phpDoc(): ?string
@@ -94,11 +76,6 @@ final class MethodReflection extends Reflection
     public function class(): ClassReflection
     {
         return $this->reflector->reflect($this->id->class);
-    }
-
-    public function declaringClass(): ClassReflection
-    {
-        return $this->reflector->reflect($this->declarationId()->class);
     }
 
     /**
@@ -161,35 +138,10 @@ final class MethodReflection extends Reflection
 
     public function isVariadic(): bool
     {
-        $parameters = $this->parameters();
-        $lastParameterName = array_key_last($parameters);
+        $lastParameterName = array_key_last($this->parameters->names());
 
-        return $lastParameterName !== null && $parameters[$lastParameterName]->isVariadic();
+        return $lastParameterName !== null && $this->parameters[$lastParameterName]->isVariadic();
     }
-
-    /**
-     * @return non-negative-int
-     */
-    public function numberOfRequiredParameters(): int
-    {
-        $parameter = null;
-
-        foreach ($this->parameters() as $parameter) {
-            if ($parameter->isOptional()) {
-                return $parameter->index;
-            }
-        }
-
-        if ($parameter === null) {
-            return 0;
-        }
-
-        return $parameter->index + 1;
-    }
-
-    // public function prototype(): ?self
-    // {
-    // }
 
     public function returnsReference(): bool
     {
@@ -209,39 +161,13 @@ final class MethodReflection extends Reflection
         return $this->data[Data::ThrowsType];
     }
 
-    public function parameter(int|string $indexOrName): ?ParameterReflection
-    {
-        if (\is_int($indexOrName)) {
-            return array_values($this->parameters())[$indexOrName] ?? null;
-        }
-
-        return $this->parameters()[$indexOrName] ?? null;
-    }
-
-    /**
-     * @return array<non-empty-string, ParameterReflection>
-     */
-    public function parameters(): array
-    {
-        if ($this->parameters !== null) {
-            return $this->parameters;
-        }
-
-        $this->parameters = [];
-
-        foreach ($this->data[Data::Parameters] as $name => $data) {
-            $this->parameters[$name] = new ParameterReflection(
-                id: parameterId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->parameters;
-    }
-
     public function toNative(): \ReflectionMethod
     {
-        return new MethodAdapter($this);
+        return new MethodAdapter($this, $this->reflector);
+    }
+
+    private function declaringClass(): ClassReflection
+    {
+        return $this->reflector->reflect($this->declarationId()->class);
     }
 }

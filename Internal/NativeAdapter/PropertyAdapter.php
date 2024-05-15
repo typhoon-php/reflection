@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\DeclarationId\PropertyId;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\PropertyReflection;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -20,6 +23,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function __construct(
         private readonly PropertyReflection $reflection,
+        private readonly Reflector $reflector,
     ) {
         unset($this->name, $this->class);
     }
@@ -55,7 +59,10 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function getDeclaringClass(): \ReflectionClass
     {
-        $declaringClass = $this->reflection->declaringClass();
+        $declarationId = $this->reflection->data[Data::DeclarationId];
+        \assert($declarationId instanceof PropertyId);
+
+        $declaringClass = $this->reflector->reflect($declarationId->class);
 
         if ($declaringClass->isTrait()) {
             return $this->reflection->class()->toNative();

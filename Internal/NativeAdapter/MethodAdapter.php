@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\ParameterReflection;
+use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
@@ -22,6 +24,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function __construct(
         private readonly MethodReflection $reflection,
+        private readonly Reflector $reflector,
     ) {
         unset($this->name, $this->class);
     }
@@ -92,7 +95,10 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getDeclaringClass(): \ReflectionClass
     {
-        $declaringClass = $this->reflection->declaringClass();
+        $declarationId = $this->reflection->data[Data::DeclarationId];
+        \assert($declarationId instanceof MethodId);
+
+        $declaringClass = $this->reflector->reflect($declarationId->class);
 
         if ($declaringClass->isTrait()) {
             return $this->reflection->class()->toNative();
@@ -148,12 +154,12 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getNumberOfParameters(): int
     {
-        return \count($this->reflection->parameters());
+        return $this->reflection->parameters->count();
     }
 
     public function getNumberOfRequiredParameters(): int
     {
-        return $this->reflection->numberOfRequiredParameters();
+        return $this->reflection->parameters->countRequired();
     }
 
     /**
@@ -161,9 +167,8 @@ final class MethodAdapter extends \ReflectionMethod
      */
     public function getParameters(): array
     {
-        return array_values(array_map(
+        return array_values($this->reflection->parameters->map(
             static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNative(),
-            $this->reflection->parameters(),
         ));
     }
 

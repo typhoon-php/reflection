@@ -12,13 +12,8 @@ use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\aliasId;
 use function Typhoon\DeclarationId\anyClassId;
-use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\classId;
-use function Typhoon\DeclarationId\methodId;
-use function Typhoon\DeclarationId\propertyId;
-use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -34,39 +29,54 @@ final class ClassReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var ?array<non-empty-string, ClassConstantReflection>
+     * @var AliasReflection[]
+     * @psalm-var AliasReflections
+     * @phpstan-var AliasReflections
      */
-    private ?array $constants = null;
+    public readonly AliasReflections $aliases;
 
     /**
-     * @var ?array<non-empty-string, PropertyReflection>
+     * @var TemplateReflection[]
+     * @psalm-var TemplateReflections
+     * @phpstan-var TemplateReflections
      */
-    private ?array $properties = null;
+    public readonly TemplateReflections $templates;
 
     /**
-     * @var ?array<non-empty-string, MethodReflection>
+     * @var ClassConstantReflection[]
+     * @psalm-var ClassConstantReflections
+     * @phpstan-var ClassConstantReflections
      */
-    private ?array $methods = null;
+    public readonly ClassConstantReflections $constants;
+
+    /**
+     * @var PropertyReflection[]
+     * @psalm-var PropertyReflections
+     * @phpstan-var PropertyReflections
+     */
+    public readonly PropertyReflections $properties;
+
+    /**
+     * @var MethodReflection[]
+     * @psalm-var MethodReflections
+     * @phpstan-var MethodReflections
+     */
+    public readonly MethodReflections $methods;
 
     /**
      * @var ?list<AttributeReflection>
      */
     private ?array $attributes = null;
 
-    /**
-     * @var ?array<non-empty-string, AliasReflection>
-     */
-    private ?array $aliases = null;
-
-    /**
-     * @var ?array<non-empty-string, TemplateReflection>
-     */
-    private ?array $templates = null;
-
     public function __construct(ClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector)
     {
-        /** @psalm-suppress PropertyTypeCoercion */
+        /** @var class-string<TObject> */
         $this->name = $id->name;
+        $this->aliases = new AliasReflections($id, $data[Data::Aliases], $reflector);
+        $this->templates = new TemplateReflections($id, $data[Data::Templates], $reflector);
+        $this->constants = new ClassConstantReflections($id, $data[Data::ClassConstants], $reflector);
+        $this->properties = new PropertyReflections($id, $data[Data::Properties], $reflector);
+        $this->methods = new MethodReflections($id, $data[Data::Methods], $reflector);
 
         parent::__construct($id, $data, $reflector);
     }
@@ -84,56 +94,6 @@ final class ClassReflection extends Reflection
             ),
             $this->data[Data::Attributes],
         );
-    }
-
-    /**
-     * @return array<non-empty-string, AliasReflection>
-     */
-    public function aliases(): array
-    {
-        if ($this->aliases !== null) {
-            return $this->aliases;
-        }
-
-        $this->aliases = [];
-
-        if ($this->id instanceof AnonymousClassId) {
-            \assert($this->data[Data::Aliases] === []);
-
-            return $this->aliases = [];
-        }
-
-        foreach ($this->data[Data::Aliases] as $name => $data) {
-            $this->aliases[$name] = new AliasReflection(
-                id: aliasId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->aliases;
-    }
-
-    /**
-     * @return array<non-empty-string, TemplateReflection>
-     */
-    public function templates(): array
-    {
-        if ($this->templates !== null) {
-            return $this->templates;
-        }
-
-        $this->templates = [];
-
-        foreach ($this->data[Data::Templates] as $name => $data) {
-            $this->templates[$name] = new TemplateReflection(
-                id: templateId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->templates;
     }
 
     /**
@@ -167,8 +127,8 @@ final class ClassReflection extends Reflection
         }
 
         if ($this->isInterface() || $this->isTrait()) {
-            foreach ($this->data[Data::Methods] as $method) {
-                if ($method[Data::Abstract]) {
+            foreach ($this->methods as $method) {
+                if ($method->isAbstract()) {
                     return true;
                 }
             }
@@ -193,7 +153,7 @@ final class ClassReflection extends Reflection
     {
         return !$this->isAbstract()
             && $this->data[Data::ClassKind] === ClassKind::Class_
-            && ($this->method('__clone')?->isPublic() ?? true);
+            && (!isset($this->methods['__clone']) || $this->methods['__clone']->isPublic());
     }
 
     public function isTrait(): bool
@@ -219,7 +179,7 @@ final class ClassReflection extends Reflection
     {
         return !$this->isAbstract()
             && $this->data[Data::ClassKind] === ClassKind::Class_
-            && ($this->method('__construct')?->isPublic() ?? true);
+            && (!isset($this->methods['__construct']) || $this->methods['__construct']->isPublic());
     }
 
     public function isInterface(): bool
@@ -281,87 +241,6 @@ final class ClassReflection extends Reflection
         \assert($shortName !== '');
 
         return $shortName;
-    }
-
-    public function constant(string $name): ?ClassConstantReflection
-    {
-        return $this->constants()[$name] ?? null;
-    }
-
-    /**
-     * @return array<non-empty-string, ClassConstantReflection>
-     */
-    public function constants(): array
-    {
-        if ($this->constants !== null) {
-            return $this->constants;
-        }
-
-        $this->constants = [];
-
-        foreach ($this->data[Data::ClassConstants] as $name => $data) {
-            $this->constants[$name] = new ClassConstantReflection(
-                id: classConstantId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->constants;
-    }
-
-    public function property(string $name): ?PropertyReflection
-    {
-        return $this->properties()[$name] ?? null;
-    }
-
-    /**
-     * @return array<non-empty-string, PropertyReflection>
-     */
-    public function properties(): array
-    {
-        if ($this->properties !== null) {
-            return $this->properties;
-        }
-
-        $this->properties = [];
-
-        foreach ($this->data[Data::Properties] as $name => $data) {
-            $this->properties[$name] = new PropertyReflection(
-                id: propertyId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->properties;
-    }
-
-    public function method(string $name): ?MethodReflection
-    {
-        return $this->methods()[$name] ?? null;
-    }
-
-    /**
-     * @return array<non-empty-string, MethodReflection>
-     */
-    public function methods(): array
-    {
-        if ($this->methods !== null) {
-            return $this->methods;
-        }
-
-        $this->methods = [];
-
-        foreach ($this->data[Data::Methods] as $name => $data) {
-            $this->methods[$name] = new MethodReflection(
-                id: methodId($this->id, $name),
-                data: $data,
-                reflector: $this->reflector,
-            );
-        }
-
-        return $this->methods;
     }
 
     /**

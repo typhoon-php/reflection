@@ -27,6 +27,7 @@ final class ClassConstantFetch implements Expression
     public function evaluate(Reflection $reflection, Reflector $reflector): mixed
     {
         $name = $this->name->evaluate($reflection, $reflector);
+        \assert(\is_string($name));
 
         if ($this->class === MagicClass::Constant) {
             // todo prevent infinite loops
@@ -43,13 +44,11 @@ final class ClassConstantFetch implements Expression
                 default => throw new \LogicException(),
             };
         } else {
-            /** @psalm-suppress MixedArgument */
-            $classReflection = $reflector->reflect(anyClassId($this->class->evaluate($reflection, $reflector)));
+            $class = $this->class->evaluate($reflection, $reflector);
+            \assert(\is_string($class));
+            $classReflection = $reflector->reflect(anyClassId($class));
         }
 
-        /** @psalm-suppress MixedArgument */
-        $constant = $classReflection->constant($name) ?? throw new \ReflectionException();
-
-        return $constant->value();
+        return $classReflection->constants[$name]->value();
     }
 }

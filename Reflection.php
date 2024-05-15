@@ -24,18 +24,6 @@ abstract class Reflection
     ) {}
 
     /**
-     * @return TId
-     */
-    final public function declarationId(): DeclarationId
-    {
-        $declarationId = $this->data[Data::DeclarationId];
-        \assert($declarationId instanceof $this->id);
-
-        /** @var TId */
-        return $declarationId;
-    }
-
-    /**
      * @return ?positive-int
      */
     final public function startLine(): ?int
@@ -49,5 +37,17 @@ abstract class Reflection
     final public function endLine(): ?int
     {
         return $this->data[Data::EndLine];
+    }
+
+    /**
+     * @return TId
+     */
+    final protected function declarationId(): DeclarationId
+    {
+        $declarationId = $this->data[Data::DeclarationId];
+        \assert($declarationId instanceof $this->id);
+
+        /** @var TId */
+        return $declarationId;
     }
 }
