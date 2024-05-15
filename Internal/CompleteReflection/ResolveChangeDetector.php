@@ -21,8 +21,8 @@ final class ResolveChangeDetector implements ReflectionHook
 {
     public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
-        $changeDetector = ChangeDetectors::from($data[Data::UnresolvedChangeDetectors]) ?? new InMemoryChangeDetector();
+        $unresolved = $data[Data::UnresolvedChangeDetectors];
 
-        return $data->set(Data::ChangeDetector, $changeDetector);
+        return $data->set(Data::ChangeDetector, $unresolved === [] ? new InMemoryChangeDetector() : ChangeDetectors::from($unresolved));
     }
 }
