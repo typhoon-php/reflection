@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\ChangeDetector\IfSerializedChangeDetector;
+use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\Reflection\Internal\ClassKind;
@@ -106,7 +106,7 @@ final class ClassReflection extends Reflection
 
     public function changeDetector(): ChangeDetector
     {
-        return $this->data[Data::ChangeDetector] ?? new IfSerializedChangeDetector();
+        return $this->data[Data::ChangeDetector] ?? new InMemoryChangeDetector();
     }
 
     public function isInstanceOf(string|ClassId|AnonymousClassId $class): bool

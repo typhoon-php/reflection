@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\ChangeDetector\ChangeDetectors;
-use Typhoon\ChangeDetector\IfSerializedChangeDetector;
+use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
@@ -21,7 +21,7 @@ final class ResolveChangeDetector implements ReflectionHook
 {
     public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
-        $changeDetector = ChangeDetectors::from($data[Data::UnresolvedChangeDetectors]) ?? new IfSerializedChangeDetector();
+        $changeDetector = ChangeDetectors::from($data[Data::UnresolvedChangeDetectors]) ?? new InMemoryChangeDetector();
 
         return $data->set(Data::ChangeDetector, $changeDetector);
     }
