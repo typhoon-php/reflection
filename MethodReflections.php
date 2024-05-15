@@ -53,6 +53,28 @@ final class MethodReflections extends Reflections
         return $this->filter(static fn(MethodReflection $reflection): bool => !$reflection->isStatic());
     }
 
+    /**
+     * @param ?int-mask-of<\ReflectionMethod::IS_*> $filter
+     * @return array<non-empty-string, \ReflectionMethod>
+     */
+    public function toNative(?int $filter = null): array
+    {
+        $filter ??= 0;
+        $methods = [];
+
+        foreach ($this as $name => $method) {
+            $native = $method->toNative();
+
+            if ($filter > 0 && ($native->getModifiers() & $filter) === 0) {
+                continue;
+            }
+
+            $methods[$name] = $native;
+        }
+
+        return $methods;
+    }
+
     protected function load(string $name, TypedMap $data): Reflection
     {
         return new MethodReflection(methodId($this->classId, $name), $data, $this->reflector);

@@ -63,6 +63,28 @@ final class PropertyReflections extends Reflections
         return $this->filter(static fn(PropertyReflection $reflection): bool => !$reflection->isReadonly());
     }
 
+    /**
+     * @param ?int-mask-of<\ReflectionProperty::IS_*> $filter
+     * @return array<non-empty-string, \ReflectionProperty>
+     */
+    public function toNative(?int $filter = null): array
+    {
+        $filter ??= 0;
+        $properties = [];
+
+        foreach ($this as $name => $property) {
+            $native = $property->toNative();
+
+            if ($filter > 0 && ($native->getModifiers() & $filter) === 0) {
+                continue;
+            }
+
+            $properties[$name] = $native;
+        }
+
+        return $properties;
+    }
+
     protected function load(string $name, TypedMap $data): Reflection
     {
         return new PropertyReflection(propertyId($this->classId, $name), $data, $this->reflector);

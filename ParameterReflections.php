@@ -48,6 +48,16 @@ final class ParameterReflections extends Reflections
         return $parameter->index + 1;
     }
 
+    /**
+     * @return array<non-empty-string, \ReflectionParameter>
+     */
+    public function toNative(): array
+    {
+        return $this->map(
+            static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNative(),
+        );
+    }
+
     protected function load(string $name, TypedMap $data): Reflection
     {
         return new ParameterReflection(parameterId($this->functionId, $name), $data, $this->reflector);

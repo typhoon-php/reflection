@@ -8,7 +8,6 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
-use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\Reflector;
 
 /**
@@ -167,9 +166,7 @@ final class MethodAdapter extends \ReflectionMethod
      */
     public function getParameters(): array
     {
-        return array_values($this->reflection->parameters->map(
-            static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNative(),
-        ));
+        return array_values($this->reflection->parameters->toNative());
     }
 
     /**

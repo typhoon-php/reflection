@@ -43,6 +43,28 @@ final class ClassConstantReflections extends Reflections
         return $this->filter(static fn(ClassConstantReflection $reflection): bool => $reflection->isPrivate());
     }
 
+    /**
+     * @param ?int-mask-of<\ReflectionClassConstant::IS_*> $filter
+     * @return array<non-empty-string, \ReflectionClassConstant>
+     */
+    public function toNative(?int $filter = null): array
+    {
+        $filter ??= 0;
+        $constants = [];
+
+        foreach ($this as $name => $constant) {
+            $native = $constant->toNative();
+
+            if ($filter > 0 && ($native->getModifiers() & $filter) === 0) {
+                continue;
+            }
+
+            $constants[$name] = $native;
+        }
+
+        return $constants;
+    }
+
     protected function load(string $name, TypedMap $data): Reflection
     {
         return new ClassConstantReflection(classConstantId($this->classId, $name), $data, $this->reflector);

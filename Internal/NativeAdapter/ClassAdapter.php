@@ -78,17 +78,15 @@ final class ClassAdapter extends \ReflectionClass
     public function getConstants(?int $filter = null): array
     {
         $filter ??= 0;
-        $constantValues = [];
+        $values = [];
 
         foreach ($this->reflection->constants as $name => $constant) {
-            if ($filter > 0 && ($constant->toNative()->getModifiers() & $filter) === 0) {
-                continue;
+            if ($filter === 0 || ($constant->toNative()->getModifiers() & $filter) !== 0) {
+                $values[$name] = $constant->value();
             }
-
-            $constantValues[$name] = $constant->value();
         }
 
-        return $constantValues;
+        return $values;
     }
 
     public function getConstructor(): ?\ReflectionMethod
@@ -162,20 +160,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getMethods(?int $filter = null): array
     {
-        $filter ??= 0;
-        $natives = [];
-
-        foreach ($this->reflection->methods as $method) {
-            $native = $method->toNative();
-
-            if ($filter > 0 && ($native->getModifiers() & $filter) === 0) {
-                continue;
-            }
-
-            $natives[] = $native;
-        }
-
-        return $natives;
+        return array_values($this->reflection->methods->toNative($filter));
     }
 
     public function getModifiers(): int
@@ -207,20 +192,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getProperties(?int $filter = null): array
     {
-        $filter ??= 0;
-        $natives = [];
-
-        foreach ($this->reflection->properties as $property) {
-            $native = $property->toNative();
-
-            if ($filter > 0 && ($native->getModifiers() & $filter) === 0) {
-                continue;
-            }
-
-            $natives[] = $native;
-        }
-
-        return $natives;
+        return array_values($this->reflection->properties->toNative($filter));
     }
 
     public function getProperty(string $name): \ReflectionProperty
@@ -235,20 +207,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getReflectionConstants(?int $filter = null): array
     {
-        $filter ??= 0;
-        $natives = [];
-
-        foreach ($this->reflection->constants as $constant) {
-            $native = $constant->toNative();
-
-            if ($filter > 0 && ($native->getModifiers() & $filter) === 0) {
-                continue;
-            }
-
-            $natives[] = $native;
-        }
-
-        return $natives;
+        return array_values($this->reflection->constants->toNative($filter));
     }
 
     public function getShortName(): string
