@@ -257,15 +257,15 @@ final class PhpDocTypeReflector
         $exprNode = $node->constExpr;
 
         if ($exprNode instanceof ConstExprIntegerNode) {
-            return types::literalValue((int) $exprNode->value);
+            return types::intValue((int) $exprNode->value);
         }
 
         if ($exprNode instanceof ConstExprFloatNode) {
-            return types::literalValue((float) $exprNode->value);
+            return types::floatValue((float) $exprNode->value);
         }
 
         if ($exprNode instanceof ConstExprStringNode) {
-            return types::literalValue($exprNode->value);
+            return types::stringValue($exprNode->value);
         }
 
         if ($exprNode instanceof ConstExprTrueNode) {

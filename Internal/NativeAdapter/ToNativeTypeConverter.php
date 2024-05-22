@@ -65,13 +65,14 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::namedObject($class->name);
     }
 
-    public function literalValue(Type $self, float|bool|int|string $value): mixed
+    public function true(Type $self): mixed
     {
-        return match ($value) {
-            true => NamedTypeAdapter::true(),
-            false => NamedTypeAdapter::false(),
-            default => throw new NonConvertableType($self),
-        };
+        return NamedTypeAdapter::true();
+    }
+
+    public function false(Type $self): mixed
+    {
+        return NamedTypeAdapter::false();
     }
 
     public function callable(Type $self, array $parameters, Type $return): mixed
