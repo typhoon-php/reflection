@@ -123,7 +123,7 @@ final class PhpDocTypeReflector
             'non-positive-int' => types::nonPositiveInt,
             'int' => match (\count($genericTypes)) {
                 0 => types::int,
-                2 => types::intRange(
+                2 => types::int(
                     min: $this->reflectIntLimit($genericTypes[0], 'min'),
                     max: $this->reflectIntLimit($genericTypes[1], 'max'),
                 ),
