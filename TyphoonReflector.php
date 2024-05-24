@@ -24,6 +24,7 @@ use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
+use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
@@ -235,6 +236,7 @@ final class TyphoonReflector implements Reflector
             new ReflectPhpDocTypes(),
             new CopyPromotedParametersToProperties(),
             new CompleteEnumReflection(),
+            new AddStringableInterface(),
             new ResolveClassInheritance($this),
             new EnsureInterfaceMethodsAreAbstract(),
             new EnsureReadonlyClassPropertiesAreReadonly(),
