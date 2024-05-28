@@ -66,22 +66,6 @@ final class ParameterReflection extends Reflection
         return $this->reflector->reflect($this->id->function->class);
     }
 
-    public function declaringFunction(): MethodReflection
-    {
-        return $this->reflector->reflect($this->declarationId()->function);
-    }
-
-    public function declaringClass(): ?ClassReflection
-    {
-        $declarationId = $this->declarationId();
-
-        if ($declarationId->function instanceof FunctionId) {
-            return null;
-        }
-
-        return $this->reflector->reflect($declarationId->function->class);
-    }
-
     public function hasDefaultValue(): bool
     {
         return $this->data[Data::DefaultValueExpression] !== null;

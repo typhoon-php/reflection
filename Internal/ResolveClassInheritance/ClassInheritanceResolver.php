@@ -17,10 +17,7 @@ use Typhoon\Type\Visitor\SelfParentStaticTypeResolver;
 use Typhoon\Type\Visitor\TemplateTypeResolver;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\anyClassId;
-use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\classId;
-use function Typhoon\DeclarationId\methodId;
-use function Typhoon\DeclarationId\propertyId;
 
 /**
  * @internal
@@ -84,15 +81,15 @@ final class ClassInheritanceResolver
     private function own(): void
     {
         foreach ($this->data[Data::ClassConstants] as $name => $constant) {
-            $this->constant($name)->setOwn($constant->set(Data::DeclarationId, classConstantId($this->id, $name)));
+            $this->constant($name)->setOwn($constant->set(Data::DeclaringClassId, $this->id));
         }
 
         foreach ($this->data[Data::Properties] as $name => $property) {
-            $this->property($name)->setOwn($property->set(Data::DeclarationId, propertyId($this->id, $name)));
+            $this->property($name)->setOwn($property->set(Data::DeclaringClassId, $this->id));
         }
 
         foreach ($this->data[Data::Methods] as $name => $method) {
-            $this->method($name)->setOwn($method->set(Data::DeclarationId, methodId($this->id, $name)));
+            $this->method($name)->setOwn($method->set(Data::DeclaringClassId, $this->id));
         }
     }
 

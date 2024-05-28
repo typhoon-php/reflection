@@ -38,16 +38,4 @@ abstract class Reflection
     {
         return $this->data[Data::EndLine];
     }
-
-    /**
-     * @return TId
-     */
-    final protected function declarationId(): DeclarationId
-    {
-        $declarationId = $this->data[Data::DeclarationId];
-        \assert($declarationId instanceof $this->id);
-
-        /** @var TId */
-        return $declarationId;
-    }
 }

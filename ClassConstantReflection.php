@@ -135,6 +135,6 @@ final class ClassConstantReflection extends Reflection
 
     private function declaringClass(): ClassReflection
     {
-        return $this->reflector->reflect($this->declarationId()->class);
+        return $this->reflector->reflect($this->data[Data::DeclaringClassId]);
     }
 }

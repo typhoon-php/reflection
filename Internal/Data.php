@@ -17,7 +17,7 @@ enum Data
     public const Attributes = Data\Attributes::Key;
     public const ClassConstants = Data\ClassConstants::Key;
     public const ClassKind = Data\ClassKindKey::Key;
-    public const DeclarationId = Data\DeclarationIdKey::Key;
+    public const DeclaringClassId = Data\DeclaringClassId::Key;
     public const DefaultValueExpression = Data\DefaultValueExpression::Key;
     public const StartLine = Data\StartLine::Key;
     public const EndLine = Data\EndLine::Key;

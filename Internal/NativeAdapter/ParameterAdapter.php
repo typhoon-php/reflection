@@ -7,7 +7,6 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
-use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
@@ -141,31 +140,18 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getDeclaringClass(): ?\ReflectionClass
     {
-        $declarationId = $this->reflection->data[Data::DeclarationId];
-        \assert($declarationId instanceof ParameterId);
+        $declaringFunction = $this->getDeclaringFunction();
 
-        if ($declarationId->function instanceof FunctionId) {
-            return null;
+        if ($declaringFunction instanceof \ReflectionMethod) {
+            return $declaringFunction->getDeclaringClass();
         }
 
-        $declaringClass = $this->reflector->reflect($declarationId->function->class);
-
-        if ($declaringClass->isTrait()) {
-            return $this->reflection->class()?->toNative();
-        }
-
-        return $declaringClass->toNative();
+        return null;
     }
 
     public function getDeclaringFunction(): \ReflectionFunctionAbstract
     {
-        $function = $this->reflection->declaringFunction();
-
-        if ($function->class()->isTrait()) {
-            return $this->reflection->function()->toNative();
-        }
-
-        return $function->toNative();
+        return $this->reflection->function()->toNative();
     }
 
     public function getDefaultValue(): mixed

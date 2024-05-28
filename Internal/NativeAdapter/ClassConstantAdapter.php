@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
-use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
@@ -59,10 +58,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
 
     public function getDeclaringClass(): \ReflectionClass
     {
-        $declarationId = $this->reflection->data[Data::DeclarationId];
-        \assert($declarationId instanceof ClassConstantId);
-
-        $declaringClass = $this->reflector->reflect($declarationId->class);
+        $declaringClass = $this->reflector->reflect($this->reflection->data[Data::DeclaringClassId]);
 
         if ($declaringClass->isTrait()) {
             return $this->reflection->class()->toNative();

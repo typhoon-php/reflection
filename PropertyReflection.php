@@ -60,11 +60,6 @@ final class PropertyReflection extends Reflection
         return $this->reflector->reflect($this->id->class);
     }
 
-    public function declaringClass(): ClassReflection
-    {
-        return $this->reflector->reflect($this->declarationId()->class);
-    }
-
     public function isStatic(): bool
     {
         return $this->data[Data::Static];
@@ -122,5 +117,10 @@ final class PropertyReflection extends Reflection
     public function toNative(): \ReflectionProperty
     {
         return new PropertyAdapter($this, $this->reflector);
+    }
+
+    private function declaringClass(): ClassReflection
+    {
+        return $this->reflector->reflect($this->data[Data::DeclaringClassId]);
     }
 }

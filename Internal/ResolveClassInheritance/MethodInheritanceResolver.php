@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
-use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\parameterId;
 
 /**
  * @internal
@@ -36,13 +34,10 @@ final class MethodInheritanceResolver
 
     public function setOwn(TypedMap $data): void
     {
-        $methodId = $data[Data::DeclarationId];
-        \assert($methodId instanceof MethodId);
-
         $this->data = $data;
 
         foreach ($data[Data::Parameters] as $name => $parameter) {
-            ($this->parameters[$name] = new BasicInheritanceResolver())->setOwn($parameter->set(Data::DeclarationId, parameterId($methodId, $name)));
+            ($this->parameters[$name] = new BasicInheritanceResolver())->setOwn($parameter);
         }
 
         $this->returnType->setOwn($data[Data::Type]);

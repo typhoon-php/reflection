@@ -27,7 +27,8 @@ interface Reflector
      *     $id is MethodId ? MethodReflection :
      *     $id is ParameterId ? ParameterReflection :
      *     $id is AliasId ? AliasReflection :
-     *     $id is TemplateId ? TemplateReflection : never
+     *     $id is TemplateId ? TemplateReflection :
+     *     never
      * )
      */
     public function reflect(DeclarationId $id): Reflection;
