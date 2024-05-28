@@ -25,13 +25,12 @@ final class TemplateReflections extends Reflections
     public function __construct(
         private readonly FunctionId|ClassId|AnonymousClassId|MethodId $declaredAt,
         array $data,
-        private readonly Reflector $reflector,
     ) {
         parent::__construct($data);
     }
 
     protected function load(string $name, TypedMap $data): Reflection
     {
-        return new TemplateReflection(templateId($this->declaredAt, $name), $data, $this->reflector);
+        return new TemplateReflection(templateId($this->declaredAt, $name), $data);
     }
 }

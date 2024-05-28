@@ -35,13 +35,16 @@ final class ParameterReflection extends Reflection
      */
     public readonly AttributeReflections $attributes;
 
-    public function __construct(ParameterId $id, TypedMap $data, Reflector $reflector)
-    {
+    public function __construct(
+        ParameterId $id,
+        TypedMap $data,
+        private readonly Reflector $reflector,
+    ) {
         $this->name = $id->name;
         $this->index = $data[Data::Index];
         $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
-        parent::__construct($id, $data, $reflector);
+        parent::__construct($id, $data);
     }
 
     /**

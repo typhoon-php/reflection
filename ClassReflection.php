@@ -70,18 +70,21 @@ final class ClassReflection extends Reflection
      */
     public readonly AttributeReflections $attributes;
 
-    public function __construct(ClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector)
-    {
+    public function __construct(
+        ClassId|AnonymousClassId $id,
+        TypedMap $data,
+        private readonly Reflector $reflector,
+    ) {
         /** @var class-string<TObject> */
         $this->name = $id->name;
-        $this->aliases = new AliasReflections($id, $data[Data::Aliases], $reflector);
-        $this->templates = new TemplateReflections($id, $data[Data::Templates], $reflector);
+        $this->aliases = new AliasReflections($id, $data[Data::Aliases]);
+        $this->templates = new TemplateReflections($id, $data[Data::Templates]);
         $this->constants = new ClassConstantReflections($id, $data[Data::ClassConstants], $reflector);
         $this->properties = new PropertyReflections($id, $data[Data::Properties], $reflector);
         $this->methods = new MethodReflections($id, $data[Data::Methods], $reflector);
         $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
-        parent::__construct($id, $data, $reflector);
+        parent::__construct($id, $data);
     }
 
     /**

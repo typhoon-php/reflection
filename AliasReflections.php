@@ -23,7 +23,6 @@ final class AliasReflections extends Reflections
     public function __construct(
         private readonly ClassId|AnonymousClassId $classId,
         array $data,
-        private readonly Reflector $reflector,
     ) {
         parent::__construct($data);
     }
@@ -32,6 +31,6 @@ final class AliasReflections extends Reflections
     {
         \assert(!$this->classId instanceof AnonymousClassId);
 
-        return new AliasReflection(aliasId($this->classId, $name), $data, $this->reflector);
+        return new AliasReflection(aliasId($this->classId, $name), $data);
     }
 }

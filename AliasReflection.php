@@ -20,11 +20,11 @@ final class AliasReflection extends Reflection
      */
     public readonly string $name;
 
-    public function __construct(AliasId $id, TypedMap $data, Reflector $reflector)
+    public function __construct(AliasId $id, TypedMap $data)
     {
         $this->name = $id->name;
 
-        parent::__construct($id, $data, $reflector);
+        parent::__construct($id, $data);
     }
 
     public function type(): Type

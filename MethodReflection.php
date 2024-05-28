@@ -43,14 +43,17 @@ final class MethodReflection extends Reflection
      */
     public readonly AttributeReflections $attributes;
 
-    public function __construct(MethodId $id, TypedMap $data, Reflector $reflector)
-    {
+    public function __construct(
+        MethodId $id,
+        TypedMap $data,
+        private readonly Reflector $reflector,
+    ) {
         $this->name = $id->name;
-        $this->templates = new TemplateReflections($id, $data[Data::Templates], $reflector);
+        $this->templates = new TemplateReflections($id, $data[Data::Templates]);
         $this->parameters = new ParameterReflections($id, $data[Data::Parameters], $reflector);
         $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
-        parent::__construct($id, $data, $reflector);
+        parent::__construct($id, $data);
     }
 
     /**

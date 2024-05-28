@@ -30,12 +30,15 @@ final class ClassConstantReflection extends Reflection
      */
     public readonly AttributeReflections $attributes;
 
-    public function __construct(ClassConstantId $id, TypedMap $data, Reflector $reflector)
-    {
+    public function __construct(
+        ClassConstantId $id,
+        TypedMap $data,
+        private readonly Reflector $reflector,
+    ) {
         $this->name = $id->name;
         $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
 
-        parent::__construct($id, $data, $reflector);
+        parent::__construct($id, $data);
     }
 
     /**

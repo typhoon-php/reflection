@@ -20,7 +20,6 @@ abstract class Reflection
     public function __construct(
         public readonly DeclarationId $id,
         public readonly TypedMap $data,
-        protected readonly Reflector $reflector,
     ) {}
 
     /**

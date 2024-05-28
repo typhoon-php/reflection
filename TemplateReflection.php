@@ -26,12 +26,12 @@ final class TemplateReflection extends Reflection
      */
     public readonly int $index;
 
-    public function __construct(TemplateId $id, TypedMap $data, Reflector $reflector)
+    public function __construct(TemplateId $id, TypedMap $data)
     {
         $this->name = $id->name;
         $this->index = $data[Data::Index];
 
-        parent::__construct($id, $data, $reflector);
+        parent::__construct($id, $data);
     }
 
     public function variance(): Variance
