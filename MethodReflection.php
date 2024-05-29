@@ -10,6 +10,8 @@ use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\parameterId;
+use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -24,24 +26,24 @@ final class MethodReflection extends Reflection
 
     /**
      * @var TemplateReflection[]
-     * @psalm-var TemplateReflections
-     * @phpstan-var TemplateReflections
+     * @psalm-var NameMap<TemplateReflection>
+     * @phpstan-var NameMap<TemplateReflection>
      */
-    public readonly TemplateReflections $templates;
+    public readonly NameMap $templates;
 
     /**
      * @var ParameterReflection[]
-     * @psalm-var ParameterReflections
-     * @phpstan-var ParameterReflections
+     * @psalm-var NameMap<ParameterReflection>
+     * @phpstan-var NameMap<ParameterReflection>
      */
-    public readonly ParameterReflections $parameters;
+    public readonly NameMap $parameters;
 
     /**
      * @var AttributeReflection[]
-     * @psalm-var AttributeReflections
-     * @phpstan-var AttributeReflections
+     * @psalm-var ListOf<AttributeReflection>
+     * @phpstan-var ListOf<AttributeReflection>
      */
-    public readonly AttributeReflections $attributes;
+    public readonly ListOf $attributes;
 
     public function __construct(
         MethodId $id,
@@ -49,9 +51,15 @@ final class MethodReflection extends Reflection
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        $this->templates = new TemplateReflections($id, $data[Data::Templates]);
-        $this->parameters = new ParameterReflections($id, $data[Data::Parameters], $reflector);
-        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
+        $this->templates = (new NameMap($data[Data::Templates]))->map(
+            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(templateId($id, $name), $data),
+        );
+        $this->parameters = (new NameMap($data[Data::Parameters]))->map(
+            static fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(parameterId($id, $name), $data, $reflector),
+        );
+        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
+            static fn(TypedMap $data): AttributeReflection => new AttributeReflection($id, $data, $reflector),
+        );
 
         parent::__construct($id, $data);
     }

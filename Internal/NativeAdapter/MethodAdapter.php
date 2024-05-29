@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
+use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\Reflector;
 
 /**
@@ -61,7 +62,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return $this->reflection->attributes->toNative($name, $flags);
+        return AttributeAdapter::from($this->reflection->attributes, $name, $flags);
     }
 
     public function getClosure(?object $object = null): \Closure
@@ -154,7 +155,11 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getNumberOfRequiredParameters(): int
     {
-        return $this->reflection->parameters->countRequired();
+        return $this
+            ->reflection
+            ->parameters
+            ->filter(static fn(ParameterReflection $reflection): bool => !$reflection->isOptional())
+            ->count();
     }
 
     /**
@@ -162,7 +167,11 @@ final class MethodAdapter extends \ReflectionMethod
      */
     public function getParameters(): array
     {
-        return array_values($this->reflection->parameters->toNative());
+        return $this
+            ->reflection
+            ->parameters
+            ->map(static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNative())
+            ->toList();
     }
 
     /**

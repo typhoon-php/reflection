@@ -12,8 +12,13 @@ use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
+use function Typhoon\DeclarationId\aliasId;
 use function Typhoon\DeclarationId\anyClassId;
+use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\methodId;
+use function Typhoon\DeclarationId\propertyId;
+use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -30,45 +35,45 @@ final class ClassReflection extends Reflection
 
     /**
      * @var AliasReflection[]
-     * @psalm-var AliasReflections
-     * @phpstan-var AliasReflections
+     * @psalm-var NameMap<AliasReflection>
+     * @phpstan-var NameMap<AliasReflection>
      */
-    public readonly AliasReflections $aliases;
+    public readonly NameMap $aliases;
 
     /**
      * @var TemplateReflection[]
-     * @psalm-var TemplateReflections
-     * @phpstan-var TemplateReflections
+     * @psalm-var NameMap<TemplateReflection>
+     * @phpstan-var NameMap<TemplateReflection>
      */
-    public readonly TemplateReflections $templates;
+    public readonly NameMap $templates;
 
     /**
      * @var ClassConstantReflection[]
-     * @psalm-var ClassConstantReflections
-     * @phpstan-var ClassConstantReflections
+     * @psalm-var NameMap<ClassConstantReflection>
+     * @phpstan-var NameMap<ClassConstantReflection>
      */
-    public readonly ClassConstantReflections $constants;
+    public readonly NameMap $constants;
 
     /**
      * @var PropertyReflection[]
-     * @psalm-var PropertyReflections
-     * @phpstan-var PropertyReflections
+     * @psalm-var NameMap<PropertyReflection>
+     * @phpstan-var NameMap<PropertyReflection>
      */
-    public readonly PropertyReflections $properties;
+    public readonly NameMap $properties;
 
     /**
      * @var MethodReflection[]
-     * @psalm-var MethodReflections
-     * @phpstan-var MethodReflections
+     * @psalm-var NameMap<MethodReflection>
+     * @phpstan-var NameMap<MethodReflection>
      */
-    public readonly MethodReflections $methods;
+    public readonly NameMap $methods;
 
     /**
      * @var AttributeReflection[]
-     * @psalm-var AttributeReflections
-     * @phpstan-var AttributeReflections
+     * @psalm-var ListOf<AttributeReflection>
+     * @phpstan-var ListOf<AttributeReflection>
      */
-    public readonly AttributeReflections $attributes;
+    public readonly ListOf $attributes;
 
     public function __construct(
         ClassId|AnonymousClassId $id,
@@ -77,12 +82,28 @@ final class ClassReflection extends Reflection
     ) {
         /** @var class-string<TObject> */
         $this->name = $id->name;
-        $this->aliases = new AliasReflections($id, $data[Data::Aliases]);
-        $this->templates = new TemplateReflections($id, $data[Data::Templates]);
-        $this->constants = new ClassConstantReflections($id, $data[Data::ClassConstants], $reflector);
-        $this->properties = new PropertyReflections($id, $data[Data::Properties], $reflector);
-        $this->methods = new MethodReflections($id, $data[Data::Methods], $reflector);
-        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
+        $this->aliases = (new NameMap($data[Data::Aliases]))->map(
+            static function (TypedMap $data, string $name) use ($id): AliasReflection {
+                \assert($id instanceof ClassId);
+
+                return new AliasReflection(aliasId($id, $name), $data);
+            },
+        );
+        $this->templates = (new NameMap($data[Data::Templates]))->map(
+            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(templateId($id, $name), $data),
+        );
+        $this->constants = (new NameMap($data[Data::ClassConstants]))->map(
+            static fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(classConstantId($id, $name), $data, $reflector),
+        );
+        $this->properties = (new NameMap($data[Data::Properties]))->map(
+            static fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(propertyId($id, $name), $data, $reflector),
+        );
+        $this->methods = (new NameMap($data[Data::Methods]))->map(
+            static fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(methodId($id, $name), $data, $reflector),
+        );
+        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
+            static fn(TypedMap $data): AttributeReflection => new AttributeReflection($id, $data, $reflector),
+        );
 
         parent::__construct($id, $data);
     }

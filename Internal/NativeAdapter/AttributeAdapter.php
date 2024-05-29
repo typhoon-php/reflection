@@ -12,6 +12,7 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\AttributeReflection;
+use Typhoon\Reflection\ListOf;
 
 /**
  * @internal
@@ -24,6 +25,29 @@ final class AttributeAdapter extends \ReflectionAttribute
     public function __construct(
         private readonly AttributeReflection $reflection,
     ) {}
+
+    /**
+     * @param ListOf<AttributeReflection> $attributes
+     * @return list<\ReflectionAttribute>
+     */
+    public static function from(ListOf $attributes, ?string $name, int $flags): array
+    {
+        if ($name !== null) {
+            if ($flags & \ReflectionAttribute::IS_INSTANCEOF) {
+                $attributes = $attributes->filter(
+                    static fn(AttributeReflection $attribute): bool => $attribute->className() === $name,
+                );
+            } else {
+                $attributes = $attributes->filter(
+                    static fn(AttributeReflection $attribute): bool => $attribute->class()->isInstanceOf($name),
+                );
+            }
+        }
+
+        return $attributes
+            ->map(static fn(AttributeReflection $attribute): \ReflectionAttribute => $attribute->toNative())
+            ->toList();
+    }
 
     public function __toString(): string
     {

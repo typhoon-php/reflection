@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
+use Typhoon\Reflection\MethodReflection;
+use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\Reflector;
 use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classId;
@@ -61,32 +64,24 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return $this->reflection->attributes->toNative($name, $flags);
+        return AttributeAdapter::from($this->reflection->attributes, $name, $flags);
     }
 
     public function getConstant(string $name): mixed
     {
-        $constant = $this->reflection->constants[$name] ?? null;
-
-        if ($constant === null) {
-            return false;
-        }
-
-        return $constant->value();
+        return isset($this->reflection->constants[$name])
+            ? $this->reflection->constants[$name]->value()
+            : false;
     }
 
     public function getConstants(?int $filter = null): array
     {
-        $filter ??= 0;
-        $values = [];
-
-        foreach ($this->reflection->constants as $name => $constant) {
-            if ($filter === 0 || ($constant->toNative()->getModifiers() & $filter) !== 0) {
-                $values[$name] = $constant->value();
-            }
-        }
-
-        return $values;
+        return $this
+            ->reflection
+            ->constants
+            ->filter(static fn(ClassConstantReflection $constant): bool => $filter === null || ($constant->toNative()->getModifiers() & $filter) !== 0)
+            ->map(static fn(ClassConstantReflection $constant): mixed => $constant->value())
+            ->toArray();
     }
 
     public function getConstructor(): ?\ReflectionMethod
@@ -96,15 +91,12 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getDefaultProperties(): array
     {
-        $defaults = [];
-
-        foreach ($this->reflection->properties as $name => $property) {
-            if ($property->hasDefaultValue()) {
-                $defaults[$name] = $property->defaultValue();
-            }
-        }
-
-        return $defaults;
+        return $this
+            ->reflection
+            ->properties
+            ->filter(static fn(PropertyReflection $property): bool => $property->hasDefaultValue())
+            ->map(static fn(PropertyReflection $property): mixed => $property->defaultValue())
+            ->toArray();
     }
 
     public function getDocComment(): string|false
@@ -160,7 +152,12 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getMethods(?int $filter = null): array
     {
-        return array_values($this->reflection->methods->toNative($filter));
+        return $this
+            ->reflection
+            ->methods
+            ->map(static fn(MethodReflection $method): \ReflectionMethod => $method->toNative())
+            ->filter(static fn(\ReflectionMethod $method): bool => $filter === null || ($method->getModifiers() & $filter) !== 0)
+            ->toList();
     }
 
     public function getModifiers(): int
@@ -192,7 +189,12 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getProperties(?int $filter = null): array
     {
-        return array_values($this->reflection->properties->toNative($filter));
+        return $this
+            ->reflection
+            ->properties
+            ->map(static fn(PropertyReflection $property): \ReflectionProperty => $property->toNative())
+            ->filter(static fn(\ReflectionProperty $property): bool => $filter === null || ($property->getModifiers() & $filter) !== 0)
+            ->toList();
     }
 
     public function getProperty(string $name): \ReflectionProperty
@@ -207,7 +209,11 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getReflectionConstants(?int $filter = null): array
     {
-        return array_values($this->reflection->constants->toNative($filter));
+        return $this
+            ->reflection
+            ->constants->map(static fn(ClassConstantReflection $constant): \ReflectionClassConstant => $constant->toNative())
+            ->filter(static fn(\ReflectionClassConstant $constant): bool => $filter === null || ($constant->getModifiers() & $filter) !== 0)
+            ->toList();
     }
 
     public function getShortName(): string

@@ -25,10 +25,10 @@ final class PropertyReflection extends Reflection
 
     /**
      * @var AttributeReflection[]
-     * @psalm-var AttributeReflections
-     * @phpstan-var AttributeReflections
+     * @psalm-var ListOf<AttributeReflection>
+     * @phpstan-var ListOf<AttributeReflection>
      */
-    public readonly AttributeReflections $attributes;
+    public readonly ListOf $attributes;
 
     public function __construct(
         PropertyId $id,
@@ -36,7 +36,9 @@ final class PropertyReflection extends Reflection
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        $this->attributes = new AttributeReflections($id, $data[Data::Attributes], $reflector);
+        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
+            static fn(TypedMap $data): AttributeReflection => new AttributeReflection($id, $data, $reflector),
+        );
 
         parent::__construct($id, $data);
     }
