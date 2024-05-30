@@ -62,7 +62,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::from($this->reflection->attributes, $name, $flags);
+        return AttributeAdapter::fromList($this->reflection->attributes, $name, $flags);
     }
 
     public function getClosure(?object $object = null): \Closure

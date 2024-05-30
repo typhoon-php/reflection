@@ -13,6 +13,7 @@ use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\AttributeReflection;
 use Typhoon\Reflection\ListOf;
+use function Typhoon\DeclarationId\nativeReflectionById;
 
 /**
  * @internal
@@ -22,15 +23,19 @@ use Typhoon\Reflection\ListOf;
  */
 final class AttributeAdapter extends \ReflectionAttribute
 {
+    /**
+     * @param non-negative-int $index
+     */
     public function __construct(
         private readonly AttributeReflection $reflection,
+        private readonly int $index,
     ) {}
 
     /**
      * @param ListOf<AttributeReflection> $attributes
      * @return list<\ReflectionAttribute>
      */
-    public static function from(ListOf $attributes, ?string $name, int $flags): array
+    public static function fromList(ListOf $attributes, ?string $name, int $flags): array
     {
         if ($name !== null) {
             if ($flags & \ReflectionAttribute::IS_INSTANCEOF) {
@@ -51,8 +56,7 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function __toString(): string
     {
-        // TODO
-        return '';
+        return (string) nativeReflectionById($this->reflection->targetId)->getAttributes()[$this->index];
     }
 
     public function getArguments(): array

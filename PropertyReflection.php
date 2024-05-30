@@ -37,7 +37,7 @@ final class PropertyReflection extends Reflection
     ) {
         $this->name = $id->name;
         $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data): AttributeReflection => new AttributeReflection($id, $data, $reflector),
+            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
         );
 
         parent::__construct($id, $data);

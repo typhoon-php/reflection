@@ -58,7 +58,7 @@ final class MethodReflection extends Reflection
             static fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(parameterId($id, $name), $data, $reflector),
         );
         $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data): AttributeReflection => new AttributeReflection($id, $data, $reflector),
+            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
         );
 
         parent::__construct($id, $data);

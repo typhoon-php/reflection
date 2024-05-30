@@ -43,7 +43,7 @@ final class ParameterReflection extends Reflection
         $this->name = $id->name;
         $this->index = $data[Data::Index];
         $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data): AttributeReflection => new AttributeReflection($id, $data, $reflector),
+            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
         );
 
         parent::__construct($id, $data);

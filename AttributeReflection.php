@@ -17,8 +17,12 @@ use function Typhoon\DeclarationId\classId;
  */
 final class AttributeReflection
 {
+    /**
+     * @param non-negative-int $index
+     */
     public function __construct(
         public readonly DeclarationId $targetId,
+        private readonly int $index,
         public readonly TypedMap $data,
         private readonly Reflector $reflector,
     ) {}
@@ -62,6 +66,6 @@ final class AttributeReflection
 
     public function toNative(): \ReflectionAttribute
     {
-        return new AttributeAdapter($this);
+        return new AttributeAdapter($this, $this->index);
     }
 }
