@@ -30,7 +30,7 @@ final class ExpressionCompiler
             $expr instanceof Scalar\LNumber,
             $expr instanceof Scalar\DNumber => new Value($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
-            $expr instanceof Scalar\MagicConst\Line => MagicLine::Constant,
+            $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
             $expr instanceof Scalar\MagicConst\File => MagicFile::Constant,
             $expr instanceof Scalar\MagicConst\Dir => MagicDir::Constant,
             $expr instanceof Scalar\MagicConst\Namespace_ => MagicNamespace::Constant,
