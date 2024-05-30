@@ -31,9 +31,9 @@ final class MethodAdapter extends \ReflectionMethod
     /**
      * @psalm-suppress MethodSignatureMismatch, PossiblyUnusedMethod, UnusedPsalmSuppress, UnusedParam
      */
-    public static function createFromMethodName(string $method): static
+    public static function createFromMethodName(string $method): never
     {
-        throw new \BadMethodCallException();
+        throw new \BadMethodCallException(sprintf('%s must never be called', __METHOD__));
     }
 
     /**

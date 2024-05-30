@@ -123,4 +123,9 @@ final class NamedTypeAdapter extends \ReflectionNamedType
     {
         return $this->builtIn;
     }
+
+    public function __toString(): string
+    {
+        return $this->_name;
+    }
 }

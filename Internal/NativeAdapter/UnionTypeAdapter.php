@@ -35,4 +35,9 @@ final class UnionTypeAdapter extends \ReflectionUnionType
     {
         return $this->types;
     }
+
+    public function __toString(): string
+    {
+        return implode('|', $this->types);
+    }
 }

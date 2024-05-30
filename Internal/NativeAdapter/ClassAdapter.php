@@ -211,7 +211,8 @@ final class ClassAdapter extends \ReflectionClass
     {
         return $this
             ->reflection
-            ->constants->map(static fn(ClassConstantReflection $constant): \ReflectionClassConstant => $constant->toNative())
+            ->constants
+            ->map(static fn(ClassConstantReflection $constant): \ReflectionClassConstant => $constant->toNative())
             ->filter(static fn(\ReflectionClassConstant $constant): bool => $filter === null || ($constant->getModifiers() & $filter) !== 0)
             ->toList();
     }

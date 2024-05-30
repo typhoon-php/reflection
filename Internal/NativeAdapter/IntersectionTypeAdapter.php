@@ -26,4 +26,9 @@ final class IntersectionTypeAdapter extends \ReflectionIntersectionType
     {
         return $this->types;
     }
+
+    public function __toString(): string
+    {
+        return implode('&', $this->types);
+    }
 }
