@@ -18,13 +18,13 @@ use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\TemplateId;
 use function Typhoon\DeclarationId\aliasId;
 use function Typhoon\DeclarationId\anonymousClassId;
 use function Typhoon\DeclarationId\classConstantId;
-use function Typhoon\DeclarationId\classId;
 use function Typhoon\DeclarationId\methodId;
+use function Typhoon\DeclarationId\namedClassId;
 use function Typhoon\DeclarationId\propertyId;
 use function Typhoon\DeclarationId\templateId;
 
@@ -66,7 +66,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         if ($node instanceof Const_) {
             $typeContext = $this->typeContext();
 
-            if ($typeContext->id instanceof ClassId || $typeContext->id instanceof AnonymousClassId) {
+            if ($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId) {
                 $this->contextStack[] = new TypeContext(
                     nameContext: $this->nameContext,
                     id: classConstantId($typeContext->id, $node->name->name),
@@ -84,7 +84,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
         if ($node instanceof PropertyProperty) {
             $typeContext = $this->typeContext();
-            \assert($typeContext->id instanceof ClassId || $typeContext->id instanceof AnonymousClassId);
+            \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
 
             $this->contextStack[] = new TypeContext(
                 nameContext: $this->nameContext,
@@ -100,7 +100,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
         if ($node instanceof ClassMethod) {
             $typeContext = $this->typeContext();
-            \assert($typeContext->id instanceof ClassId || $typeContext->id instanceof AnonymousClassId);
+            \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
             $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
             $methodId = methodId($typeContext->id, $node->name->name);
 
@@ -137,7 +137,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             $typeContext = $this->typeContext();
 
             if ($typeContext->id instanceof ClassConstantId
-                || $typeContext->id instanceof ClassId
+                || $typeContext->id instanceof NamedClassId
                 || $typeContext->id instanceof AnonymousClassId
             ) {
                 array_pop($this->contextStack);
@@ -173,7 +173,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 nameContext: $this->nameContext,
                 id: $classId,
                 self: $classId,
-                parent: $node->extends === null ? null : classId($node->extends->toString()),
+                parent: $node->extends === null ? null : namedClassId($node->extends->toString()),
                 templates: array_map(
                     static fn(string $name): TemplateId => templateId($classId, $name),
                     $typeDeclarations->templateNames,
@@ -182,7 +182,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         }
 
         \assert($node->namespacedName !== null);
-        $classId = classId($node->namespacedName->toString());
+        $classId = namedClassId($node->namespacedName->toString());
         $aliases = array_map(
             static fn(string $name): AliasId => aliasId($classId, $name),
             $typeDeclarations->aliasNames,
@@ -207,7 +207,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 nameContext: $this->nameContext,
                 id: $classId,
                 self: $classId,
-                parent: $node->extends === null ? null : classId($node->extends->toString()),
+                parent: $node->extends === null ? null : namedClassId($node->extends->toString()),
                 aliases: $aliases,
                 templates: $templates,
             );

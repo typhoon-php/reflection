@@ -6,9 +6,9 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\MethodId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\AttributeReflection;
@@ -75,7 +75,7 @@ final class AttributeAdapter extends \ReflectionAttribute
         return match ($this->reflection->targetId::class) {
             FunctionId::class => \Attribute::TARGET_FUNCTION,
             ParameterId::class => \Attribute::TARGET_PARAMETER,
-            ClassId::class, AnonymousClassId::class => \Attribute::TARGET_CLASS,
+            NamedClassId::class, AnonymousClassId::class => \Attribute::TARGET_CLASS,
             ClassConstantId::class => \Attribute::TARGET_CLASS_CONSTANT,
             PropertyId::class => \Attribute::TARGET_PROPERTY,
             MethodId::class => \Attribute::TARGET_METHOD,

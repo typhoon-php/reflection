@@ -12,8 +12,8 @@ use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\Reflector;
-use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @internal
@@ -140,7 +140,7 @@ final class ClassAdapter extends \ReflectionClass
         $interfaces = $this->getInterfaceNames();
 
         return array_combine($interfaces, array_map(
-            fn(string $name): \ReflectionClass => $this->reflector->reflect(anyClassId($name))->toNative(),
+            fn(string $name): \ReflectionClass => $this->reflector->reflect(classId($name))->toNative(),
             $interfaces,
         ));
     }
@@ -257,7 +257,7 @@ final class ClassAdapter extends \ReflectionClass
         $traits = [];
 
         foreach ($this->getTraitNames() as $name) {
-            $traits[$name] = $this->reflector->reflect(classId($name))->toNative();
+            $traits[$name] = $this->reflector->reflect(namedClassId($name))->toNative();
         }
 
         return $traits;
@@ -282,7 +282,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         if (\is_string($interface)) {
             try {
-                $interfaceId = anyClassId($interface);
+                $interfaceId = classId($interface);
             } catch (\AssertionError) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
             }
@@ -382,7 +382,7 @@ final class ClassAdapter extends \ReflectionClass
             }
 
             try {
-                $classId = anyClassId($class);
+                $classId = classId($class);
             } catch (\AssertionError) {
                 throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
             }

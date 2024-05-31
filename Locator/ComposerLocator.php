@@ -23,7 +23,7 @@ final class ComposerLocator implements Locator
 
     public function locate(ConstantId|FunctionId|ClassId $id): ?Resource
     {
-        if ($id instanceof FunctionId) {
+        if (!$id instanceof ClassId) {
             return null;
         }
 

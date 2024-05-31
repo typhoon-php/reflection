@@ -6,7 +6,6 @@ namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\ChangeDetector\ChangeDetectors;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\Reflection\Internal\Data;
@@ -19,7 +18,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ResolveChangeDetector implements ReflectionHook
 {
-    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
     {
         $unresolved = $data[Data::UnresolvedChangeDetectors];
 

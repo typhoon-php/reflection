@@ -8,22 +8,23 @@ use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
 use function Typhoon\DeclarationId\aliasId;
-use function Typhoon\DeclarationId\anyClassId;
 use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\classId;
 use function Typhoon\DeclarationId\methodId;
+use function Typhoon\DeclarationId\namedClassId;
 use function Typhoon\DeclarationId\propertyId;
 use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
  * @readonly
- * @extends Reflection<ClassId|AnonymousClassId>
+ * @extends Reflection<ClassId>
  * @template-covariant TObject of object
  */
 final class ClassReflection extends Reflection
@@ -76,7 +77,7 @@ final class ClassReflection extends Reflection
     public readonly ListOf $attributes;
 
     public function __construct(
-        ClassId|AnonymousClassId $id,
+        ClassId $id,
         TypedMap $data,
         private readonly Reflector $reflector,
     ) {
@@ -84,7 +85,7 @@ final class ClassReflection extends Reflection
         $this->name = $id->name;
         $this->aliases = (new NameMap($data[Data::Aliases]))->map(
             static function (TypedMap $data, string $name) use ($id): AliasReflection {
-                \assert($id instanceof ClassId);
+                \assert($id instanceof NamedClassId);
 
                 return new AliasReflection(aliasId($id, $name), $data);
             },
@@ -121,10 +122,10 @@ final class ClassReflection extends Reflection
         return $this->data[Data::ChangeDetector] ?? new InMemoryChangeDetector();
     }
 
-    public function isInstanceOf(string|ClassId|AnonymousClassId $class): bool
+    public function isInstanceOf(string|ClassId $class): bool
     {
         if (\is_string($class)) {
-            $class = anyClassId($class);
+            $class = classId($class);
         }
 
         return $this->id->equals($class)
@@ -227,7 +228,7 @@ final class ClassReflection extends Reflection
             return null;
         }
 
-        return $this->reflector->reflect(classId($parentName));
+        return $this->reflector->reflect(namedClassId($parentName));
     }
 
     /**

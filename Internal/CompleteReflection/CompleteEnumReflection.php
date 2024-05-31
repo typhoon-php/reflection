@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\CompleteReflection;
 
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
@@ -21,7 +20,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class CompleteEnumReflection implements ReflectionHook
 {
-    public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
     {
         if ($id instanceof FunctionId || $data[Data::ClassKind] !== ClassKind::Enum) {
             return $data;

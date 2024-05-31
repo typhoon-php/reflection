@@ -29,6 +29,7 @@ use PhpParser\Node\UnionType;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
@@ -57,7 +58,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         private ExpressionCompiler $expressionCompiler = new ExpressionCompiler(),
     ) {}
 
-    public function reflect(FunctionId|ClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
     {
         $node = $data[Data::Node] ?? null;
 
@@ -65,7 +66,7 @@ final class ReflectPhpParserNode implements ReflectionHook
             return $data;
         }
 
-        if ($id instanceof ClassId || $id instanceof AnonymousClassId) {
+        if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
             \assert($node instanceof ClassLike);
 
             return $this->reflectClass($data, $node);

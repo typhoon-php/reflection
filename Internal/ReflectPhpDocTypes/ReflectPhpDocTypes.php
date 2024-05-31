@@ -8,7 +8,6 @@ use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
@@ -51,7 +50,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         );
     }
 
-    public function reflect(ClassId|AnonymousClassId|FunctionId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $this->reflectFunction($data);

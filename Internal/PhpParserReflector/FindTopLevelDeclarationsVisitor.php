@@ -9,6 +9,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\DeclarationIdMap;
 
 /**
@@ -19,19 +20,19 @@ final class FindTopLevelDeclarationsVisitor extends NodeVisitorAbstract
 {
     /**
      * @psalm-readonly-allow-private-mutation
-     * @var DeclarationIdMap<ClassId|AnonymousClassId, ClassLike>
+     * @var DeclarationIdMap<ClassId, ClassLike>
      */
     public DeclarationIdMap $nodes;
 
     public function __construct()
     {
-        /** @var DeclarationIdMap<ClassId|AnonymousClassId, ClassLike> */
+        /** @var DeclarationIdMap<ClassId, ClassLike> */
         $this->nodes = new DeclarationIdMap();
     }
 
     public function beforeTraverse(array $nodes): ?array
     {
-        /** @var DeclarationIdMap<ClassId|AnonymousClassId, ClassLike> */
+        /** @var DeclarationIdMap<ClassId, ClassLike> */
         $this->nodes = new DeclarationIdMap();
 
         return null;
@@ -41,7 +42,7 @@ final class FindTopLevelDeclarationsVisitor extends NodeVisitorAbstract
     {
         if ($node instanceof ClassLike) {
             $id = SetTypeContextVisitor::getNodeTypeContext($node)->id;
-            \assert($id instanceof ClassId || $id instanceof AnonymousClassId);
+            \assert($id instanceof NamedClassId || $id instanceof AnonymousClassId);
             $this->nodes = $this->nodes->with($id, $node);
 
             return null;

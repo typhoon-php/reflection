@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
-use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
@@ -16,7 +16,7 @@ use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\Reflector;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\DefaultTypeVisitor;
-use function Typhoon\DeclarationId\anyClassId;
+use function Typhoon\DeclarationId\classId;
 
 /**
  * @internal
@@ -110,24 +110,24 @@ final class ParameterAdapter extends \ReflectionParameter
                     private readonly Reflector $reflector,
                 ) {}
 
-                public function namedObject(Type $self, ClassId|AnonymousClassId $class, array $arguments): mixed
+                public function namedObject(Type $self, ClassId $class, array $arguments): mixed
                 {
                     return $this->reflector->reflect($class);
                 }
 
-                public function self(Type $self, null|ClassId|AnonymousClassId $resolvedClass, array $arguments): mixed
+                public function self(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
                 {
                     return $this->reflection->class();
                 }
 
-                public function parent(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+                public function parent(Type $self, ?NamedClassId $resolvedClass, array $arguments): mixed
                 {
                     return $this->reflection->class()?->parent();
                 }
 
                 public function closure(Type $self, array $parameters, Type $return): mixed
                 {
-                    return $this->reflector->reflect(anyClassId(\Closure::class));
+                    return $this->reflector->reflect(classId(\Closure::class));
                 }
 
                 protected function default(Type $self): mixed

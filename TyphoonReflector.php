@@ -18,6 +18,7 @@ use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\DeclarationId\MethodId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\DeclarationId\TemplateId;
@@ -51,7 +52,7 @@ use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\anyClassId;
+use function Typhoon\DeclarationId\classId;
 
 /**
  * @api
@@ -108,7 +109,7 @@ final class TyphoonReflector implements Reflector
     public function reflectClass(string|object $nameOrObject): ClassReflection
     {
         /** @var ClassReflection<T> */
-        return $this->reflect(anyClassId($nameOrObject));
+        return $this->reflect(classId($nameOrObject));
     }
 
     /**
@@ -117,7 +118,7 @@ final class TyphoonReflector implements Reflector
     public function reflect(DeclarationId $id): Reflection
     {
         return match (true) {
-            $id instanceof ClassId, $id instanceof AnonymousClassId => new ClassReflection(
+            $id instanceof NamedClassId, $id instanceof AnonymousClassId => new ClassReflection(
                 id: $id,
                 data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name),
                 reflector: $this,
@@ -133,7 +134,7 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
-     * @return DeclarationIdMap<ClassId|AnonymousClassId, ClassReflection>
+     * @return DeclarationIdMap<ClassId, ClassReflection>
      */
     public function reflectCode(string $code, TypedMap $baseData = new TypedMap()): DeclarationIdMap
     {
@@ -141,7 +142,7 @@ final class TyphoonReflector implements Reflector
         $this->traverse($this->parse($code), $finder);
         $this->stageForCommit($finder->nodes, $baseData);
 
-        /** @var DeclarationIdMap<ClassId|AnonymousClassId, ClassReflection> */
+        /** @var DeclarationIdMap<ClassId, ClassReflection> */
         $reflections = new DeclarationIdMap();
 
         foreach ($finder->nodes as $declarationId => $_) {
@@ -153,7 +154,7 @@ final class TyphoonReflector implements Reflector
         return $reflections;
     }
 
-    private function reflectData(ClassId|AnonymousClassId $id): ?TypedMap
+    private function reflectData(ClassId $id): ?TypedMap
     {
         $cachedData = $this->storage->get($id);
 
@@ -212,7 +213,7 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
-     * @param DeclarationIdMap<ClassId|AnonymousClassId, ClassLike> $nodes
+     * @param DeclarationIdMap<ClassId, ClassLike> $nodes
      * @param list<ReflectionHook> $hooks
      */
     private function stageForCommit(DeclarationIdMap $nodes, TypedMap $baseData = new TypedMap(), array $hooks = []): void

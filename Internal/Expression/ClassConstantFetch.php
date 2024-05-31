@@ -12,7 +12,7 @@ use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
-use function Typhoon\DeclarationId\classId;
+use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @internal
@@ -62,7 +62,7 @@ final class ClassConstantFetch implements Expression
             $class = $this->class->evaluate($reflection, $reflector);
             \assert(\is_string($class));
 
-            return $reflector->reflect(classId($class));
+            return $reflector->reflect(namedClassId($class));
         }
 
         return match (true) {
