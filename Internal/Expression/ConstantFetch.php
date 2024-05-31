@@ -14,12 +14,12 @@ use Typhoon\Reflection\Reflector;
 final class ConstantFetch implements Expression
 {
     /**
-     * @param non-empty-string $namespacedName
+     * @param non-empty-string $name
      * @param ?non-empty-string $globalName
      */
     public function __construct(
-        private readonly string $namespacedName,
-        private readonly ?string $globalName,
+        private readonly string $name,
+        private readonly ?string $globalName = null,
     ) {}
 
     /**
@@ -27,8 +27,8 @@ final class ConstantFetch implements Expression
      */
     public function name(Reflector $_reflector): string
     {
-        if ($this->globalName === null || \defined($this->namespacedName)) {
-            return $this->namespacedName;
+        if ($this->globalName === null || \defined($this->name)) {
+            return $this->name;
         }
 
         return $this->globalName;

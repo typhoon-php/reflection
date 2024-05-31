@@ -9,6 +9,7 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Coalesce;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VariadicPlaceholder;
@@ -90,11 +91,16 @@ final class ExpressionCompiler
             return new Value(false);
         }
 
-        // TODO
-        return new ConstantFetch(
-            namespacedName: $name->toString(),
-            globalName: $name->toString(),
-        );
+        $namespacedName = $name->getAttribute('namespacedName');
+
+        if ($namespacedName instanceof FullyQualified) {
+            return new ConstantFetch(
+                name: $namespacedName->toString(),
+                globalName: $name->toString(),
+            );
+        }
+
+        return new ConstantFetch($name->toString());
     }
 
     private function compileArray(Expr\Array_ $expr): Expression
