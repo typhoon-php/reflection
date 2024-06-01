@@ -165,6 +165,7 @@ final class TyphoonReflector implements Reflector
         if ($id instanceof AnonymousClassId) {
             $resolvedResource = ResolvedResource::fromAnonymousClassId($id);
         } else {
+            \assert($id instanceof NamedClassId);
             $resource = $this->locator->locate($id);
 
             if ($resource === null) {

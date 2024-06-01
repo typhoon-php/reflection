@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Locator;
 
-use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Locator;
 use Typhoon\Reflection\Resource;
 
@@ -22,7 +22,7 @@ final class Locators implements Locator
         private readonly iterable $locators,
     ) {}
 
-    public function locate(ConstantId|FunctionId|ClassId $id): ?Resource
+    public function locate(ConstantId|FunctionId|NamedClassId $id): ?Resource
     {
         foreach ($this->locators as $locator) {
             $resource = $locator->locate($id);

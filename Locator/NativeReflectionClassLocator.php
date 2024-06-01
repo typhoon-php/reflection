@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Locator;
 
-use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Locator;
 use Typhoon\Reflection\Resource;
@@ -21,9 +21,9 @@ final class NativeReflectionClassLocator implements Locator
         private readonly bool $autoload = false,
     ) {}
 
-    public function locate(ConstantId|FunctionId|ClassId $id): ?Resource
+    public function locate(ConstantId|FunctionId|NamedClassId $id): ?Resource
     {
-        if (!$id instanceof ClassId) {
+        if (!$id instanceof NamedClassId) {
             return null;
         }
 
