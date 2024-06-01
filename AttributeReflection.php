@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\ClassConstantId;
+use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\MethodId;
+use Typhoon\DeclarationId\ParameterId;
+use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
@@ -21,7 +26,7 @@ final class AttributeReflection
      * @param non-negative-int $index
      */
     public function __construct(
-        public readonly DeclarationId $targetId,
+        public readonly FunctionId|ParameterId|ClassId|ClassConstantId|MethodId|PropertyId $targetId,
         private readonly int $index,
         public readonly TypedMap $data,
         private readonly Reflector $reflector,

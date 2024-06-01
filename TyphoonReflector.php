@@ -139,7 +139,7 @@ final class TyphoonReflector implements Reflector
     public function reflectCode(string $code, TypedMap $baseData = new TypedMap()): DeclarationIdMap
     {
         $finder = new FindTopLevelDeclarationsVisitor();
-        $this->traverse($this->parse($code), $finder);
+        $this->traverse($this->parse($code), $finder, $code, $baseData[Data::File] ?? null);
         $this->stageForCommit($finder->nodes, $baseData);
 
         /** @var DeclarationIdMap<ClassId, ClassReflection> */
@@ -176,7 +176,7 @@ final class TyphoonReflector implements Reflector
         }
 
         $finder = new FindTopLevelDeclarationsVisitor();
-        $this->traverse($this->parse($resolvedResource->code), $finder, $resolvedResource->file);
+        $this->traverse($this->parse($resolvedResource->code), $finder, $resolvedResource->code, $resolvedResource->file);
         $this->stageForCommit($finder->nodes, $resolvedResource->baseData, $resolvedResource->hooks);
 
         $data = $this->storage->get($id);
@@ -198,12 +198,17 @@ final class TyphoonReflector implements Reflector
      * @param ?non-empty-string $file
      * @param array<Node> $nodes
      */
-    private function traverse(array $nodes, NodeVisitor $visitor, ?string $file = null): void
+    private function traverse(array $nodes, NodeVisitor $visitor, string $code, ?string $file = null): void
     {
         $traverser = new NodeTraverser();
 
         $nameResolver = new NameResolver();
-        $typeContextVisitor = new TypeContextVisitor($nameResolver->getNameContext(), new ReflectPhpDocTypes(), file: $file);
+        $typeContextVisitor = new TypeContextVisitor(
+            nameContext: $nameResolver->getNameContext(),
+            reader: new ReflectPhpDocTypes(),
+            code: $code,
+            file: $file,
+        );
         $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($typeContextVisitor);

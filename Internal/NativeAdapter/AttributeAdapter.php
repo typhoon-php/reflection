@@ -12,7 +12,6 @@ use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\AttributeReflection;
 use Typhoon\Reflection\ListOf;
-use function Typhoon\DeclarationId\nativeReflectionById;
 
 /**
  * @internal
@@ -55,7 +54,7 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function __toString(): string
     {
-        return (string) nativeReflectionById($this->reflection->targetId)->getAttributes()[$this->index];
+        return (string) $this->reflection->targetId->reflect()->getAttributes()[$this->index];
     }
 
     public function getArguments(): array

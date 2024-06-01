@@ -8,18 +8,14 @@ use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\aliasId;
-use function Typhoon\DeclarationId\classConstantId;
 use function Typhoon\DeclarationId\classId;
-use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\namedClassId;
-use function Typhoon\DeclarationId\propertyId;
-use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -87,20 +83,20 @@ final class ClassReflection extends Reflection
             static function (TypedMap $data, string $name) use ($id): AliasReflection {
                 \assert($id instanceof NamedClassId);
 
-                return new AliasReflection(aliasId($id, $name), $data);
+                return new AliasReflection(DeclarationId::alias($id, $name), $data);
             },
         );
         $this->templates = (new NameMap($data[Data::Templates]))->map(
-            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(templateId($id, $name), $data),
+            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($id, $name), $data),
         );
         $this->constants = (new NameMap($data[Data::ClassConstants]))->map(
-            static fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(classConstantId($id, $name), $data, $reflector),
+            static fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(DeclarationId::classConstant($id, $name), $data, $reflector),
         );
         $this->properties = (new NameMap($data[Data::Properties]))->map(
-            static fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(propertyId($id, $name), $data, $reflector),
+            static fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(DeclarationId::property($id, $name), $data, $reflector),
         );
         $this->methods = (new NameMap($data[Data::Methods]))->map(
-            static fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(methodId($id, $name), $data, $reflector),
+            static fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(DeclarationId::method($id, $name), $data, $reflector),
         );
         $this->attributes = (new ListOf($data[Data::Attributes]))->map(
             static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),

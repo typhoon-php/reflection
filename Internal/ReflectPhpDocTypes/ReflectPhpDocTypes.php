@@ -9,6 +9,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
@@ -18,7 +19,6 @@ use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
 use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Type\types;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\aliasId;
 
 /**
  * @internal
@@ -175,7 +175,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         foreach ($phpDoc->typeAliasImports() as $aliasImport) {
             $aliases[$aliasImport->importedAs ?? $aliasImport->importedAlias] = (new TypedMap())->set(
                 Data::AliasType,
-                types::alias(aliasId($typeReflector->resolveClass($aliasImport->importedFrom), $aliasImport->importedAlias)),
+                types::alias(DeclarationId::alias($typeReflector->resolveClass($aliasImport->importedFrom), $aliasImport->importedAlias)),
             );
         }
 

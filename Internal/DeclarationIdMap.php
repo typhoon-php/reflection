@@ -18,7 +18,7 @@ final class DeclarationIdMap implements \ArrayAccess, \IteratorAggregate, \Count
     /**
      * @var array<non-empty-string, array{TId, TValue}>
      */
-    private array $values = [];
+    public array $values = [];
 
     /**
      * @template TNewId of DeclarationId

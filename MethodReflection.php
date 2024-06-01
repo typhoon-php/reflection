@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
+use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\parameterId;
-use function Typhoon\DeclarationId\templateId;
 
 /**
  * @api
@@ -52,10 +51,10 @@ final class MethodReflection extends Reflection
     ) {
         $this->name = $id->name;
         $this->templates = (new NameMap($data[Data::Templates]))->map(
-            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(templateId($id, $name), $data),
+            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($id, $name), $data),
         );
         $this->parameters = (new NameMap($data[Data::Parameters]))->map(
-            static fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(parameterId($id, $name), $data, $reflector),
+            static fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(DeclarationId::parameter($id, $name), $data, $reflector),
         );
         $this->attributes = (new ListOf($data[Data::Attributes]))->map(
             static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),

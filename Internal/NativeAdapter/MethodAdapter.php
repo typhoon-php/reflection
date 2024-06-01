@@ -94,7 +94,13 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getDeclaringClass(): \ReflectionClass
     {
-        $declaringClass = $this->reflector->reflect($this->reflection->data[Data::DeclaringClassId]);
+        $declaringClassId = $this->reflection->data[Data::DeclaringClassId];
+
+        if ($declaringClassId->equals($this->reflection->id->class)) {
+            $declaringClassId = $this->reflection->id->class;
+        }
+
+        $declaringClass = $this->reflector->reflect($declaringClassId);
 
         if ($declaringClass->isTrait()) {
             return $this->reflection->class()->toNative();

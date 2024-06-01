@@ -18,15 +18,10 @@ use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
+use Typhoon\DeclarationId\DeclarationId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\TemplateId;
-use function Typhoon\DeclarationId\aliasId;
-use function Typhoon\DeclarationId\anonymousClassId;
-use function Typhoon\DeclarationId\classConstantId;
-use function Typhoon\DeclarationId\methodId;
 use function Typhoon\DeclarationId\namedClassId;
-use function Typhoon\DeclarationId\propertyId;
-use function Typhoon\DeclarationId\templateId;
 
 /**
  * @internal
@@ -40,11 +35,17 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
     private array $contextStack = [];
 
     /**
+     * @var ?non-negative-int
+     */
+    private ?int $codeLength = null;
+
+    /**
      * @param ?non-empty-string $file
      */
     public function __construct(
         private readonly NameContext $nameContext,
-        private readonly AnnotatedTypesDriver $reader = new NullAnnotatedTypesDriver(),
+        private readonly AnnotatedTypesDriver $reader,
+        private readonly string $code,
         private readonly ?string $file = null,
     ) {}
 
@@ -69,7 +70,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             if ($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId) {
                 $this->contextStack[] = new TypeContext(
                     nameContext: $this->nameContext,
-                    id: classConstantId($typeContext->id, $node->name->name),
+                    id: DeclarationId::classConstant($typeContext->id, $node->name->name),
                     self: $typeContext->self,
                     parent: $typeContext->parent,
                     aliases: $typeContext->aliases,
@@ -88,7 +89,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
             $this->contextStack[] = new TypeContext(
                 nameContext: $this->nameContext,
-                id: propertyId($typeContext->id, $node->name->name),
+                id: DeclarationId::property($typeContext->id, $node->name->name),
                 self: $typeContext->self,
                 parent: $typeContext->parent,
                 aliases: $typeContext->aliases,
@@ -102,7 +103,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             $typeContext = $this->typeContext();
             \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
             $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
-            $methodId = methodId($typeContext->id, $node->name->name);
+            $methodId = DeclarationId::method($typeContext->id, $node->name->name);
 
             $this->contextStack[] = new TypeContext(
                 nameContext: $this->nameContext,
@@ -113,7 +114,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 templates: [
                     ...$typeContext->templates,
                     ...array_map(
-                        static fn(string $name): TemplateId => templateId($methodId, $name),
+                        static fn(string $name): TemplateId => DeclarationId::template($methodId, $name),
                         $typeDeclarations->templateNames,
                     ),
                 ],
@@ -167,7 +168,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 throw new \LogicException('No file for anonymous class');
             }
 
-            $classId = anonymousClassId($this->file, $node->getStartLine());
+            $classId = DeclarationId::anonymousClass($this->file, $node->getStartLine(), $this->column($node));
 
             return new TypeContext(
                 nameContext: $this->nameContext,
@@ -175,7 +176,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 self: $classId,
                 parent: $node->extends === null ? null : namedClassId($node->extends->toString()),
                 templates: array_map(
-                    static fn(string $name): TemplateId => templateId($classId, $name),
+                    static fn(string $name): TemplateId => DeclarationId::template($classId, $name),
                     $typeDeclarations->templateNames,
                 ),
             );
@@ -184,11 +185,11 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         \assert($node->namespacedName !== null);
         $classId = namedClassId($node->namespacedName->toString());
         $aliases = array_map(
-            static fn(string $name): AliasId => aliasId($classId, $name),
+            static fn(string $name): AliasId => DeclarationId::alias($classId, $name),
             $typeDeclarations->aliasNames,
         );
         $templates = array_map(
-            static fn(string $name): TemplateId => templateId($classId, $name),
+            static fn(string $name): TemplateId => DeclarationId::template($classId, $name),
             $typeDeclarations->templateNames,
         );
 
@@ -221,5 +222,26 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             aliases: $aliases,
             templates: $templates,
         );
+    }
+
+    /**
+     * @return positive-int
+     */
+    private function column(Node $node): int
+    {
+        $this->codeLength ??= \strlen($this->code);
+        $startFilePosition = $node->getStartFilePos();
+        \assert($startFilePosition >= 0);
+
+        $lineStartPosition = strrpos($this->code, "\n", $startFilePosition - $this->codeLength);
+
+        if ($lineStartPosition === false) {
+            $lineStartPosition = -1;
+        }
+
+        $column = $startFilePosition - $lineStartPosition;
+        \assert($column > 0);
+
+        return $column;
     }
 }
