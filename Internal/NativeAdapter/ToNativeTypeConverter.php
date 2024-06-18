@@ -16,30 +16,6 @@ use Typhoon\Type\Visitor\DefaultTypeVisitor;
  */
 final class ToNativeTypeConverter extends DefaultTypeVisitor
 {
-    public function string(Type $self): mixed
-    {
-        return NamedTypeAdapter::string();
-    }
-
-    public function int(Type $self, ?int $min, ?int $max): mixed
-    {
-        if ($min === null && $max === null) {
-            return NamedTypeAdapter::int();
-        }
-
-        throw new NonConvertableType($self);
-    }
-
-    public function float(Type $self): mixed
-    {
-        return NamedTypeAdapter::float();
-    }
-
-    public function array(Type $self, Type $key, Type $value, array $elements): mixed
-    {
-        return NamedTypeAdapter::array();
-    }
-
     public function never(Type $self): mixed
     {
         return NamedTypeAdapter::never();
@@ -60,11 +36,6 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::bool();
     }
 
-    public function namedObject(Type $self, ClassId $class, array $arguments): mixed
-    {
-        return NamedTypeAdapter::namedObject($class->name);
-    }
-
     public function true(Type $self): mixed
     {
         return NamedTypeAdapter::true();
@@ -75,9 +46,33 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::false();
     }
 
-    public function callable(Type $self, array $parameters, Type $return): mixed
+    public function int(Type $self, ?int $min, ?int $max): mixed
     {
-        return NamedTypeAdapter::callable();
+        if ($min === null && $max === null) {
+            return NamedTypeAdapter::int();
+        }
+
+        throw new NonConvertableType($self);
+    }
+
+    public function float(Type $self): mixed
+    {
+        return NamedTypeAdapter::float();
+    }
+
+    public function string(Type $self): mixed
+    {
+        return NamedTypeAdapter::string();
+    }
+
+    public function array(Type $self, Type $key, Type $value, array $elements): mixed
+    {
+        return NamedTypeAdapter::array();
+    }
+
+    public function iterable(Type $self, Type $key, Type $value): mixed
+    {
+        return NamedTypeAdapter::iterable();
     }
 
     public function object(Type $self, array $properties): mixed
@@ -85,9 +80,29 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::object();
     }
 
-    public function iterable(Type $self, Type $key, Type $value): mixed
+    public function namedObject(Type $self, ClassId $class, array $arguments): mixed
     {
-        return NamedTypeAdapter::iterable();
+        return NamedTypeAdapter::namedObject($class->name);
+    }
+
+    public function self(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+    {
+        return NamedTypeAdapter::namedObject('self');
+    }
+
+    public function parent(Type $self, ?NamedClassId $resolvedClass, array $arguments): mixed
+    {
+        return NamedTypeAdapter::namedObject('parent');
+    }
+
+    public function static(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+    {
+        return NamedTypeAdapter::namedObject('static');
+    }
+
+    public function callable(Type $self, array $parameters, Type $return): mixed
+    {
+        return NamedTypeAdapter::callable();
     }
 
     public function closure(Type $self, array $parameters, Type $return): mixed
@@ -127,21 +142,6 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         \assert(\count($convertedTypes) > 1);
 
         return new UnionTypeAdapter($convertedTypes);
-    }
-
-    public function self(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
-    {
-        return NamedTypeAdapter::namedObject('self');
-    }
-
-    public function parent(Type $self, ?NamedClassId $resolvedClass, array $arguments): mixed
-    {
-        return NamedTypeAdapter::namedObject('parent');
-    }
-
-    public function static(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
-    {
-        return NamedTypeAdapter::namedObject('static');
     }
 
     public function intersection(Type $self, array $types): mixed
