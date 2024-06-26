@@ -101,6 +101,17 @@ final class TyphoonReflector implements Reflector
         return $locators;
     }
 
+    public function classExists(string $class): bool
+    {
+        try {
+            $this->reflectClass($class);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /**
      * @template T of object
      * @param string|class-string<T>|T $nameOrObject
