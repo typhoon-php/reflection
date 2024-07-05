@@ -124,7 +124,16 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
-     * @psalm-suppress MixedInferredReturnType, MixedReturnStatement, UndefinedPropertyFetch, MixedArrayAccess
+     * @return (
+     *     $id is ClassId ? ClassReflection :
+     *     $id is ClassConstantId ? ClassConstantReflection :
+     *     $id is PropertyId ? PropertyReflection :
+     *     $id is MethodId ? MethodReflection :
+     *     $id is ParameterId ? ParameterReflection :
+     *     $id is AliasId ? AliasReflection :
+     *     $id is TemplateId ? TemplateReflection :
+     *     never
+     * )
      */
     public function reflect(DeclarationId $id): Reflection
     {
