@@ -61,15 +61,15 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         return $this->reflection->type(Kind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
-                public function null(Type $self): mixed
+                public function null(Type $type): mixed
                 {
                     return true;
                 }
 
-                public function union(Type $self, array $types): mixed
+                public function union(Type $type, array $ofTypes): mixed
                 {
-                    foreach ($types as $type) {
-                        if ($type->accept($this)) {
+                    foreach ($ofTypes as $ofType) {
+                        if ($ofType->accept($this)) {
                             return true;
                         }
                     }
@@ -77,12 +77,12 @@ final class ParameterAdapter extends \ReflectionParameter
                     return false;
                 }
 
-                public function mixed(Type $self): mixed
+                public function mixed(Type $type): mixed
                 {
                     return true;
                 }
 
-                protected function default(Type $self): mixed
+                protected function default(Type $type): mixed
                 {
                     return false;
                 }
@@ -109,22 +109,22 @@ final class ParameterAdapter extends \ReflectionParameter
                     private readonly Reflector $reflector,
                 ) {}
 
-                public function namedObject(Type $self, ClassId $class, array $arguments): mixed
+                public function namedObject(Type $type, ClassId $class, array $typeArguments): mixed
                 {
                     return $this->reflector->reflect($class);
                 }
 
-                public function self(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+                public function self(Type $type, ?ClassId $resolvedClass, array $typeArguments): mixed
                 {
                     return $this->reflection->class();
                 }
 
-                public function parent(Type $self, ?NamedClassId $resolvedClass, array $arguments): mixed
+                public function parent(Type $type, ?NamedClassId $resolvedClass, array $typeArguments): mixed
                 {
                     return $this->reflection->class()?->parent();
                 }
 
-                protected function default(Type $self): mixed
+                protected function default(Type $type): mixed
                 {
                     return null;
                 }
@@ -192,12 +192,12 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         return $this->reflection->type(Kind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
-                public function array(Type $self, Type $key, Type $value, array $elements): mixed
+                public function array(Type $type, Type $keyType, Type $valueType, array $elements): mixed
                 {
                     return true;
                 }
 
-                protected function default(Type $self): mixed
+                protected function default(Type $type): mixed
                 {
                     return false;
                 }
@@ -209,12 +209,12 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         return $this->reflection->type(Kind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
-                public function callable(Type $self, array $parameters, Type $return): mixed
+                public function callable(Type $type, array $parameters, Type $returnType): mixed
                 {
                     return true;
                 }
 
-                protected function default(Type $self): mixed
+                protected function default(Type $type): mixed
                 {
                     return false;
                 }

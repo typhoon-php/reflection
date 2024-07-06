@@ -18,105 +18,105 @@ use Typhoon\Type\Visitor\DefaultTypeVisitor;
  */
 final class ToNativeTypeConverter extends DefaultTypeVisitor
 {
-    public function never(Type $self): mixed
+    public function never(Type $type): mixed
     {
         return NamedTypeAdapter::never();
     }
 
-    public function void(Type $self): mixed
+    public function void(Type $type): mixed
     {
         return NamedTypeAdapter::void();
     }
 
-    public function null(Type $self): mixed
+    public function null(Type $type): mixed
     {
         return NamedTypeAdapter::null();
     }
 
-    public function true(Type $self): mixed
+    public function true(Type $type): mixed
     {
         return NamedTypeAdapter::true();
     }
 
-    public function false(Type $self): mixed
+    public function false(Type $type): mixed
     {
         return NamedTypeAdapter::false();
     }
 
-    public function int(Type $self, ?int $min, ?int $max): mixed
+    public function int(Type $type, ?int $min, ?int $max): mixed
     {
         if ($min === null && $max === null) {
             return NamedTypeAdapter::int();
         }
 
-        throw new NonConvertableType($self);
+        throw new NonConvertableType($type);
     }
 
-    public function float(Type $self): mixed
+    public function float(Type $type): mixed
     {
         return NamedTypeAdapter::float();
     }
 
-    public function string(Type $self): mixed
+    public function string(Type $type): mixed
     {
         return NamedTypeAdapter::string();
     }
 
-    public function array(Type $self, Type $key, Type $value, array $elements): mixed
+    public function array(Type $type, Type $keyType, Type $valueType, array $elements): mixed
     {
         return NamedTypeAdapter::array();
     }
 
-    public function iterable(Type $self, Type $key, Type $value): mixed
+    public function iterable(Type $type, Type $keyType, Type $valueType): mixed
     {
         return NamedTypeAdapter::iterable();
     }
 
-    public function object(Type $self, array $properties): mixed
+    public function object(Type $type, array $properties): mixed
     {
         return NamedTypeAdapter::object();
     }
 
-    public function namedObject(Type $self, ClassId $class, array $arguments): mixed
+    public function namedObject(Type $type, ClassId $class, array $typeArguments): mixed
     {
         return NamedTypeAdapter::namedObject($class->name);
     }
 
-    public function self(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+    public function self(Type $type, ?ClassId $resolvedClass, array $typeArguments): mixed
     {
         return NamedTypeAdapter::namedObject('self');
     }
 
-    public function parent(Type $self, ?NamedClassId $resolvedClass, array $arguments): mixed
+    public function parent(Type $type, ?NamedClassId $resolvedClass, array $typeArguments): mixed
     {
         return NamedTypeAdapter::namedObject('parent');
     }
 
-    public function static(Type $self, ?ClassId $resolvedClass, array $arguments): mixed
+    public function static(Type $type, ?ClassId $resolvedClass, array $typeArguments): mixed
     {
         return NamedTypeAdapter::namedObject('static');
     }
 
-    public function callable(Type $self, array $parameters, Type $return): mixed
+    public function callable(Type $type, array $parameters, Type $returnType): mixed
     {
         return NamedTypeAdapter::callable();
     }
 
-    public function union(Type $self, array $types): mixed
+    public function union(Type $type, array $ofTypes): mixed
     {
         // TODO use comparator
-        if ($self === types::bool) {
+        if ($type === types::bool) {
             return NamedTypeAdapter::bool();
         }
 
         $convertedTypes = [];
         $hasNull = false;
 
-        foreach ($types as $type) {
-            $convertedType = $type->accept($this);
+        foreach ($ofTypes as $ofType) {
+            $convertedType = $ofType->accept($this);
 
             if (!$convertedType instanceof \ReflectionNamedType && !$convertedType instanceof \ReflectionIntersectionType) {
-                throw new NonConvertableType($self);
+                throw new NonConvertableType($type);
             }
 
             if ($convertedType instanceof \ReflectionNamedType && $convertedType->getName() === 'null') {
@@ -141,29 +141,29 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return new UnionTypeAdapter($convertedTypes);
     }
 
-    public function intersection(Type $self, array $types): mixed
+    public function intersection(Type $type, array $ofTypes): mixed
     {
         return new IntersectionTypeAdapter(array_map(
-            function (Type $type) use ($self): \ReflectionNamedType {
-                $converted = $type->accept($this);
+            function (Type $ofType) use ($type): \ReflectionNamedType {
+                $converted = $ofType->accept($this);
 
                 if ($converted instanceof \ReflectionNamedType) {
                     return $converted;
                 }
 
-                throw new NonConvertableType($self);
+                throw new NonConvertableType($type);
             },
-            $types,
+            $ofTypes,
         ));
     }
 
-    public function mixed(Type $self): mixed
+    public function mixed(Type $type): mixed
     {
         return NamedTypeAdapter::mixed();
     }
 
-    protected function default(Type $self): mixed
+    protected function default(Type $type): mixed
     {
-        throw new NonConvertableType($self);
+        throw new NonConvertableType($type);
     }
 }
