@@ -123,7 +123,7 @@ final class PhpDocTypeReflector
             'non-positive-int' => types::nonPositiveInt,
             'int' => match (\count($genericTypes)) {
                 0 => types::int,
-                2 => types::int(
+                2 => types::intRange(
                     min: $this->reflectIntLimit($genericTypes[0], 'min'),
                     max: $this->reflectIntLimit($genericTypes[1], 'max'),
                 ),
@@ -267,15 +267,15 @@ final class PhpDocTypeReflector
         $exprNode = $node->constExpr;
 
         if ($exprNode instanceof ConstExprIntegerNode) {
-            return types::intValue((int) $exprNode->value);
+            return types::int((int) $exprNode->value);
         }
 
         if ($exprNode instanceof ConstExprFloatNode) {
-            return types::floatValue((float) $exprNode->value);
+            return types::float((float) $exprNode->value);
         }
 
         if ($exprNode instanceof ConstExprStringNode) {
-            return types::stringValue($exprNode->value);
+            return types::string($exprNode->value);
         }
 
         if ($exprNode instanceof ConstExprTrueNode) {
