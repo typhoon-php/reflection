@@ -129,7 +129,7 @@ final class PhpDocTypeReflector
                 ),
                 default => throw new InvalidPhpDocType(sprintf('int range type should have 2 arguments, got %d', \count($genericTypes)))
             },
-            'int-mask', 'int-mask-of' => types::intMask(types::union(...array_map($this->reflectType(...), $genericTypes))),
+            'int-mask', 'int-mask-of' => types::intMaskOf(types::union(...array_map($this->reflectType(...), $genericTypes))),
             'numeric' => types::numeric,
             'non-empty-string' => types::nonEmptyString,
             'string' => types::string,
