@@ -18,10 +18,9 @@ use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\TemplateId;
-use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @internal
@@ -70,7 +69,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             if ($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId) {
                 $this->contextStack[] = new TypeContext(
                     nameContext: $this->nameContext,
-                    id: DeclarationId::classConstant($typeContext->id, $node->name->name),
+                    id: Id::classConstant($typeContext->id, $node->name->name),
                     self: $typeContext->self,
                     parent: $typeContext->parent,
                     aliases: $typeContext->aliases,
@@ -89,7 +88,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
             $this->contextStack[] = new TypeContext(
                 nameContext: $this->nameContext,
-                id: DeclarationId::property($typeContext->id, $node->name->name),
+                id: Id::property($typeContext->id, $node->name->name),
                 self: $typeContext->self,
                 parent: $typeContext->parent,
                 aliases: $typeContext->aliases,
@@ -103,7 +102,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
             $typeContext = $this->get();
             \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
             $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
-            $methodId = DeclarationId::method($typeContext->id, $node->name->name);
+            $methodId = Id::method($typeContext->id, $node->name->name);
 
             $this->contextStack[] = new TypeContext(
                 nameContext: $this->nameContext,
@@ -114,7 +113,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 templates: [
                     ...$typeContext->templates,
                     ...array_map(
-                        static fn(string $name): TemplateId => DeclarationId::template($methodId, $name),
+                        static fn(string $name): TemplateId => Id::template($methodId, $name),
                         $typeDeclarations->templateNames,
                     ),
                 ],
@@ -168,28 +167,28 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 throw new \LogicException('No file for anonymous class');
             }
 
-            $classId = DeclarationId::anonymousClass($this->file, $node->getStartLine(), $this->column($node));
+            $classId = Id::anonymousClass($this->file, $node->getStartLine(), $this->column($node));
 
             return new TypeContext(
                 nameContext: $this->nameContext,
                 id: $classId,
                 self: $classId,
-                parent: $node->extends === null ? null : namedClassId($node->extends->toString()),
+                parent: $node->extends === null ? null : Id::namedClass($node->extends->toString()),
                 templates: array_map(
-                    static fn(string $name): TemplateId => DeclarationId::template($classId, $name),
+                    static fn(string $name): TemplateId => Id::template($classId, $name),
                     $typeDeclarations->templateNames,
                 ),
             );
         }
 
         \assert($node->namespacedName !== null);
-        $classId = namedClassId($node->namespacedName->toString());
+        $classId = Id::namedClass($node->namespacedName->toString());
         $aliases = array_map(
-            static fn(string $name): AliasId => DeclarationId::alias($classId, $name),
+            static fn(string $name): AliasId => Id::alias($classId, $name),
             $typeDeclarations->aliasNames,
         );
         $templates = array_map(
-            static fn(string $name): TemplateId => DeclarationId::template($classId, $name),
+            static fn(string $name): TemplateId => Id::template($classId, $name),
             $typeDeclarations->templateNames,
         );
 
@@ -208,7 +207,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
                 nameContext: $this->nameContext,
                 id: $classId,
                 self: $classId,
-                parent: $node->extends === null ? null : namedClassId($node->extends->toString()),
+                parent: $node->extends === null ? null : Id::namedClass($node->extends->toString()),
                 aliases: $aliases,
                 templates: $templates,
             );

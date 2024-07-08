@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
@@ -55,7 +55,7 @@ final class MethodReflection extends Reflection
     public function templates(): NameMap
     {
         return $this->templates ??= (new NameMap($this->data[Data::Templates]))->map(
-            fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($this->id, $name), $data),
+            fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(Id::template($this->id, $name), $data),
         );
     }
 
@@ -79,7 +79,7 @@ final class MethodReflection extends Reflection
     public function parameters(): NameMap
     {
         return $this->parameters ??= (new NameMap($this->data[Data::Parameters]))->map(
-            fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(DeclarationId::parameter($this->id, $name), $data, $this->reflector),
+            fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(Id::parameter($this->id, $name), $data, $this->reflector),
         );
     }
 

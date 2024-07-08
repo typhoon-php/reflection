@@ -7,6 +7,7 @@ namespace Typhoon\Reflection;
 use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
@@ -14,7 +15,6 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @api
@@ -42,7 +42,7 @@ final class AttributeReflection
 
     public function class(): ClassReflection
     {
-        return $this->reflector->reflect(namedClassId($this->className()));
+        return $this->reflector->reflect(Id::namedClass($this->className()));
     }
 
     public function target(): Reflection

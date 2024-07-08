@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
@@ -15,8 +16,6 @@ use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\SelfParentStaticTypeResolver;
 use Typhoon\Type\Visitor\TemplateTypeResolver;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\classId;
-use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @internal
@@ -105,7 +104,7 @@ final class ClassInheritanceResolver
      */
     private function oneUsed(string $traitName, array $arguments): void
     {
-        $trait = $this->reflector->reflect(classId($traitName));
+        $trait = $this->reflector->reflect(Id::class($traitName));
 
         $this->changeDetectors[] = $trait->changeDetector();
 
@@ -163,7 +162,7 @@ final class ClassInheritanceResolver
      */
     private function oneInherited(string $className, array $arguments): void
     {
-        $class = $this->reflector->reflect(classId($className));
+        $class = $this->reflector->reflect(Id::class($className));
 
         $this->changeDetectors[] = $class->changeDetector();
 
@@ -214,7 +213,7 @@ final class ClassInheritanceResolver
 
         if ($this->data[Data::ClassKind] !== ClassKind::Trait) {
             $parent = $this->data[Data::UnresolvedParent];
-            $processors[] = new SelfParentStaticTypeResolver($this->id, $parent === null ? null : namedClassId($parent[0]));
+            $processors[] = new SelfParentStaticTypeResolver($this->id, $parent === null ? null : Id::namedClass($parent[0]));
         }
 
         return new TypeProcessor($processors);

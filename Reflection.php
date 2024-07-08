@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api
- * @template-covariant TId of DeclarationId
+ * @template-covariant TId of Id
  */
 abstract class Reflection
 {
@@ -18,7 +18,7 @@ abstract class Reflection
      * @param TId $id
      */
     public function __construct(
-        public readonly DeclarationId $id,
+        public readonly Id $id,
         public readonly TypedMap $data,
     ) {}
 

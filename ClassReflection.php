@@ -8,14 +8,12 @@ use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassId;
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\classId;
-use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @api
@@ -81,7 +79,7 @@ final class ClassReflection extends Reflection
             function (TypedMap $data, string $name): AliasReflection {
                 \assert($this->id instanceof NamedClassId);
 
-                return new AliasReflection(DeclarationId::alias($this->id, $name), $data);
+                return new AliasReflection(Id::alias($this->id, $name), $data);
             },
         );
     }
@@ -94,7 +92,7 @@ final class ClassReflection extends Reflection
     public function templates(): NameMap
     {
         return $this->templates ??= (new NameMap($this->data[Data::Templates]))->map(
-            fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($this->id, $name), $data),
+            fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(Id::template($this->id, $name), $data),
         );
     }
 
@@ -118,7 +116,7 @@ final class ClassReflection extends Reflection
     public function constants(): NameMap
     {
         return $this->constants ??= (new NameMap($this->data[Data::ClassConstants]))->map(
-            fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(DeclarationId::classConstant($this->id, $name), $data, $this->reflector),
+            fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(Id::classConstant($this->id, $name), $data, $this->reflector),
         );
     }
 
@@ -130,7 +128,7 @@ final class ClassReflection extends Reflection
     public function properties(): NameMap
     {
         return $this->properties ??= (new NameMap($this->data[Data::Properties]))->map(
-            fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(DeclarationId::property($this->id, $name), $data, $this->reflector),
+            fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(Id::property($this->id, $name), $data, $this->reflector),
         );
     }
 
@@ -142,7 +140,7 @@ final class ClassReflection extends Reflection
     public function methods(): NameMap
     {
         return $this->methods ??= (new NameMap($this->data[Data::Methods]))->map(
-            fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(DeclarationId::method($this->id, $name), $data, $this->reflector),
+            fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(Id::method($this->id, $name), $data, $this->reflector),
         );
     }
 
@@ -162,7 +160,7 @@ final class ClassReflection extends Reflection
     public function isInstanceOf(string|ClassId $class): bool
     {
         if (\is_string($class)) {
-            $class = classId($class);
+            $class = Id::class($class);
         }
 
         return $this->id->equals($class)
@@ -265,7 +263,7 @@ final class ClassReflection extends Reflection
             return null;
         }
 
-        return $this->reflector->reflect(namedClassId($parentName));
+        return $this->reflector->reflect(Id::namedClass($parentName));
     }
 
     /**

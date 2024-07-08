@@ -14,7 +14,7 @@ use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\ParameterId;
@@ -49,7 +49,6 @@ use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\DeclarationId\classId;
 
 /**
  * @api
@@ -117,7 +116,7 @@ final class TyphoonReflector implements Reflector
     public function reflectClass(string|object $nameOrObject): ClassReflection
     {
         /** @var ClassReflection<T> */
-        return $this->reflect(classId($nameOrObject));
+        return $this->reflect(Id::class($nameOrObject));
     }
 
     /**
@@ -132,7 +131,7 @@ final class TyphoonReflector implements Reflector
      *     never
      * )
      */
-    public function reflect(DeclarationId $id): Reflection
+    public function reflect(Id $id): Reflection
     {
         return match (true) {
             $id instanceof NamedClassId, $id instanceof AnonymousClassId => new ClassReflection(

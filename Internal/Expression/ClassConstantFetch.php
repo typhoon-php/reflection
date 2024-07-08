@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
+use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\Reflector;
-use function Typhoon\DeclarationId\namedClassId;
 
 /**
  * @internal
@@ -53,6 +53,6 @@ final class ClassConstantFetch implements Expression
             return \constant($class . '::' . $name);
         }
 
-        return $reflector->reflect(namedClassId($class))->constants()[$name]->value();
+        return $reflector->reflect(Id::namedClass($class))->constants()[$name]->value();
     }
 }

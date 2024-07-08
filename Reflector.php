@@ -7,7 +7,7 @@ namespace Typhoon\Reflection;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\ClassId;
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
@@ -30,5 +30,5 @@ interface Reflector
      *     never
      * )
      */
-    public function reflect(DeclarationId $id): Reflection;
+    public function reflect(Id $id): Reflection;
 }

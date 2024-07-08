@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal;
 
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 
 /**
  * @api
- * @template TId of DeclarationId
+ * @template TId of Id
  * @template TValue
  * @implements \ArrayAccess<TId, TValue>
  * @implements \IteratorAggregate<TId, TValue>
@@ -21,13 +21,13 @@ final class DeclarationIdMap implements \ArrayAccess, \IteratorAggregate, \Count
     public array $values = [];
 
     /**
-     * @template TNewId of DeclarationId
+     * @template TNewId of Id
      * @template TNewValue
      * @param TNewId $id
      * @param TNewValue $value
      * @return self<TId|TNewId, TValue|TNewValue>
      */
-    public function with(DeclarationId $id, mixed $value): self
+    public function with(Id $id, mixed $value): self
     {
         /** @var self<TId|TNewId, TValue|TNewValue> */
         $copy = clone $this;

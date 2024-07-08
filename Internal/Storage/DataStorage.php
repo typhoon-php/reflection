@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\Storage;
 
 use Psr\SimpleCache\CacheInterface;
-use Typhoon\DeclarationId\DeclarationId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -26,12 +26,12 @@ final class DataStorage
     /**
      * @return non-empty-string
      */
-    private static function key(DeclarationId $id): string
+    private static function key(Id $id): string
     {
         return hash('xxh128', $id->toString());
     }
 
-    public function get(DeclarationId $id): ?TypedMap
+    public function get(Id $id): ?TypedMap
     {
         $key = self::key($id);
 
@@ -51,7 +51,7 @@ final class DataStorage
     /**
      * @param \Closure(): TypedMap $data
      */
-    public function stageForCommit(DeclarationId $id, \Closure $data): void
+    public function stageForCommit(Id $id, \Closure $data): void
     {
         $this->deferred[self::key($id)] = new DataCacheItem($data);
     }
