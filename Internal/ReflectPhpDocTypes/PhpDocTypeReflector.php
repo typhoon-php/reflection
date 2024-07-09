@@ -28,6 +28,7 @@ use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use Typhoon\Reflection\Internal\TypeContext\NameParser;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Type\Parameter;
+use Typhoon\Type\ShapeElement;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
@@ -220,7 +221,7 @@ final class PhpDocTypeReflector
         $elements = [];
 
         foreach ($node->items as $item) {
-            $type = types::arrayElement($this->reflectType($item->valueType), $item->optional);
+            $type = new ShapeElement($this->reflectType($item->valueType), $item->optional);
 
             if ($item->keyName === null) {
                 $elements[] = $type;
@@ -256,7 +257,7 @@ final class PhpDocTypeReflector
                 default => throw new InvalidPhpDocType(sprintf('%s is not supported', $keyName::class)),
             };
 
-            $properties[$name] = types::prop($this->reflectType($item->valueType), $item->optional);
+            $properties[$name] = new ShapeElement($this->reflectType($item->valueType), $item->optional);
         }
 
         return types::objectShape($properties);
