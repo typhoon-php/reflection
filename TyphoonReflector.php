@@ -52,7 +52,7 @@ use Typhoon\TypedMap\TypedMap;
 /**
  * @api
  */
-final class TyphoonReflector implements Reflector
+final class TyphoonReflector extends Reflector
 {
     private function __construct(
         private readonly Parser $phpParser,
@@ -94,96 +94,6 @@ final class TyphoonReflector implements Reflector
         $locators[] = new NativeReflectionFunctionLocator();
 
         return $locators;
-    }
-
-    public function classExists(string $class): bool
-    {
-        try {
-            $this->reflectClassLike($class);
-
-            return true;
-        } catch (\Throwable) {
-            return false;
-        }
-    }
-
-    /**
-     * @template T of object
-     * @param string|class-string<T>|T $nameOrObject
-     * @return ClassLikeReflection<T, NamedClassId|AnonymousClassId>
-     */
-    public function reflectClassLike(string|object $nameOrObject): ClassLikeReflection
-    {
-        /** @var ClassLikeReflection<T> */
-        return $this->reflect(Id::class($nameOrObject));
-    }
-
-    /**
-     * @template T of object
-     * @param string|class-string<T>|T $nameOrObject
-     * @return ClassReflection<T>
-     */
-    public function reflectClass(string|object $nameOrObject): ClassReflection
-    {
-        $reflection = $this->reflect(Id::namedClass($nameOrObject));
-
-        if (!$reflection instanceof ClassReflection) {
-            throw new \RuntimeException('Not a class!');
-        }
-
-        /** @var ClassReflection<T> */
-        return $reflection;
-    }
-
-    /**
-     * @template T of object
-     * @param string|class-string<T> $name
-     * @return InterfaceReflection<T>
-     */
-    public function reflectInterface(string $name): InterfaceReflection
-    {
-        $reflection = $this->reflect(Id::namedClass($name));
-
-        if (!$reflection instanceof InterfaceReflection) {
-            throw new \RuntimeException('Not an interface!');
-        }
-
-        /** @var InterfaceReflection<T> */
-        return $reflection;
-    }
-
-    /**
-     * @template T of object
-     * @param string|class-string<T> $name
-     * @return TraitReflection<T>
-     */
-    public function reflectTrait(string $name): TraitReflection
-    {
-        $reflection = $this->reflect(Id::namedClass($name));
-
-        if (!$reflection instanceof TraitReflection) {
-            throw new \RuntimeException('Not a trait!');
-        }
-
-        /** @var TraitReflection<T> */
-        return $reflection;
-    }
-
-    /**
-     * @template T of \UnitEnum
-     * @param string|class-string<T> $name
-     * @return EnumReflection<T>
-     */
-    public function reflectEnum(string $name): EnumReflection
-    {
-        $reflection = $this->reflect(Id::namedClass($name));
-
-        if (!$reflection instanceof EnumReflection) {
-            throw new \RuntimeException('Not an enum!');
-        }
-
-        /** @var EnumReflection<T> */
-        return $reflection;
     }
 
     /**
