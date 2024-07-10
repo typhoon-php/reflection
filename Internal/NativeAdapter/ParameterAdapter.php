@@ -110,7 +110,7 @@ final class ParameterAdapter extends \ReflectionParameter
                     private readonly Reflector $reflector,
                 ) {}
 
-                public function namedObject(Type $type, ClassId $class, array $typeArguments): mixed
+                public function namedObject(Type $type, NamedClassId $class, array $typeArguments): mixed
                 {
                     return $this->reflector->reflect($class);
                 }
