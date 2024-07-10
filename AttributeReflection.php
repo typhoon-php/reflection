@@ -58,7 +58,7 @@ final class AttributeReflection
     public function arguments(): array
     {
         return array_map(
-            fn(Expression $expression): mixed => $expression->evaluate($this->target(), $this->reflector),
+            fn(Expression $expression): mixed => $expression->evaluate($this->reflector),
             $this->data[Data::ArgumentExpressions],
         );
     }

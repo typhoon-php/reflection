@@ -25,7 +25,7 @@ final class ConstantFetch implements Expression
     /**
      * @return non-empty-string
      */
-    public function name(Reflector $_reflector): string
+    public function name(?Reflector $_reflector = null): string
     {
         if ($this->globalName === null || \defined($this->name)) {
             return $this->name;
@@ -34,7 +34,7 @@ final class ConstantFetch implements Expression
         return $this->globalName;
     }
 
-    public function evaluate(Reflection $reflection, Reflector $reflector): mixed
+    public function evaluate(?Reflector $reflector = null): mixed
     {
         // todo via reflection
         return \constant($this->name($reflector));

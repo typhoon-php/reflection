@@ -65,9 +65,4 @@ final class DataStorage
         $this->cache->setMultiple($this->deferred);
         $this->deferred = [];
     }
-
-    public function rollback(): void
-    {
-        $this->deferred = [];
-    }
 }

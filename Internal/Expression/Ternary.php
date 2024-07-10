@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
 
 /**
@@ -19,12 +18,12 @@ final class Ternary implements Expression
         private readonly Expression $else,
     ) {}
 
-    public function evaluate(Reflection $reflection, Reflector $reflector): mixed
+    public function evaluate(?Reflector $reflector = null): mixed
     {
         if ($this->if === null) {
-            return $this->condition->evaluate($reflection, $reflector) ?: $this->else->evaluate($reflection, $reflector);
+            return $this->condition->evaluate($reflector) ?: $this->else->evaluate($reflector);
         }
 
-        return $this->condition->evaluate($reflection, $reflector) ? $this->if->evaluate($reflection, $reflector) : $this->else->evaluate($reflection, $reflector);
+        return $this->condition->evaluate($reflector) ? $this->if->evaluate($reflector) : $this->else->evaluate($reflector);
     }
 }

@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\DeclarationId\MethodId;
-use Typhoon\Reflection\ClassConstantReflection;
-use Typhoon\Reflection\ClassReflection;
-use Typhoon\Reflection\MethodReflection;
-use Typhoon\Reflection\ParameterReflection;
-use Typhoon\Reflection\PropertyReflection;
-use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
 use function Typhoon\DeclarationId\namedClassId;
 
@@ -28,50 +21,38 @@ final class ClassConstantFetch implements Expression
     /**
      * @return non-empty-string
      */
-    public function name(Reflection $reflection, Reflector $reflector): string
+    public function class(?Reflector $reflector = null): string
     {
-        $name = $this->name->evaluate($reflection, $reflector);
-        \assert(\is_string($name));
-        $class = match (true) {
-            $this->class === MagicClass::Constant => 'self',
-            $reflection instanceof ClassReflection => $reflection->name,
-            $reflection instanceof ClassConstantReflection,
-            $reflection instanceof PropertyReflection,
-            $reflection instanceof MethodReflection => $reflection->id->class->name,
-            $reflection instanceof ParameterReflection => $reflection->id->function instanceof MethodId
-                ? $reflection->id->function->class->name
-                : throw new \LogicException(),
-            default => throw new \LogicException(),
-        };
+        $class = $this->class->evaluate($reflector);
+        \assert(\is_string($class) && $class !== '');
 
-        return $class . '::' . $name;
+        return $class;
     }
 
-    public function evaluate(Reflection $reflection, Reflector $reflector): mixed
+    /**
+     * @return non-empty-string
+     */
+    public function name(?Reflector $reflector = null): string
     {
-        $name = $this->name->evaluate($reflection, $reflector);
-        \assert(\is_string($name));
+        $name = $this->name->evaluate($reflector);
+        \assert(\is_string($name) && $name !== '');
 
-        return $this->classReflection($reflection, $reflector)->constants[$name]->value();
+        return $name;
     }
 
-    private function classReflection(Reflection $reflection, Reflector $reflector): ClassReflection
+    public function evaluate(?Reflector $reflector = null): mixed
     {
-        // todo check no cycles
-        if ($this->class !== MagicClass::Constant) {
-            $class = $this->class->evaluate($reflection, $reflector);
-            \assert(\is_string($class));
+        $class = $this->class($reflector);
+        $name = $this->name($reflector);
 
-            return $reflector->reflect(namedClassId($class));
+        if ($name === 'class') {
+            return $class;
         }
 
-        return match (true) {
-            $reflection instanceof ClassReflection => $reflection,
-            $reflection instanceof ClassConstantReflection,
-            $reflection instanceof PropertyReflection,
-            $reflection instanceof MethodReflection => $reflection->class(),
-            $reflection instanceof ParameterReflection => $reflection->class() ?? throw new \LogicException(),
-            default => throw new \LogicException(),
-        };
+        if ($reflector === null) {
+            return \constant($class . '::' . $name);
+        }
+
+        return $reflector->reflect(namedClassId($class))->constants[$name]->value();
     }
 }

@@ -6,5 +6,5 @@ namespace Typhoon\Reflection\Internal\TypeContext;
 
 interface TypeContextProvider
 {
-    public function typeContext(): TypeContext;
+    public function get(): TypeContext;
 }

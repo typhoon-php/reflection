@@ -21,6 +21,19 @@ use PhpParser\Node\VariadicPlaceholder;
 final class ExpressionCompiler
 {
     /**
+     * @todo optimize by converting strings into Values on demand
+     */
+    public function __construct(
+        private readonly string $file = '',
+        private readonly string $namespace = '',
+        private readonly string $function = '',
+        private readonly string $class = '',
+        private readonly ?string $parentClass = null,
+        private readonly string $trait = '',
+        private readonly string $method = '',
+    ) {}
+
+    /**
      * @return ($expr is null ? null : Expression)
      */
     public function compile(?Expr $expr): ?Expression
@@ -32,13 +45,13 @@ final class ExpressionCompiler
             $expr instanceof Scalar\DNumber => new Value($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
             $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
-            $expr instanceof Scalar\MagicConst\File => MagicFile::Constant,
-            $expr instanceof Scalar\MagicConst\Dir => MagicDir::Constant,
-            $expr instanceof Scalar\MagicConst\Namespace_ => MagicNamespace::Constant,
-            $expr instanceof Scalar\MagicConst\Function_ => MagicFunction::Constant,
-            $expr instanceof Scalar\MagicConst\Class_ => MagicClass::Constant,
-            $expr instanceof Scalar\MagicConst\Trait_ => MagicTrait::Constant,
-            $expr instanceof Scalar\MagicConst\Method => MagicMethod::Constant,
+            $expr instanceof Scalar\MagicConst\File => new Value($this->file),
+            $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file)),
+            $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->namespace),
+            $expr instanceof Scalar\MagicConst\Function_ => new Value($this->function),
+            $expr instanceof Scalar\MagicConst\Class_ => new Value($this->class),
+            $expr instanceof Scalar\MagicConst\Trait_ => new Value($this->trait),
+            $expr instanceof Scalar\MagicConst\Method => new Value($this->method),
             $expr instanceof Coalesce && $expr->left instanceof Expr\ArrayDimFetch => new ArrayFetchCoalesce(
                 array: $this->compile($expr->left->var),
                 key: $this->compile($expr->left->dim ?? throw new \LogicException()),
@@ -129,8 +142,8 @@ final class ExpressionCompiler
         if ($name instanceof Name) {
             if ($name->isSpecialClassName()) {
                 return match ($name->toLowerString()) {
-                    'self' => MagicClass::Constant,
-                    'parent' => ParentClass::Instance,
+                    'self' => new Value($this->class),
+                    'parent' => new Value($this->parentClass ?? throw new \LogicException('no parent')),
                     'static' => throw new \LogicException('static'),
                 };
             }

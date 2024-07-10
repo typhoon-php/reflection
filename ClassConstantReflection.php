@@ -80,7 +80,7 @@ final class ClassConstantReflection extends Reflection
             return \constant($this->id->class->name . '::' . $this->name);
         }
 
-        return $this->data[Data::ValueExpression]->evaluate($this, $this->reflector);
+        return $this->data[Data::ValueExpression]->evaluate($this->reflector);
     }
 
     public function isPrivate(): bool
@@ -122,7 +122,7 @@ final class ClassConstantReflection extends Reflection
         $expression = $this->data[Data::EnumBackingValueExpression] ?? throw new \LogicException('Not a backed enum');
 
         /** @psalm-suppress PossiblyNullReference */
-        return $expression->evaluate($this, $this->reflector);
+        return $expression->evaluate($this->reflector);
     }
 
     /**

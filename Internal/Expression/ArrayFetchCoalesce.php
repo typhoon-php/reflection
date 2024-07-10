@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Expression;
 
-use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
 
 /**
@@ -19,9 +18,9 @@ final class ArrayFetchCoalesce implements Expression
         private readonly Expression $default,
     ) {}
 
-    public function evaluate(Reflection $reflection, Reflector $reflector): mixed
+    public function evaluate(?Reflector $reflector = null): mixed
     {
         /** @psalm-suppress MixedArrayOffset */
-        return $this->array->evaluate($reflection, $reflector)[$this->key->evaluate($reflection, $reflector)] ?? $this->default->evaluate($reflection, $reflector);
+        return $this->array->evaluate($reflector)[$this->key->evaluate($reflector)] ?? $this->default->evaluate($reflector);
     }
 }

@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\Data;
@@ -162,7 +163,14 @@ final class ParameterAdapter extends \ReflectionParameter
         }
 
         if ($expression instanceof ClassConstantFetch) {
-            return $expression->name($this->reflection, $this->reflector);
+            $functionId = $this->reflection->id->function;
+            $expressionClass = $expression->class($this->reflector);
+
+            if ($functionId instanceof MethodId && $expressionClass === $functionId->class->name) {
+                $expressionClass = 'self';
+            }
+
+            return $expressionClass . '::' . $expression->name($this->reflector);
         }
 
         return null;

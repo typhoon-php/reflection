@@ -77,7 +77,7 @@ final class PropertyReflection extends Reflection
 
     public function defaultValue(): mixed
     {
-        return $this->data[Data::DefaultValueExpression]?->evaluate($this, $this->reflector);
+        return $this->data[Data::DefaultValueExpression]?->evaluate($this->reflector);
     }
 
     public function hasDefaultValue(): bool

@@ -65,7 +65,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         }
 
         if ($node instanceof Const_) {
-            $typeContext = $this->typeContext();
+            $typeContext = $this->get();
 
             if ($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId) {
                 $this->contextStack[] = new TypeContext(
@@ -84,7 +84,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         }
 
         if ($node instanceof PropertyProperty) {
-            $typeContext = $this->typeContext();
+            $typeContext = $this->get();
             \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
 
             $this->contextStack[] = new TypeContext(
@@ -100,7 +100,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         }
 
         if ($node instanceof ClassMethod) {
-            $typeContext = $this->typeContext();
+            $typeContext = $this->get();
             \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
             $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
             $methodId = DeclarationId::method($typeContext->id, $node->name->name);
@@ -135,7 +135,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         }
 
         if ($node instanceof Const_) {
-            $typeContext = $this->typeContext();
+            $typeContext = $this->get();
 
             if ($typeContext->id instanceof ClassConstantId
                 || $typeContext->id instanceof NamedClassId
@@ -152,7 +152,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         return null;
     }
 
-    public function typeContext(): TypeContext
+    public function get(): TypeContext
     {
         return end($this->contextStack) ?: new TypeContext($this->nameContext);
     }

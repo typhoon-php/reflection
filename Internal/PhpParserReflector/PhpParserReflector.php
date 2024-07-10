@@ -26,22 +26,19 @@ use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\Stmt\TraitUseAdaptation\Alias;
 use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
 use PhpParser\Node\UnionType;
-use Typhoon\DeclarationId\AnonymousClassId;
+use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\ClassId;
-use Typhoon\DeclarationId\FunctionId;
-use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
+use Typhoon\Reflection\Internal\DeclarationIdMap;
 use Typhoon\Reflection\Internal\Expression\Expression;
-use Typhoon\Reflection\Internal\Expression\ExpressionCompiler;
-use Typhoon\Reflection\Internal\Expression\MagicClass;
+use Typhoon\Reflection\Internal\Expression\ExpressionCompilerProvider;
 use Typhoon\Reflection\Internal\Expression\Value;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
-use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TraitMethodAlias;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
+use Typhoon\Reflection\Internal\TypeContext\TypeContextProvider;
 use Typhoon\Reflection\Internal\TypeData;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
@@ -52,35 +49,38 @@ use Typhoon\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ReflectPhpParserNode implements ReflectionHook
+final class PhpParserReflector extends NodeVisitorAbstract
 {
+    /**
+     * @psalm-readonly-allow-private-mutation
+     * @var DeclarationIdMap<ClassId, TypedMap>
+     */
+    public DeclarationIdMap $data;
+
     public function __construct(
-        private ExpressionCompiler $expressionCompiler = new ExpressionCompiler(),
-    ) {}
-
-    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
-    {
-        $node = $data[Data::Node] ?? null;
-
-        if ($node === null) {
-            return $data;
-        }
-
-        if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
-            \assert($node instanceof ClassLike);
-
-            return $this->reflectClass($data, $node);
-        }
-
-        return $data;
+        private readonly TypeContextProvider $typeContextProvider,
+        private readonly ExpressionCompilerProvider $expressionCompilerProvider,
+    ) {
+        /** @var DeclarationIdMap<ClassId, TypedMap> */
+        $this->data = new DeclarationIdMap();
     }
 
-    private function reflectClass(TypedMap $data, ClassLike $node): TypedMap
+    public function leaveNode(Node $node): ?int
     {
-        $typeContext = SetTypeContextVisitor::getNodeTypeContext($node);
+        if ($node instanceof ClassLike) {
+            $typeContext = $this->typeContextProvider->get();
+            \assert($typeContext->id instanceof ClassId);
+            $this->data = $this->data->with($typeContext->id, $this->reflectClass($node, $typeContext));
 
-        $data = $data
-            ->merge($this->reflectNode($node))
+            return null;
+        }
+
+        return null;
+    }
+
+    private function reflectClass(ClassLike $node, TypeContext $typeContext): TypedMap
+    {
+        $data = $this->reflectNode($node)
             ->set(Data::TypeContext, $typeContext)
             ->set(Data::Attributes, $this->reflectAttributes($node->attrGroups));
 
@@ -262,13 +262,14 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectArguments(array $nodes): array
     {
+        $expressionCompiler = $this->expressionCompilerProvider->get();
         $arguments = [];
 
         foreach ($nodes as $node) {
             if ($node->name === null) {
-                $arguments[] = $this->expressionCompiler->compile($node->value);
+                $arguments[] = $expressionCompiler->compile($node->value);
             } else {
-                $arguments[$node->name->name] = $this->expressionCompiler->compile($node->value);
+                $arguments[$node->name->name] = $expressionCompiler->compile($node->value);
             }
         }
 
@@ -281,6 +282,7 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectConstants(TypeContext $typeContext, array $nodes): array
     {
+        $expressionCompiler = $this->expressionCompilerProvider->get();
         $constants = [];
 
         foreach ($nodes as $node) {
@@ -292,7 +294,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->set(Data::Visibility, $this->reflectVisibility($node->flags));
 
             foreach ($node->consts as $const) {
-                $constants[$const->name->name] = $data->set(Data::ValueExpression, $this->expressionCompiler->compile($const->value));
+                $constants[$const->name->name] = $data->set(Data::ValueExpression, $expressionCompiler->compile($const->value));
             }
         }
 
@@ -305,6 +307,7 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectEnumCases(TypeContext $typeContext, array $nodes): array
     {
+        $expressionCompiler = $this->expressionCompilerProvider->get();
         $cases = [];
 
         foreach ($nodes as $node) {
@@ -315,11 +318,10 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->set(Data::NativeFinal, false)
                 ->set(Data::EnumCase, true)
                 ->set(Data::Type, new TypeData(types::classConstant($typeContext->resolveType(new Name('self')), $name)))
-                ->set(Data::Visibility, Visibility::Public)
-                ->set(Data::ValueExpression, new ClassConstantFetch(MagicClass::Constant, new Value($name)));
+                ->set(Data::Visibility, Visibility::Public);
 
             if ($node->expr !== null) {
-                $data = $data->set(Data::EnumBackingValueExpression, $this->expressionCompiler->compile($node->expr));
+                $data = $data->set(Data::EnumBackingValueExpression, $expressionCompiler->compile($node->expr));
             }
 
             $cases[$name] = $data;
@@ -334,6 +336,7 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectProperties(TypeContext $typeContext, array $nodes): array
     {
+        $expressionCompiler = $this->expressionCompilerProvider->get();
         $properties = [];
 
         foreach ($nodes as $node) {
@@ -346,7 +349,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                 ->set(Data::Visibility, $this->reflectVisibility($node->flags));
 
             foreach ($node->props as $prop) {
-                $default = $this->expressionCompiler->compile($prop->default);
+                $default = $expressionCompiler->compile($prop->default);
 
                 if ($default === null && $node->type === null) {
                     $default = new Value(null);
@@ -368,7 +371,7 @@ final class ReflectPhpParserNode implements ReflectionHook
         $methods = [];
 
         foreach ($nodes as $node) {
-            $typeContext = SetTypeContextVisitor::getNodeTypeContext($node);
+            $typeContext = $this->typeContextProvider->get();
             $methods[$node->name->name] = $this->reflectNode($node)
                 ->set(Data::TypeContext, $typeContext)
                 ->set(Data::Static, $node->isStatic())
@@ -391,6 +394,7 @@ final class ReflectPhpParserNode implements ReflectionHook
      */
     private function reflectParameters(TypeContext $typeContext, array $nodes): array
     {
+        $expressionCompiler = $this->expressionCompilerProvider->get();
         $parameters = [];
 
         foreach ($nodes as $node) {
@@ -404,7 +408,7 @@ final class ReflectPhpParserNode implements ReflectionHook
                     nullable: $node->default instanceof ConstFetch && $node->default->name->toCodeString() === 'null',
                 )))
                 ->set(Data::ByReference, $node->byRef)
-                ->set(Data::DefaultValueExpression, $this->expressionCompiler->compile($node->default))
+                ->set(Data::DefaultValueExpression, $expressionCompiler->compile($node->default))
                 ->set(Data::Promoted, $node->flags !== 0)
                 ->set(Data::NativeReadonly, (bool) ($node->flags & Class_::MODIFIER_READONLY))
                 ->set(Data::Variadic, $node->variadic);
