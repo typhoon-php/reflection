@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Reflector;
 use Typhoon\TypedMap\TypedMap;
@@ -20,7 +21,7 @@ final class ResolveClassInheritance implements ReflectionHook
         private readonly Reflector $reflector,
     ) {}
 
-    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $data;

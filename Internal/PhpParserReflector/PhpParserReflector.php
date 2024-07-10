@@ -27,7 +27,8 @@ use PhpParser\Node\Stmt\TraitUseAdaptation\Alias;
 use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
 use PhpParser\Node\UnionType;
 use PhpParser\NodeVisitorAbstract;
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DeclarationIdMap;
@@ -53,7 +54,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
 {
     /**
      * @psalm-readonly-allow-private-mutation
-     * @var DeclarationIdMap<ClassId, TypedMap>
+     * @var DeclarationIdMap<NamedClassId|AnonymousClassId, TypedMap>
      */
     public DeclarationIdMap $data;
 
@@ -61,7 +62,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
         private readonly TypeContextProvider $typeContextProvider,
         private readonly ExpressionCompilerProvider $expressionCompilerProvider,
     ) {
-        /** @var DeclarationIdMap<ClassId, TypedMap> */
+        /** @var DeclarationIdMap<NamedClassId|AnonymousClassId, TypedMap> */
         $this->data = new DeclarationIdMap();
     }
 
@@ -69,7 +70,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
     {
         if ($node instanceof ClassLike) {
             $typeContext = $this->typeContextProvider->get();
-            \assert($typeContext->id instanceof ClassId);
+            \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
             $this->data = $this->data->with($typeContext->id, $this->reflectClass($node, $typeContext));
 
             return null;

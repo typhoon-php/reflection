@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
@@ -82,7 +82,7 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::namedObject($class->name);
     }
 
-    public function self(Type $type, ?ClassId $resolvedClass, array $typeArguments): mixed
+    public function self(Type $type, null|NamedClassId|AnonymousClassId $resolvedClass, array $typeArguments): mixed
     {
         return NamedTypeAdapter::namedObject('self');
     }
@@ -92,7 +92,7 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::namedObject('parent');
     }
 
-    public function static(Type $type, ?ClassId $resolvedClass, array $typeArguments): mixed
+    public function static(Type $type, null|NamedClassId|AnonymousClassId $resolvedClass, array $typeArguments): mixed
     {
         return NamedTypeAdapter::namedObject('static');
     }

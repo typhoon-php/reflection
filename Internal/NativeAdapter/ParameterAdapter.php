@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
@@ -115,7 +115,7 @@ final class ParameterAdapter extends \ReflectionParameter
                     return $this->reflector->reflect($class);
                 }
 
-                public function self(Type $type, ?ClassId $resolvedClass, array $typeArguments): mixed
+                public function self(Type $type, null|NamedClassId|AnonymousClassId $resolvedClass, array $typeArguments): mixed
                 {
                     return $this->reflection->class();
                 }

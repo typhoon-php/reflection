@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
@@ -60,13 +61,13 @@ final class ClassInheritanceResolver
 
     private function __construct(
         private readonly Reflector $reflector,
-        private readonly ClassId $id,
+        private readonly NamedClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
     ) {
         $this->changeDetectors = $data[Data::UnresolvedChangeDetectors];
     }
 
-    public static function resolve(Reflector $reflector, ClassId $id, TypedMap $data): TypedMap
+    public static function resolve(Reflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         $resolver = new self($reflector, $id, $data);
         $resolver->own();

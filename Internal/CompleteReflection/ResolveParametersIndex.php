@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\CompleteReflection;
 
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\TypedMap\TypedMap;
@@ -16,7 +17,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ResolveParametersIndex implements ReflectionHook
 {
-    public function reflect(FunctionId|ClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $this->resolveParametersIndex($data);

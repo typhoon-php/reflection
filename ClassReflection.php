@@ -7,7 +7,6 @@ namespace Typhoon\Reflection;
 use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
@@ -18,7 +17,7 @@ use Typhoon\TypedMap\TypedMap;
 /**
  * @api
  * @readonly
- * @extends Reflection<ClassId>
+ * @extends Reflection<NamedClassId|AnonymousClassId>
  * @template-covariant TObject of object
  */
 final class ClassReflection extends Reflection
@@ -59,7 +58,7 @@ final class ClassReflection extends Reflection
     private ?NameMap $methods = null;
 
     public function __construct(
-        ClassId $id,
+        NamedClassId|AnonymousClassId $id,
         TypedMap $data,
         private readonly Reflector $reflector,
     ) {
@@ -157,7 +156,7 @@ final class ClassReflection extends Reflection
         return $this->data[Data::ChangeDetector] ?? new InMemoryChangeDetector();
     }
 
-    public function isInstanceOf(string|ClassId $class): bool
+    public function isInstanceOf(string|NamedClassId|AnonymousClassId $class): bool
     {
         if (\is_string($class)) {
             $class = Id::class($class);

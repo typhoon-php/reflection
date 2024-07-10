@@ -8,7 +8,7 @@ use PhpParser\ErrorHandler\Throwing;
 use PhpParser\NameContext;
 use PhpParser\Node\Name;
 use Typhoon\DeclarationId\AliasId;
-use Typhoon\DeclarationId\ClassId;
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\TemplateId;
@@ -40,7 +40,7 @@ final class TypeContext
     public function __construct(
         ?NameContext $nameContext = null,
         public readonly ?Id $id = null,
-        public readonly ?ClassId $self = null,
+        public readonly null|NamedClassId|AnonymousClassId $self = null,
         public readonly ?NamedClassId $parent = null,
         array $aliases = [],
         array $templates = [],

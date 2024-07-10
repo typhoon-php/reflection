@@ -13,7 +13,6 @@ use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\DeclarationId\ClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
@@ -121,7 +120,8 @@ final class TyphoonReflector implements Reflector
 
     /**
      * @return (
-     *     $id is ClassId ? ClassReflection :
+     *      $id is NamedClassId ? ClassReflection :
+     *      $id is AnonymousClassId ? ClassReflection :
      *     $id is ClassConstantId ? ClassConstantReflection :
      *     $id is PropertyId ? PropertyReflection :
      *     $id is MethodId ? MethodReflection :
@@ -150,14 +150,14 @@ final class TyphoonReflector implements Reflector
     }
 
     /**
-     * @return DeclarationIdMap<ClassId, ClassReflection>
+     * @return DeclarationIdMap<NamedClassId|AnonymousClassId, ClassReflection>
      */
     public function reflectCode(string $_code, TypedMap $_baseData = new TypedMap()): DeclarationIdMap
     {
         throw new \LogicException();
     }
 
-    private function reflectData(ClassId $id): ?TypedMap
+    private function reflectData(NamedClassId|AnonymousClassId $id): ?TypedMap
     {
         $cachedData = $this->storage->get($id);
 
