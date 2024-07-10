@@ -23,6 +23,11 @@ use Typhoon\TypedMap\TypedMap;
 abstract class ClassLikeReflection extends Reflection
 {
     /**
+     * @var ?NameMap<AliasReflection>
+     */
+    private ?NameMap $aliases = null;
+
+    /**
      * @var ?NameMap<TemplateReflection>
      */
     private ?NameMap $templates = null;
@@ -56,6 +61,18 @@ abstract class ClassLikeReflection extends Reflection
         protected readonly Reflector $reflector,
     ) {
         parent::__construct($id, $data);
+    }
+
+    /**
+     * @return AliasReflection[]
+     * @psalm-return NameMap<AliasReflection>
+     * @phpstan-return NameMap<AliasReflection>
+     */
+    final public function aliases(): NameMap
+    {
+        return $this->aliases ??= (new NameMap($this->data[Data::Aliases]))->map(
+            fn(TypedMap $data, string $name): AliasReflection => new AliasReflection(Id::alias($this->id, $name), $data),
+        );
     }
 
     /**

@@ -10,8 +10,6 @@ use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Enum_;
-use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\PropertyProperty;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
@@ -161,65 +159,29 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
 
         if ($node->name === null) {
-            \assert($node instanceof Class_);
-
-            if ($this->file === null) {
-                throw new \LogicException('No file for anonymous class');
-            }
-
-            $classId = Id::anonymousClass($this->file, $node->getStartLine(), $this->column($node));
-
-            return new TypeContext(
-                nameContext: $this->nameContext,
-                id: $classId,
-                self: $classId,
-                parent: $node->extends === null ? null : Id::namedClass($node->extends->toString()),
-                templates: array_map(
-                    static fn(string $name): TemplateId => Id::template($classId, $name),
-                    $typeDeclarations->templateNames,
-                ),
+            $classId = Id::anonymousClass(
+                file: $this->file ?? throw new \LogicException('No file for anonymous class'),
+                line: $node->getStartLine(),
+                column: $this->column($node),
             );
+        } else {
+            \assert($node->namespacedName !== null);
+            $classId = Id::namedClass($node->namespacedName->toString());
         }
-
-        \assert($node->namespacedName !== null);
-        $classId = Id::namedClass($node->namespacedName->toString());
-        $aliases = array_map(
-            static fn(string $name): AliasId => Id::alias($classId, $name),
-            $typeDeclarations->aliasNames,
-        );
-        $templates = array_map(
-            static fn(string $name): TemplateId => Id::template($classId, $name),
-            $typeDeclarations->templateNames,
-        );
-
-        if ($node instanceof Interface_ || $node instanceof Enum_) {
-            return new TypeContext(
-                nameContext: $this->nameContext,
-                id: $classId,
-                self: $classId,
-                aliases: $aliases,
-                templates: $templates,
-            );
-        }
-
-        if ($node instanceof Class_) {
-            return new TypeContext(
-                nameContext: $this->nameContext,
-                id: $classId,
-                self: $classId,
-                parent: $node->extends === null ? null : Id::namedClass($node->extends->toString()),
-                aliases: $aliases,
-                templates: $templates,
-            );
-        }
-
-        \assert($node instanceof Trait_);
 
         return new TypeContext(
             nameContext: $this->nameContext,
             id: $classId,
-            aliases: $aliases,
-            templates: $templates,
+            self: $node instanceof Trait_ ? null : $classId,
+            parent: $node instanceof Class_ && $node->extends !== null ? Id::namedClass($node->extends->toString()) : null,
+            aliases: array_map(
+                static fn(string $name): AliasId => Id::alias($classId, $name),
+                $typeDeclarations->aliasNames,
+            ),
+            templates: array_map(
+                static fn(string $name): TemplateId => Id::template($classId, $name),
+                $typeDeclarations->templateNames,
+            ),
         );
     }
 
