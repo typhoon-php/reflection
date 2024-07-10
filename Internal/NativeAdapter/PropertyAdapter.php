@@ -9,6 +9,7 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TraitReflection;
 
 /**
  * @internal
@@ -67,7 +68,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
         $declaringClass = $this->reflector->reflect($declaringClassId);
 
-        if ($declaringClass->isTrait()) {
+        if ($declaringClass instanceof TraitReflection) {
             return $this->reflection->class()->toNative();
         }
 

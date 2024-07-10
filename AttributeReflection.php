@@ -43,7 +43,10 @@ final class AttributeReflection
 
     public function class(): ClassReflection
     {
-        return $this->reflector->reflect(Id::namedClass($this->className()));
+        $reflection = $this->reflector->reflect(Id::namedClass($this->className()));
+        \assert($reflection instanceof ClassReflection);
+
+        return $reflection;
     }
 
     public function target(): Reflection

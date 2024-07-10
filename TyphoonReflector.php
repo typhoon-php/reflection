@@ -23,6 +23,7 @@ use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Exception\FileNotReadable;
+use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
@@ -98,7 +99,7 @@ final class TyphoonReflector implements Reflector
     public function classExists(string $class): bool
     {
         try {
-            $this->reflectClass($class);
+            $this->reflectClassLike($class);
 
             return true;
         } catch (\Throwable) {
@@ -109,18 +110,86 @@ final class TyphoonReflector implements Reflector
     /**
      * @template T of object
      * @param string|class-string<T>|T $nameOrObject
-     * @return ClassReflection<T>
+     * @return ClassLikeReflection<T, NamedClassId|AnonymousClassId>
      */
-    public function reflectClass(string|object $nameOrObject): ClassReflection
+    public function reflectClassLike(string|object $nameOrObject): ClassLikeReflection
     {
-        /** @var ClassReflection<T> */
+        /** @var ClassLikeReflection<T> */
         return $this->reflect(Id::class($nameOrObject));
     }
 
     /**
+     * @template T of object
+     * @param string|class-string<T>|T $nameOrObject
+     * @return ClassReflection<T>
+     */
+    public function reflectClass(string|object $nameOrObject): ClassReflection
+    {
+        $reflection = $this->reflect(Id::namedClass($nameOrObject));
+
+        if (!$reflection instanceof ClassReflection) {
+            throw new \RuntimeException('Not a class!');
+        }
+
+        /** @var ClassReflection<T> */
+        return $reflection;
+    }
+
+    /**
+     * @template T of object
+     * @param string|class-string<T> $name
+     * @return InterfaceReflection<T>
+     */
+    public function reflectInterface(string $name): InterfaceReflection
+    {
+        $reflection = $this->reflect(Id::namedClass($name));
+
+        if (!$reflection instanceof InterfaceReflection) {
+            throw new \RuntimeException('Not an interface!');
+        }
+
+        /** @var InterfaceReflection<T> */
+        return $reflection;
+    }
+
+    /**
+     * @template T of object
+     * @param string|class-string<T> $name
+     * @return TraitReflection<T>
+     */
+    public function reflectTrait(string $name): TraitReflection
+    {
+        $reflection = $this->reflect(Id::namedClass($name));
+
+        if (!$reflection instanceof TraitReflection) {
+            throw new \RuntimeException('Not a trait!');
+        }
+
+        /** @var TraitReflection<T> */
+        return $reflection;
+    }
+
+    /**
+     * @template T of \UnitEnum
+     * @param string|class-string<T> $name
+     * @return EnumReflection<T>
+     */
+    public function reflectEnum(string $name): EnumReflection
+    {
+        $reflection = $this->reflect(Id::namedClass($name));
+
+        if (!$reflection instanceof EnumReflection) {
+            throw new \RuntimeException('Not an enum!');
+        }
+
+        /** @var EnumReflection<T> */
+        return $reflection;
+    }
+
+    /**
      * @return (
-     *      $id is NamedClassId ? ClassReflection :
-     *      $id is AnonymousClassId ? ClassReflection :
+     *     $id is NamedClassId ? ClassReflection|InterfaceReflection|TraitReflection|EnumReflection :
+     *     $id is AnonymousClassId ? AnonymousClassReflection :
      *     $id is ClassConstantId ? ClassConstantReflection :
      *     $id is PropertyId ? PropertyReflection :
      *     $id is MethodId ? MethodReflection :
@@ -132,9 +201,19 @@ final class TyphoonReflector implements Reflector
      */
     public function reflect(Id $id): Reflection
     {
-        /** @psalm-suppress TypeDoesNotContainType */
+        if ($id instanceof NamedClassId) {
+            $data = $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name);
+
+            return match ($data[Data::ClassKind]) {
+                ClassKind::Class_ => new ClassReflection($id, $data, $this),
+                ClassKind::Interface => new InterfaceReflection($id, $data, $this),
+                ClassKind::Trait => new TraitReflection($id, $data, $this),
+                ClassKind::Enum => new EnumReflection($id, $data, $this),
+            };
+        }
+
         return match (true) {
-            $id instanceof NamedClassId, $id instanceof AnonymousClassId => new ClassReflection(
+            $id instanceof AnonymousClassId => new AnonymousClassReflection(
                 id: $id,
                 data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name ?? $id->toString()),
                 reflector: $this,

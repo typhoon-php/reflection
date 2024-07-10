@@ -10,6 +10,7 @@ use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TraitReflection;
 
 /**
  * @internal
@@ -103,7 +104,7 @@ final class MethodAdapter extends \ReflectionMethod
 
         $declaringClass = $this->reflector->reflect($declaringClassId);
 
-        if ($declaringClass->isTrait()) {
+        if ($declaringClass instanceof TraitReflection) {
             return $this->reflection->class()->toNative();
         }
 

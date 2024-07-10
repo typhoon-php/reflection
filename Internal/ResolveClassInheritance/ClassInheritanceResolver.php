@@ -8,7 +8,9 @@ use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\ClassLikeReflection;
 use Typhoon\Reflection\ClassReflection;
+use Typhoon\Reflection\InterfaceReflection;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Reflector;
@@ -172,14 +174,15 @@ final class ClassInheritanceResolver
             ...$class->data[Data::Interfaces],
         ];
 
-        if ($class->isInterface()) {
+        if ($class instanceof InterfaceReflection) {
             $this->resolvedOwnInterfaces[$class->name] ??= $arguments;
-        } else {
-            /** @psalm-suppress PropertyTypeCoercion */
+        } elseif ($class instanceof ClassReflection) {
             $this->resolvedParents = [
                 $class->name => $arguments,
                 ...$class->data[Data::Parents],
             ];
+        } else {
+            throw new \LogicException();
         }
 
         $typeProcessor = $this->typeProcessor($class, $arguments);
@@ -200,7 +203,7 @@ final class ClassInheritanceResolver
     /**
      * @param list<Type> $arguments
      */
-    private function typeProcessor(ClassReflection $class, array $arguments): TypeProcessor
+    private function typeProcessor(ClassLikeReflection $class, array $arguments): TypeProcessor
     {
         $processors = [];
 

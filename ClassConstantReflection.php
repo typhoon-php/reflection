@@ -74,7 +74,7 @@ final class ClassConstantReflection extends Reflection
         return $this->data[Data::PhpDoc];
     }
 
-    public function class(): ClassReflection
+    public function class(): ClassLikeReflection
     {
         return $this->reflector->reflect($this->id->class);
     }
@@ -146,7 +146,7 @@ final class ClassConstantReflection extends Reflection
         return new ClassConstantAdapter($this, $this->reflector);
     }
 
-    private function declaringClass(): ClassReflection
+    private function declaringClass(): ClassLikeReflection
     {
         return $this->reflector->reflect($this->data[Data::DeclaringClassId]);
     }

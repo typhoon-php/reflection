@@ -21,8 +21,8 @@ interface Reflector
 {
     /**
      * @return (
-     *     $id is NamedClassId ? ClassReflection :
-     *     $id is AnonymousClassId ? ClassReflection :
+     *     $id is NamedClassId ? ClassReflection|InterfaceReflection|TraitReflection|EnumReflection :
+     *     $id is AnonymousClassId ? AnonymousClassReflection :
      *     $id is ClassConstantId ? ClassConstantReflection :
      *     $id is PropertyId ? PropertyReflection :
      *     $id is MethodId ? MethodReflection :

@@ -66,7 +66,7 @@ final class PropertyReflection extends Reflection
         return $this->declaringClass()->file();
     }
 
-    public function class(): ClassReflection
+    public function class(): ClassLikeReflection
     {
         return $this->reflector->reflect($this->id->class);
     }
@@ -130,7 +130,7 @@ final class PropertyReflection extends Reflection
         return new PropertyAdapter($this, $this->reflector);
     }
 
-    private function declaringClass(): ClassReflection
+    private function declaringClass(): ClassLikeReflection
     {
         return $this->reflector->reflect($this->data[Data::DeclaringClassId]);
     }
