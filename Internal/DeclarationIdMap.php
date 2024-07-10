@@ -7,7 +7,8 @@ namespace Typhoon\Reflection\Internal;
 use Typhoon\DeclarationId\Id;
 
 /**
- * @api
+ * @internal
+ * @psalm-internal Typhoon\Reflection
  * @template TId of Id
  * @template TValue
  * @implements \ArrayAccess<TId, TValue>
