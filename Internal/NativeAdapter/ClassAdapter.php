@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\InvalidClassName;
 use Typhoon\Reflection\ClassConstantReflection;
@@ -140,7 +141,7 @@ final class ClassAdapter extends \ReflectionClass
         $interfaces = $this->getInterfaceNames();
 
         return array_combine($interfaces, array_map(
-            fn(string $name): \ReflectionClass => $this->reflector->reflect(Id::class($name))->toNative(),
+            fn(string $name): \ReflectionClass => $this->reflector->reflect(Id::namedClass($name))->toNative(),
             $interfaces,
         ));
     }
@@ -285,6 +286,10 @@ final class ClassAdapter extends \ReflectionClass
                 $interfaceId = Id::class($interface);
             } catch (InvalidClassName) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
+            }
+
+            if ($interfaceId instanceof AnonymousClassId) {
+                throw new \ReflectionException(sprintf('%s is not an interface', ClassNameNormalizer::normalize($interface)));
             }
 
             try {

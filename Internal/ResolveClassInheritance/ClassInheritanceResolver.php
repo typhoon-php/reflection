@@ -104,7 +104,7 @@ final class ClassInheritanceResolver
      */
     private function oneUsed(string $traitName, array $arguments): void
     {
-        $trait = $this->reflector->reflect(Id::class($traitName));
+        $trait = $this->reflector->reflect(Id::namedClass($traitName));
 
         $this->changeDetectors[] = $trait->changeDetector();
 
@@ -162,7 +162,7 @@ final class ClassInheritanceResolver
      */
     private function oneInherited(string $className, array $arguments): void
     {
-        $class = $this->reflector->reflect(Id::class($className));
+        $class = $this->reflector->reflect(Id::namedClass($className));
 
         $this->changeDetectors[] = $class->changeDetector();
 
