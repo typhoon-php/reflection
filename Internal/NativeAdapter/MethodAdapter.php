@@ -62,7 +62,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::fromList($this->reflection->attributes, $name, $flags);
+        return AttributeAdapter::fromList($this->reflection->attributes(), $name, $flags);
     }
 
     public function getClosure(?object $object = null): \Closure
@@ -156,14 +156,14 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getNumberOfParameters(): int
     {
-        return $this->reflection->parameters->count();
+        return $this->reflection->parameters()->count();
     }
 
     public function getNumberOfRequiredParameters(): int
     {
         return $this
             ->reflection
-            ->parameters
+            ->parameters()
             ->filter(static fn(ParameterReflection $reflection): bool => !$reflection->isOptional())
             ->count();
     }
@@ -175,7 +175,7 @@ final class MethodAdapter extends \ReflectionMethod
     {
         return $this
             ->reflection
-            ->parameters
+            ->parameters()
             ->map(static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNative())
             ->toList();
     }

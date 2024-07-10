@@ -29,11 +29,9 @@ final class ParameterReflection extends Reflection
     public readonly int $index;
 
     /**
-     * @var AttributeReflection[]
-     * @psalm-var ListOf<AttributeReflection>
-     * @phpstan-var ListOf<AttributeReflection>
+     * @var ?ListOf<AttributeReflection>
      */
-    public readonly ListOf $attributes;
+    private ?ListOf $attributes = null;
 
     public function __construct(
         ParameterId $id,
@@ -42,11 +40,19 @@ final class ParameterReflection extends Reflection
     ) {
         $this->name = $id->name;
         $this->index = $data[Data::Index];
-        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
-        );
-
         parent::__construct($id, $data);
+    }
+
+    /**
+     * @return AttributeReflection[]
+     * @psalm-return ListOf<AttributeReflection>
+     * @phpstan-return ListOf<AttributeReflection>
+     */
+    public function attributes(): ListOf
+    {
+        return $this->attributes ??= (new ListOf($this->data[Data::Attributes]))->map(
+            fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($this->id, $index, $data, $this->reflector),
+        );
     }
 
     /**

@@ -64,13 +64,13 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::fromList($this->reflection->attributes, $name, $flags);
+        return AttributeAdapter::fromList($this->reflection->attributes(), $name, $flags);
     }
 
     public function getConstant(string $name): mixed
     {
-        return isset($this->reflection->constants[$name])
-            ? $this->reflection->constants[$name]->value()
+        return isset($this->reflection->constants()[$name])
+            ? $this->reflection->constants()[$name]->value()
             : false;
     }
 
@@ -78,7 +78,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         return $this
             ->reflection
-            ->constants
+            ->constants()
             ->filter(static fn(ClassConstantReflection $constant): bool => $filter === null || ($constant->toNative()->getModifiers() & $filter) !== 0)
             ->map(static fn(ClassConstantReflection $constant): mixed => $constant->value())
             ->toArray();
@@ -86,14 +86,14 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getConstructor(): ?\ReflectionMethod
     {
-        return ($this->reflection->methods['__construct'] ?? null)?->toNative();
+        return ($this->reflection->methods()['__construct'] ?? null)?->toNative();
     }
 
     public function getDefaultProperties(): array
     {
         return $this
             ->reflection
-            ->properties
+            ->properties()
             ->filter(static fn(PropertyReflection $property): bool => $property->hasDefaultValue())
             ->map(static fn(PropertyReflection $property): mixed => $property->defaultValue())
             ->toArray();
@@ -147,14 +147,14 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getMethod(string $name): \ReflectionMethod
     {
-        return $this->reflection->methods[$name]->toNative();
+        return $this->reflection->methods()[$name]->toNative();
     }
 
     public function getMethods(?int $filter = null): array
     {
         return $this
             ->reflection
-            ->methods
+            ->methods()
             ->map(static fn(MethodReflection $method): \ReflectionMethod => $method->toNative())
             ->filter(static fn(\ReflectionMethod $method): bool => $filter === null || ($method->getModifiers() & $filter) !== 0)
             ->toList();
@@ -191,7 +191,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         return $this
             ->reflection
-            ->properties
+            ->properties()
             ->map(static fn(PropertyReflection $property): \ReflectionProperty => $property->toNative())
             ->filter(static fn(\ReflectionProperty $property): bool => $filter === null || ($property->getModifiers() & $filter) !== 0)
             ->toList();
@@ -199,19 +199,19 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getProperty(string $name): \ReflectionProperty
     {
-        return $this->reflection->properties[$name]->toNative();
+        return $this->reflection->properties()[$name]->toNative();
     }
 
     public function getReflectionConstant(string $name): \ReflectionClassConstant|false
     {
-        return ($this->reflection->constants[$name] ?? null)?->toNative() ?? false;
+        return ($this->reflection->constants()[$name] ?? null)?->toNative() ?? false;
     }
 
     public function getReflectionConstants(?int $filter = null): array
     {
         return $this
             ->reflection
-            ->constants
+            ->constants()
             ->map(static fn(ClassConstantReflection $constant): \ReflectionClassConstant => $constant->toNative())
             ->filter(static fn(\ReflectionClassConstant $constant): bool => $filter === null || ($constant->getModifiers() & $filter) !== 0)
             ->toList();
@@ -265,17 +265,17 @@ final class ClassAdapter extends \ReflectionClass
 
     public function hasConstant(string $name): bool
     {
-        return isset($this->reflection->constants[$name]);
+        return isset($this->reflection->constants()[$name]);
     }
 
     public function hasMethod(string $name): bool
     {
-        return isset($this->reflection->methods[$name]);
+        return isset($this->reflection->methods()[$name]);
     }
 
     public function hasProperty(string $name): bool
     {
-        return isset($this->reflection->properties[$name]);
+        return isset($this->reflection->properties()[$name]);
     }
 
     public function implementsInterface(string|\ReflectionClass $interface): bool

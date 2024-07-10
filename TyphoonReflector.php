@@ -140,12 +140,12 @@ final class TyphoonReflector implements Reflector
                 data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name),
                 reflector: $this,
             ),
-            $id instanceof PropertyId => $this->reflect($id->class)->properties[$id->name],
-            $id instanceof ClassConstantId => $this->reflect($id->class)->constants[$id->name],
-            $id instanceof MethodId => $this->reflect($id->class)->methods[$id->name],
-            $id instanceof ParameterId => $this->reflect($id->function)->parameters[$id->name],
-            $id instanceof AliasId => $this->reflect($id->class)->aliases[$id->name],
-            $id instanceof TemplateId => $this->reflect($id->declaredAt)->templates[$id->name],
+            $id instanceof PropertyId => $this->reflect($id->class)->properties()[$id->name],
+            $id instanceof ClassConstantId => $this->reflect($id->class)->constants()[$id->name],
+            $id instanceof MethodId => $this->reflect($id->class)->methods()[$id->name],
+            $id instanceof ParameterId => $this->reflect($id->function)->parameters()[$id->name],
+            $id instanceof AliasId => $this->reflect($id->class)->aliases()[$id->name],
+            $id instanceof TemplateId => $this->reflect($id->declaredAt)->templates()[$id->name],
             default => throw new \LogicException($id->toString() . ' not supported yet'),
         };
     }

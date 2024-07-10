@@ -24,11 +24,9 @@ final class ClassConstantReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var AttributeReflection[]
-     * @psalm-var ListOf<AttributeReflection>
-     * @phpstan-var ListOf<AttributeReflection>
+     * @var ?ListOf<AttributeReflection>
      */
-    public readonly ListOf $attributes;
+    private ?ListOf $attributes = null;
 
     public function __construct(
         ClassConstantId $id,
@@ -36,11 +34,19 @@ final class ClassConstantReflection extends Reflection
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
-        );
-
         parent::__construct($id, $data);
+    }
+
+    /**
+     * @return AttributeReflection[]
+     * @psalm-return ListOf<AttributeReflection>
+     * @phpstan-return ListOf<AttributeReflection>
+     */
+    public function attributes(): ListOf
+    {
+        return $this->attributes ??= (new ListOf($this->data[Data::Attributes]))->map(
+            fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($this->id, $index, $data, $this->reflector),
+        );
     }
 
     /**

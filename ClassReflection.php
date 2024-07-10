@@ -31,46 +31,34 @@ final class ClassReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var AliasReflection[]
-     * @psalm-var NameMap<AliasReflection>
-     * @phpstan-var NameMap<AliasReflection>
+     * @var ?NameMap<AliasReflection>
      */
-    public readonly NameMap $aliases;
+    private ?NameMap $aliases = null;
 
     /**
-     * @var TemplateReflection[]
-     * @psalm-var NameMap<TemplateReflection>
-     * @phpstan-var NameMap<TemplateReflection>
+     * @var ?NameMap<TemplateReflection>
      */
-    public readonly NameMap $templates;
+    private ?NameMap $templates = null;
 
     /**
-     * @var ClassConstantReflection[]
-     * @psalm-var NameMap<ClassConstantReflection>
-     * @phpstan-var NameMap<ClassConstantReflection>
+     * @var ?ListOf<AttributeReflection>
      */
-    public readonly NameMap $constants;
+    private ?ListOf $attributes = null;
 
     /**
-     * @var PropertyReflection[]
-     * @psalm-var NameMap<PropertyReflection>
-     * @phpstan-var NameMap<PropertyReflection>
+     * @var ?NameMap<ClassConstantReflection>
      */
-    public readonly NameMap $properties;
+    private ?NameMap $constants = null;
 
     /**
-     * @var MethodReflection[]
-     * @psalm-var NameMap<MethodReflection>
-     * @phpstan-var NameMap<MethodReflection>
+     * @var ?NameMap<PropertyReflection>
      */
-    public readonly NameMap $methods;
+    private ?NameMap $properties = null;
 
     /**
-     * @var AttributeReflection[]
-     * @psalm-var ListOf<AttributeReflection>
-     * @phpstan-var ListOf<AttributeReflection>
+     * @var ?NameMap<MethodReflection>
      */
-    public readonly ListOf $attributes;
+    private ?NameMap $methods = null;
 
     public function __construct(
         ClassId $id,
@@ -79,30 +67,83 @@ final class ClassReflection extends Reflection
     ) {
         /** @var class-string<TObject> */
         $this->name = $id->name;
-        $this->aliases = (new NameMap($data[Data::Aliases]))->map(
-            static function (TypedMap $data, string $name) use ($id): AliasReflection {
-                \assert($id instanceof NamedClassId);
+        parent::__construct($id, $data);
+    }
 
-                return new AliasReflection(DeclarationId::alias($id, $name), $data);
+    /**
+     * @return AliasReflection[]
+     * @psalm-return NameMap<AliasReflection>
+     * @phpstan-return NameMap<AliasReflection>
+     */
+    public function aliases(): NameMap
+    {
+        return $this->aliases ??= (new NameMap($this->data[Data::Aliases]))->map(
+            function (TypedMap $data, string $name): AliasReflection {
+                \assert($this->id instanceof NamedClassId);
+
+                return new AliasReflection(DeclarationId::alias($this->id, $name), $data);
             },
         );
-        $this->templates = (new NameMap($data[Data::Templates]))->map(
-            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($id, $name), $data),
-        );
-        $this->constants = (new NameMap($data[Data::ClassConstants]))->map(
-            static fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(DeclarationId::classConstant($id, $name), $data, $reflector),
-        );
-        $this->properties = (new NameMap($data[Data::Properties]))->map(
-            static fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(DeclarationId::property($id, $name), $data, $reflector),
-        );
-        $this->methods = (new NameMap($data[Data::Methods]))->map(
-            static fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(DeclarationId::method($id, $name), $data, $reflector),
-        );
-        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
-        );
+    }
 
-        parent::__construct($id, $data);
+    /**
+     * @return TemplateReflection[]
+     * @psalm-return NameMap<TemplateReflection>
+     * @phpstan-return NameMap<TemplateReflection>
+     */
+    public function templates(): NameMap
+    {
+        return $this->templates ??= (new NameMap($this->data[Data::Templates]))->map(
+            fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($this->id, $name), $data),
+        );
+    }
+
+    /**
+     * @return AttributeReflection[]
+     * @psalm-return ListOf<AttributeReflection>
+     * @phpstan-return ListOf<AttributeReflection>
+     */
+    public function attributes(): ListOf
+    {
+        return $this->attributes ??= (new ListOf($this->data[Data::Attributes]))->map(
+            fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($this->id, $index, $data, $this->reflector),
+        );
+    }
+
+    /**
+     * @return ClassConstantReflection[]
+     * @psalm-return NameMap<ClassConstantReflection>
+     * @phpstan-return NameMap<ClassConstantReflection>
+     */
+    public function constants(): NameMap
+    {
+        return $this->constants ??= (new NameMap($this->data[Data::ClassConstants]))->map(
+            fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(DeclarationId::classConstant($this->id, $name), $data, $this->reflector),
+        );
+    }
+
+    /**
+     * @return PropertyReflection[]
+     * @psalm-return NameMap<PropertyReflection>
+     * @phpstan-return NameMap<PropertyReflection>
+     */
+    public function properties(): NameMap
+    {
+        return $this->properties ??= (new NameMap($this->data[Data::Properties]))->map(
+            fn(TypedMap $data, string $name): PropertyReflection => new PropertyReflection(DeclarationId::property($this->id, $name), $data, $this->reflector),
+        );
+    }
+
+    /**
+     * @return MethodReflection[]
+     * @psalm-return NameMap<MethodReflection>
+     * @phpstan-return NameMap<MethodReflection>
+     */
+    public function methods(): NameMap
+    {
+        return $this->methods ??= (new NameMap($this->data[Data::Methods]))->map(
+            fn(TypedMap $data, string $name): MethodReflection => new MethodReflection(DeclarationId::method($this->id, $name), $data, $this->reflector),
+        );
     }
 
     /**
@@ -136,7 +177,7 @@ final class ClassReflection extends Reflection
         }
 
         if ($this->isInterface() || $this->isTrait()) {
-            foreach ($this->methods as $method) {
+            foreach ($this->methods() as $method) {
                 if ($method->isAbstract()) {
                     return true;
                 }
@@ -162,7 +203,7 @@ final class ClassReflection extends Reflection
     {
         return !$this->isAbstract()
             && $this->data[Data::ClassKind] === ClassKind::Class_
-            && (!isset($this->methods['__clone']) || $this->methods['__clone']->isPublic());
+            && (!isset($this->methods()['__clone']) || $this->methods()['__clone']->isPublic());
     }
 
     public function isTrait(): bool
@@ -188,7 +229,7 @@ final class ClassReflection extends Reflection
     {
         return !$this->isAbstract()
             && $this->data[Data::ClassKind] === ClassKind::Class_
-            && (!isset($this->methods['__construct']) || $this->methods['__construct']->isPublic());
+            && (!isset($this->methods()['__construct']) || $this->methods()['__construct']->isPublic());
     }
 
     public function isInterface(): bool

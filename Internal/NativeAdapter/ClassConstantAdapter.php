@@ -53,7 +53,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
 
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        return AttributeAdapter::fromList($this->reflection->attributes, $name, $flags);
+        return AttributeAdapter::fromList($this->reflection->attributes(), $name, $flags);
     }
 
     public function getDeclaringClass(): \ReflectionClass

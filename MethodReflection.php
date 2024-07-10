@@ -24,25 +24,19 @@ final class MethodReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var TemplateReflection[]
-     * @psalm-var NameMap<TemplateReflection>
-     * @phpstan-var NameMap<TemplateReflection>
+     * @var ?NameMap<TemplateReflection>
      */
-    public readonly NameMap $templates;
+    private ?NameMap $templates = null;
 
     /**
-     * @var ParameterReflection[]
-     * @psalm-var NameMap<ParameterReflection>
-     * @phpstan-var NameMap<ParameterReflection>
+     * @var ?ListOf<AttributeReflection>
      */
-    public readonly NameMap $parameters;
+    private ?ListOf $attributes = null;
 
     /**
-     * @var AttributeReflection[]
-     * @psalm-var ListOf<AttributeReflection>
-     * @phpstan-var ListOf<AttributeReflection>
+     * @var ?NameMap<ParameterReflection>
      */
-    public readonly ListOf $attributes;
+    private ?NameMap $parameters;
 
     public function __construct(
         MethodId $id,
@@ -50,17 +44,43 @@ final class MethodReflection extends Reflection
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        $this->templates = (new NameMap($data[Data::Templates]))->map(
-            static fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($id, $name), $data),
-        );
-        $this->parameters = (new NameMap($data[Data::Parameters]))->map(
-            static fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(DeclarationId::parameter($id, $name), $data, $reflector),
-        );
-        $this->attributes = (new ListOf($data[Data::Attributes]))->map(
-            static fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($id, $index, $data, $reflector),
-        );
-
         parent::__construct($id, $data);
+    }
+
+    /**
+     * @return TemplateReflection[]
+     * @psalm-return NameMap<TemplateReflection>
+     * @phpstan-return NameMap<TemplateReflection>
+     */
+    public function templates(): NameMap
+    {
+        return $this->templates ??= (new NameMap($this->data[Data::Templates]))->map(
+            fn(TypedMap $data, string $name): TemplateReflection => new TemplateReflection(DeclarationId::template($this->id, $name), $data),
+        );
+    }
+
+    /**
+     * @return AttributeReflection[]
+     * @psalm-return ListOf<AttributeReflection>
+     * @phpstan-return ListOf<AttributeReflection>
+     */
+    public function attributes(): ListOf
+    {
+        return $this->attributes ??= (new ListOf($this->data[Data::Attributes]))->map(
+            fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($this->id, $index, $data, $this->reflector),
+        );
+    }
+
+    /**
+     * @return ParameterReflection[]
+     * @psalm-return NameMap<ParameterReflection>
+     * @phpstan-return NameMap<ParameterReflection>
+     */
+    public function parameters(): NameMap
+    {
+        return $this->parameters ??= (new NameMap($this->data[Data::Parameters]))->map(
+            fn(TypedMap $data, string $name): ParameterReflection => new ParameterReflection(DeclarationId::parameter($this->id, $name), $data, $this->reflector),
+        );
     }
 
     /**
@@ -136,9 +156,9 @@ final class MethodReflection extends Reflection
 
     public function isVariadic(): bool
     {
-        $lastParameterName = array_key_last($this->parameters->names());
+        $lastParameterName = array_key_last($this->parameters()->names());
 
-        return $lastParameterName !== null && $this->parameters[$lastParameterName]->isVariadic();
+        return $lastParameterName !== null && $this->parameters()[$lastParameterName]->isVariadic();
     }
 
     public function returnsReference(): bool

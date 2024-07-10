@@ -203,8 +203,8 @@ final class ClassInheritanceResolver
     {
         $processors = [];
 
-        if (!$class->templates->isEmpty()) {
-            $processors[] = new TemplateTypeResolver($class->templates->map(
+        if (!$class->templates()->isEmpty()) {
+            $processors[] = new TemplateTypeResolver($class->templates()->map(
                 static fn(TemplateReflection $template): array => [
                     $template->id,
                     $arguments[$template->index] ?? $template->constraint(),
