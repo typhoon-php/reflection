@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
@@ -144,10 +145,17 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
 
     private function loadNative(): void
     {
-        if (!$this->nativeLoaded) {
-            /** @psalm-suppress ArgumentTypeCoercion */
-            parent::__construct($this->reflection->id->class->name, $this->name);
-            $this->nativeLoaded = true;
+        if ($this->nativeLoaded) {
+            return;
         }
+
+        $class = $this->reflection->id->class->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
+            "Cannot natively reflect anonymous class %s, because it's runtime name is not available",
+            $this->reflection->id->class->toString(),
+        ));
+
+        /** @psalm-suppress ArgumentTypeCoercion */
+        parent::__construct($class, $this->name);
+        $this->nativeLoaded = true;
     }
 }

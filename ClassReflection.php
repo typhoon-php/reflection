@@ -7,6 +7,7 @@ namespace Typhoon\Reflection;
 use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
@@ -23,9 +24,9 @@ use Typhoon\TypedMap\TypedMap;
 final class ClassReflection extends Reflection
 {
     /**
-     * @var class-string<TObject>
+     * @var ?class-string<TObject>
      */
-    public readonly string $name;
+    public readonly ?string $name;
 
     /**
      * @var ?NameMap<AliasReflection>
@@ -62,7 +63,7 @@ final class ClassReflection extends Reflection
         TypedMap $data,
         private readonly Reflector $reflector,
     ) {
-        /** @var class-string<TObject> */
+        /** @var ?class-string<TObject> */
         $this->name = $id->name;
         parent::__construct($id, $data);
     }
@@ -162,11 +163,21 @@ final class ClassReflection extends Reflection
             $class = Id::class($class);
         }
 
-        return $this->id->equals($class)
-            || \array_key_exists($class->name, $this->data[Data::Parents])
+        if ($this->id->equals($class)) {
+            return true;
+        }
+
+        if ($class instanceof AnonymousClassId) {
+            return false;
+        }
+
+        return \array_key_exists($class->name, $this->data[Data::Parents])
             || \array_key_exists($class->name, $this->data[Data::Interfaces]);
     }
 
+    /**
+     * @psalm-assert-if-true !null $this->name
+     */
     public function isAbstract(): bool
     {
         if ($this->isAbstractClass()) {
@@ -186,11 +197,17 @@ final class ClassReflection extends Reflection
         return false;
     }
 
+    /**
+     * @psalm-assert-if-true !null $this->name
+     */
     public function isAbstractClass(): bool
     {
         return $this->data[Data::Abstract];
     }
 
+    /**
+     * @psalm-assert-if-false !null $this->name
+     */
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousClassId;
@@ -203,11 +220,17 @@ final class ClassReflection extends Reflection
             && (!isset($this->methods()['__clone']) || $this->methods()['__clone']->isPublic());
     }
 
+    /**
+     * @psalm-assert-if-true !null $this->name
+     */
     public function isTrait(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Trait;
     }
 
+    /**
+     * @psalm-assert-if-true !null $this->name
+     */
     public function isEnum(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Enum;
@@ -229,6 +252,9 @@ final class ClassReflection extends Reflection
             && (!isset($this->methods()['__construct']) || $this->methods()['__construct']->isPublic());
     }
 
+    /**
+     * @psalm-assert-if-true !null $this->name
+     */
     public function isInterface(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Interface;
@@ -245,6 +271,11 @@ final class ClassReflection extends Reflection
 
     public function namespace(): string
     {
+        if ($this->name === null) {
+            // todo
+            return '';
+        }
+
         $lastSlashPosition = strrpos($this->name, '\\');
 
         if ($lastSlashPosition === false) {
@@ -278,6 +309,10 @@ final class ClassReflection extends Reflection
      */
     public function shortName(): string
     {
+        if ($this->name === null) {
+            return $this->id->toString();
+        }
+
         $lastSlashPosition = strrpos($this->name, '\\');
 
         if ($lastSlashPosition === false) {
@@ -306,6 +341,9 @@ final class ClassReflection extends Reflection
         return $this->data[Data::File];
     }
 
+    /**
+     * @psalm-assert-if-true !null $this->name
+     */
     public function isInternallyDefined(): bool
     {
         return $this->data[Data::InternallyDefined];
@@ -317,6 +355,13 @@ final class ClassReflection extends Reflection
      */
     public function newInstance(mixed ...$arguments): object
     {
+        if ($this->name === null) {
+            throw new AnonymousClassNameNotAvailable(sprintf(
+                "Cannot create an instance of anonymous class %s, because it's runtime name is not available",
+                $this->id->toString(),
+            ));
+        }
+
         return new $this->name(...$arguments);
     }
 
@@ -325,6 +370,13 @@ final class ClassReflection extends Reflection
      */
     public function newInstanceWithoutConstructor(): object
     {
+        if ($this->name === null) {
+            throw new AnonymousClassNameNotAvailable(sprintf(
+                "Cannot create an instance of anonymous class %s, because it's runtime name is not available",
+                $this->id->toString(),
+            ));
+        }
+
         return (new \ReflectionClass($this->name))->newInstanceWithoutConstructor();
     }
 

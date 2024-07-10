@@ -133,10 +133,11 @@ final class TyphoonReflector implements Reflector
      */
     public function reflect(Id $id): Reflection
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         return match (true) {
             $id instanceof NamedClassId, $id instanceof AnonymousClassId => new ClassReflection(
                 id: $id,
-                data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name),
+                data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name ?? $id->toString()),
                 reflector: $this,
             ),
             $id instanceof PropertyId => $this->reflect($id->class)->properties()[$id->name],

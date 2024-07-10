@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
@@ -264,16 +265,25 @@ final class ParameterAdapter extends \ReflectionParameter
 
     private function loadNative(): void
     {
-        if (!$this->nativeLoaded) {
-            $functionId = $this->reflection->id->function;
-
-            if ($functionId instanceof FunctionId) {
-                parent::__construct($functionId->name, $this->name);
-            } else {
-                parent::__construct([$functionId->class->name, $functionId->name], $this->name);
-            }
-
-            $this->nativeLoaded = true;
+        if ($this->nativeLoaded) {
+            return;
         }
+
+        $functionId = $this->reflection->id->function;
+
+        if ($functionId instanceof FunctionId) {
+            parent::__construct($functionId->name, $this->name);
+            $this->nativeLoaded = true;
+
+            return;
+        }
+
+        $class = $functionId->class->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
+            "Cannot natively reflect anonymous class %s, because it's runtime name is not available",
+            $functionId->class->toString(),
+        ));
+
+        parent::__construct([$class, $functionId->name], $this->name);
+        $this->nativeLoaded = true;
     }
 }

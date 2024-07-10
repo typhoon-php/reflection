@@ -175,6 +175,7 @@ final class ClassInheritanceResolver
         if ($class->isInterface()) {
             $this->resolvedOwnInterfaces[$class->name] ??= $arguments;
         } else {
+            /** @psalm-suppress PropertyTypeCoercion */
             $this->resolvedParents = [
                 $class->name => $arguments,
                 ...$class->data[Data::Parents],

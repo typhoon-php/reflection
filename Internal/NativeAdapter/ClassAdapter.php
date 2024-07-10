@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\InvalidClassName;
 use Typhoon\Reflection\ClassConstantReflection;
@@ -46,7 +47,7 @@ final class ClassAdapter extends \ReflectionClass
     public function __get(string $name): mixed
     {
         return match ($name) {
-            'name' => $this->reflection->name,
+            'name' => $this->getName(),
             default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
@@ -175,7 +176,10 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getName(): string
     {
-        return $this->reflection->name;
+        return $this->reflection->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
+            'Runtime name of anonymous class %s is not available',
+            $this->reflection->id->toString(),
+        ));
     }
 
     public function getNamespaceName(): string
@@ -443,9 +447,19 @@ final class ClassAdapter extends \ReflectionClass
 
     private function loadNative(): void
     {
-        if (!$this->nativeLoaded) {
-            parent::__construct($this->name);
-            $this->nativeLoaded = true;
+        if ($this->nativeLoaded) {
+            return;
         }
+
+        if ($this->reflection->name === null) {
+            throw new AnonymousClassNameNotAvailable(sprintf(
+                "Cannot natively reflect anonymous class %s, because it's runtime name is not available",
+                $this->reflection->id->toString(),
+            ));
+        }
+
+        parent::__construct($this->reflection->name);
+
+        $this->nativeLoaded = true;
     }
 }

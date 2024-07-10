@@ -83,6 +83,8 @@ final class ClassConstantReflection extends Reflection
     {
         // TODO is it correct?
         if ($this->isEnumCase()) {
+            \assert($this->id->class->name !== null);
+
             return \constant($this->id->class->name . '::' . $this->name);
         }
 
