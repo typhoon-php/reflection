@@ -33,7 +33,6 @@ use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\DeclarationIdMap;
 use Typhoon\Reflection\Internal\Expression\ExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\FixNodeStartLineVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\PhpParserReflector;
@@ -148,14 +147,6 @@ final class TyphoonReflector implements Reflector
             $id instanceof TemplateId => $this->reflect($id->declaredAt)->templates()[$id->name],
             default => throw new \LogicException($id->toString() . ' not supported yet'),
         };
-    }
-
-    /**
-     * @return DeclarationIdMap<NamedClassId|AnonymousClassId, ClassReflection>
-     */
-    public function reflectCode(string $_code, TypedMap $_baseData = new TypedMap()): DeclarationIdMap
-    {
-        throw new \LogicException();
     }
 
     private function reflectData(NamedClassId|AnonymousClassId $id): ?TypedMap
