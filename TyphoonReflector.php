@@ -157,7 +157,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
             $id instanceof MethodId => $this->reflect($id->class)->methods()[$id->name],
             $id instanceof ParameterId => $this->reflect($id->function)->parameters()[$id->name],
             $id instanceof AliasId => $this->reflect($id->class)->aliases()[$id->name],
-            $id instanceof TemplateId => $this->reflect($id->declaredAt)->templates()[$id->name],
+            $id instanceof TemplateId => $this->reflect($id->site)->templates()[$id->name],
             default => throw new \LogicException($id->toString() . ' not supported yet'),
         };
     }
