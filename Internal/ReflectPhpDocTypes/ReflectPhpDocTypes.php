@@ -9,9 +9,10 @@ use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;
@@ -52,9 +53,9 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         );
     }
 
-    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
+    public function reflect(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
-        if ($id instanceof FunctionId) {
+        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
             return $this->reflectFunction($data);
         }
 

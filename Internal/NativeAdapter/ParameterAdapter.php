@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\AnonymousClassReflection;
 use Typhoon\Reflection\ClassLikeReflection;
 use Typhoon\Reflection\ClassReflection;
@@ -278,11 +279,15 @@ final class ParameterAdapter extends \ReflectionParameter
 
         $functionId = $this->reflection->id->function;
 
-        if ($functionId instanceof FunctionId) {
+        if ($functionId instanceof NamedFunctionId) {
             parent::__construct($functionId->name, $this->name);
             $this->nativeLoaded = true;
 
             return;
+        }
+
+        if ($functionId instanceof AnonymousFunctionId) {
+            throw new \LogicException(sprintf('Cannot natively reflect %s', $functionId->toString()));
         }
 
         $class = $functionId->class->name ?? throw new \LogicException(sprintf(

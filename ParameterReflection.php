@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use Typhoon\DeclarationId\FunctionId;
+use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
@@ -70,11 +70,11 @@ final class ParameterReflection extends Reflection
 
     public function class(): ?ClassLikeReflection
     {
-        if ($this->id->function instanceof FunctionId) {
-            return null;
+        if ($this->id->function instanceof MethodId) {
+            return $this->reflector->reflect($this->id->function->class);
         }
 
-        return $this->reflector->reflect($this->id->function->class);
+        return null;
     }
 
     public function hasDefaultValue(): bool

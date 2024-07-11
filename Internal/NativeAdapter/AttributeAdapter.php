@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\AttributeReflection;
@@ -56,6 +57,10 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function __toString(): string
     {
+        if ($this->reflection->targetId instanceof AnonymousFunctionId) {
+            throw new \LogicException('Cannot resolve string representation of anonymous function');
+        }
+
         return (string) $this->reflection->targetId->reflect()->getAttributes()[$this->index];
     }
 
@@ -71,14 +76,14 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function getTarget(): int
     {
-        return match (true) {
-            $this->reflection->targetId instanceof FunctionId => \Attribute::TARGET_FUNCTION,
-            $this->reflection->targetId instanceof ParameterId => \Attribute::TARGET_PARAMETER,
-            $this->reflection->targetId instanceof NamedClassId => \Attribute::TARGET_CLASS,
-            $this->reflection->targetId instanceof AnonymousClassId => \Attribute::TARGET_CLASS,
-            $this->reflection->targetId instanceof ClassConstantId => \Attribute::TARGET_CLASS_CONSTANT,
-            $this->reflection->targetId instanceof PropertyId => \Attribute::TARGET_PROPERTY,
-            $this->reflection->targetId instanceof MethodId => \Attribute::TARGET_METHOD,
+        /** @psalm-suppress ParadoxicalCondition */
+        return match ($this->reflection->targetId::class) {
+            NamedFunctionId::class, AnonymousFunctionId::class => \Attribute::TARGET_FUNCTION,
+            NamedClassId::class, AnonymousClassId::class => \Attribute::TARGET_CLASS,
+            ClassConstantId::class => \Attribute::TARGET_CLASS_CONSTANT,
+            PropertyId::class => \Attribute::TARGET_PROPERTY,
+            MethodId::class => \Attribute::TARGET_METHOD,
+            ParameterId::class => \Attribute::TARGET_PARAMETER,
         };
     }
 
