@@ -8,25 +8,27 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;
-use Typhoon\Reflection\Internal\ReflectionHook;
+use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ResolveAttributesRepeated implements ReflectionHook
+final class ResolveAttributesRepeated implements FunctionReflectionHook, ClassReflectionHook
 {
-    public function reflect(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
+    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
+        $data = $this->resolveAttributesRepeated($data);
+
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
-            return $this->resolveAttributesRepeated($data);
+            return $data;
         }
 
-        return $this
-            ->resolveAttributesRepeated($data)
+        return $data
             ->modifyIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
                 $this->resolveAttributesRepeated(...),
                 $constants,

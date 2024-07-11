@@ -5,24 +5,22 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;
-use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class EnsureReadonlyClassPropertiesAreReadonly implements ReflectionHook
+final class EnsureReadonlyClassPropertiesAreReadonly implements ClassReflectionHook
 {
-    public function reflect(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
-        if (($data[Data::ClassKind] ?? null) !== ClassKind::Class_) {
+        if ($data[Data::ClassKind] !== ClassKind::Class_) {
             return $data;
         }
 

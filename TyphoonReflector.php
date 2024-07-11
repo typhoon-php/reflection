@@ -35,7 +35,6 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataCacheItem;
 use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\IdMap;
-use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
@@ -60,8 +59,8 @@ final class TyphoonReflector extends Reflector implements DataReflector
     private function __construct(
         private readonly CodeReflector $codeReflector,
         private readonly Locator $locator,
-        private readonly ReflectionHook $hook,
         private readonly Cache $cache,
+        private readonly ReflectionHooks $hooks,
     ) {
         /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
         $this->reflected = new IdMap();
@@ -78,7 +77,8 @@ final class TyphoonReflector extends Reflector implements DataReflector
         return new self(
             codeReflector: new CodeReflector($phpParser ?? (new ParserFactory())->createForHostVersion()),
             locator: new Locators($locators ?? self::defaultLocators()),
-            hook: new ReflectionHooks([
+            cache: new Cache($cache),
+            hooks: new ReflectionHooks([
                 new ReflectPhpDocTypes(),
                 new CopyPromotedParametersToProperties(),
                 new CompleteEnumReflection(),
@@ -91,7 +91,6 @@ final class TyphoonReflector extends Reflector implements DataReflector
                 new ResolveChangeDetector(),
                 new CleanUp(),
             ]),
-            cache: new Cache($cache),
         );
     }
 
@@ -172,10 +171,10 @@ final class TyphoonReflector extends Reflector implements DataReflector
         })());
 
         return new self(
-            $this->codeReflector,
-            new Locators([new DeterministicLocator($reflected->map(static fn(): Resource => $resource)), $this->locator]),
-            $this->hook,
-            $this->cache,
+            codeReflector: $this->codeReflector,
+            locator: new Locators([new DeterministicLocator($reflected->map(static fn(): Resource => $resource)), $this->locator]),
+            cache: $this->cache,
+            hooks: $this->hooks,
         );
     }
 
@@ -208,9 +207,9 @@ final class TyphoonReflector extends Reflector implements DataReflector
     {
         return new DataCacheItem(function () use ($resource, $id, $data): TypedMap {
             $data = $resource->baseData->merge($data);
-            $data = $resource->hook->reflect($id, $data, $this);
+            $data = (new ReflectionHooks($resource->hooks))->process($id, $data, $this);
 
-            return $this->hook->reflect($id, $data, $this);
+            return $this->hooks->process($id, $data, $this);
         });
     }
 

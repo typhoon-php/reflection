@@ -14,9 +14,10 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;
-use Typhoon\Reflection\Internal\ReflectionHook;
+use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
 use Typhoon\Reflection\Internal\TypeData;
@@ -27,7 +28,7 @@ use Typhoon\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
+final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionHook, FunctionReflectionHook
 {
     public function __construct(
         private readonly PhpDocParser $parser = new PhpDocParser(),
@@ -53,7 +54,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         );
     }
 
-    public function reflect(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
+    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
             return $this->reflectFunction($data);

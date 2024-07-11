@@ -6,9 +6,10 @@ namespace Typhoon\Reflection;
 
 use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\Reflection\Exception\FileNotReadable;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\ConstantReflectionHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\ReflectionHook;
-use Typhoon\Reflection\Internal\ReflectionHooks;
+use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -16,21 +17,17 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class Resource
 {
-    public readonly ReflectionHook $hook;
-
     /**
-     * @param list<ReflectionHook> $hooks
+     * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
      */
     public function __construct(
         public readonly string $code,
         public readonly TypedMap $baseData = new TypedMap(),
-        array $hooks = [],
-    ) {
-        $this->hook = new ReflectionHooks($hooks);
-    }
+        public readonly array $hooks = [],
+    ) {}
 
     /**
-     * @param list<ReflectionHook> $hooks
+     * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
      */
     public static function fromFile(string $file, TypedMap $baseData = new TypedMap(), array $hooks = []): self
     {
