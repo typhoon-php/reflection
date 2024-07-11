@@ -15,12 +15,23 @@ use Typhoon\TypedMap\TypedMap;
 abstract class Reflection
 {
     /**
+     * This property is public but internal for testing purposes.
+     * It will likely be available as part of the API in the near future.
+     *
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
+    public readonly TypedMap $data;
+
+    /**
      * @param TId $id
      */
     public function __construct(
         public readonly Id $id,
-        public readonly TypedMap $data,
-    ) {}
+        TypedMap $data,
+    ) {
+        $this->data = $data;
+    }
 
     /**
      * @return ?positive-int
