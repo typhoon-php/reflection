@@ -32,7 +32,7 @@ final class ComposerLocator implements Locator
             $file = $loader->findFile($id->name);
 
             if ($file !== false) {
-                return new Resource($file);
+                return Resource::fromFile($file);
             }
         }
 

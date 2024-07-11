@@ -20,6 +20,23 @@ use Typhoon\DeclarationId\TemplateId;
 abstract class Reflector
 {
     /**
+     * @return (
+     *     $id is NamedClassId ? ClassReflection|InterfaceReflection|TraitReflection|EnumReflection :
+     *     $id is AnonymousClassId ? AnonymousClassReflection :
+     *     $id is ClassConstantId ? ClassConstantReflection :
+     *     $id is PropertyId ? PropertyReflection :
+     *     $id is MethodId ? MethodReflection :
+     *     $id is ParameterId ? ParameterReflection :
+     *     $id is AliasId ? AliasReflection :
+     *     $id is TemplateId ? TemplateReflection :
+     *     never
+     * )
+     */
+    abstract public function reflect(Id $id): Reflection;
+
+    abstract public function reflectResource(Resource $resource): static;
+
+    /**
      * @param non-empty-string $class
      */
     final public function classLikeExists(string $class): bool
@@ -111,19 +128,4 @@ abstract class Reflector
         /** @var EnumReflection<T> */
         return $reflection;
     }
-
-    /**
-     * @return (
-     *     $id is NamedClassId ? ClassReflection|InterfaceReflection|TraitReflection|EnumReflection :
-     *     $id is AnonymousClassId ? AnonymousClassReflection :
-     *     $id is ClassConstantId ? ClassConstantReflection :
-     *     $id is PropertyId ? PropertyReflection :
-     *     $id is MethodId ? MethodReflection :
-     *     $id is ParameterId ? ParameterReflection :
-     *     $id is AliasId ? AliasReflection :
-     *     $id is TemplateId ? TemplateReflection :
-     *     never
-     * )
-     */
-    abstract public function reflect(Id $id): Reflection;
 }

@@ -22,10 +22,10 @@ final class ReflectionHooks implements ReflectionHook
         private readonly array $hooks,
     ) {}
 
-    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
         foreach ($this->hooks as $hook) {
-            $data = $hook->reflect($id, $data);
+            $data = $hook->reflect($id, $data, $reflector);
         }
 
         return $data;

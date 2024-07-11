@@ -7,8 +7,8 @@ namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\ReflectionHook;
-use Typhoon\Reflection\Reflector;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -17,16 +17,12 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ResolveClassInheritance implements ReflectionHook
 {
-    public function __construct(
-        private readonly Reflector $reflector,
-    ) {}
-
-    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $data;
         }
 
-        return ClassInheritanceResolver::resolve($this->reflector, $id, $data);
+        return ClassInheritanceResolver::resolve($reflector, $id, $data);
     }
 }

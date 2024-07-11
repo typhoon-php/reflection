@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use Psr\SimpleCache\CacheInterface;
-use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ClassConstantId;
@@ -22,8 +19,9 @@ use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Exception\FileNotReadable;
+use Typhoon\Reflection\Internal\Cache;
 use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\Internal\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
@@ -34,17 +32,16 @@ use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\Expression\ExpressionCompilerVisitor;
-use Typhoon\Reflection\Internal\PhpParserReflector\FixNodeStartLineVisitor;
-use Typhoon\Reflection\Internal\PhpParserReflector\PhpParserReflector;
+use Typhoon\Reflection\Internal\DataCacheItem;
+use Typhoon\Reflection\Internal\DataReflector;
+use Typhoon\Reflection\Internal\IdMap;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
-use Typhoon\Reflection\Internal\Storage\DataStorage;
-use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
 use Typhoon\Reflection\Locator\AnonymousClassLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
+use Typhoon\Reflection\Locator\DeterministicLocator;
 use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
@@ -53,13 +50,22 @@ use Typhoon\TypedMap\TypedMap;
 /**
  * @api
  */
-final class TyphoonReflector extends Reflector
+final class TyphoonReflector extends Reflector implements DataReflector
 {
+    /**
+     * @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem>
+     */
+    private IdMap $reflected;
+
     private function __construct(
-        private readonly Parser $phpParser,
+        private readonly CodeReflector $codeReflector,
         private readonly Locator $locator,
-        private readonly DataStorage $storage,
-    ) {}
+        private readonly ReflectionHook $hook,
+        private readonly Cache $cache,
+    ) {
+        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
+        $this->reflected = new IdMap();
+    }
 
     /**
      * @param ?list<Locator> $locators
@@ -68,11 +74,24 @@ final class TyphoonReflector extends Reflector
         ?array $locators = null,
         CacheInterface $cache = new InMemoryCache(),
         ?Parser $phpParser = null,
-    ): self {
+    ): Reflector {
         return new self(
-            phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
+            codeReflector: new CodeReflector($phpParser ?? (new ParserFactory())->createForHostVersion()),
             locator: new Locators($locators ?? self::defaultLocators()),
-            storage: new DataStorage($cache),
+            hook: new ReflectionHooks([
+                new ReflectPhpDocTypes(),
+                new CopyPromotedParametersToProperties(),
+                new CompleteEnumReflection(),
+                new AddStringableInterface(),
+                new ResolveClassInheritance(),
+                new EnsureInterfaceMethodsAreAbstract(),
+                new EnsureReadonlyClassPropertiesAreReadonly(),
+                new ResolveAttributesRepeated(),
+                new ResolveParametersIndex(),
+                new ResolveChangeDetector(),
+                new CleanUp(),
+            ]),
+            cache: new Cache($cache),
         );
     }
 
@@ -114,7 +133,8 @@ final class TyphoonReflector extends Reflector
     public function reflect(Id $id): Reflection
     {
         if ($id instanceof NamedClassId) {
-            $data = $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name);
+            $data = $this->reflectData($id);
+            $this->flush();
 
             return match ($data[Data::ClassKind]) {
                 ClassKind::Class_ => new ClassReflection($id, $data, $this),
@@ -124,12 +144,14 @@ final class TyphoonReflector extends Reflector
             };
         }
 
+        if ($id instanceof AnonymousClassId) {
+            $data = $this->reflectData($id);
+            $this->flush();
+
+            return new AnonymousClassReflection($id, $data, $this);
+        }
+
         return match (true) {
-            $id instanceof AnonymousClassId => new AnonymousClassReflection(
-                id: $id,
-                data: $this->reflectData($id) ?? throw new ClassDoesNotExist($id->name ?? $id->toString()),
-                reflector: $this,
-            ),
             $id instanceof PropertyId => $this->reflect($id->class)->properties()[$id->name],
             $id instanceof ClassConstantId => $this->reflect($id->class)->constants()[$id->name],
             $id instanceof MethodId => $this->reflect($id->class)->methods()[$id->name],
@@ -140,98 +162,62 @@ final class TyphoonReflector extends Reflector
         };
     }
 
-    private function reflectData(NamedClassId|AnonymousClassId $id): ?TypedMap
+    public function reflectResource(Resource $resource): static
     {
-        $cachedData = $this->storage->get($id);
+        $reflected = $this->codeReflector->reflectCode($resource->code, $resource->baseData[Data::File]);
+        $this->reflected = $this->reflected->withMultiple((function () use ($reflected, $resource): \Generator {
+            foreach ($reflected as $id => $data) {
+                yield $id => $this->buildCacheItem($resource, $id, $data);
+            }
+        })());
 
-        if ($cachedData !== null) {
-            return $cachedData;
+        return new self(
+            $this->codeReflector,
+            new Locators([new DeterministicLocator($reflected->map(static fn(): Resource => $resource)), $this->locator]),
+            $this->hook,
+            $this->cache,
+        );
+    }
+
+    public function reflectData(NamedClassId|AnonymousClassId $id): TypedMap
+    {
+        $cacheItem = $this->reflected[$id] ?? $this->cache->get($id);
+
+        if ($cacheItem instanceof DataCacheItem) {
+            return $cacheItem->get();
         }
 
         $resource = $this->locator->locate($id);
 
         if ($resource === null) {
-            return null;
+            throw new ClassDoesNotExist($id->name ?? $id->toString());
         }
 
-        $code = self::readFile($resource->file);
-        $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
+        $this->reflected = $this->reflected->withMultiple((function () use ($resource): \Generator {
+            foreach ($this->codeReflector->reflectCode($resource->code, $resource->baseData[Data::File]) as $id => $data) {
+                yield $id => $this->buildCacheItem($resource, $id, $data);
+            }
+        })());
 
-        $baseData = $resource->baseData;
+        $cacheItem = $this->reflected[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->toString());
 
-        if (!$baseData[Data::InternallyDefined]) {
-            $baseData = $baseData->set(Data::File, $resource->file);
-        }
-
-        if (!isset($baseData[Data::UnresolvedChangeDetectors])) {
-            $baseData = $baseData->set(Data::UnresolvedChangeDetectors, [
-                FileChangeDetector::fromFileAndContents($resource->file, $code),
-            ]);
-        }
-
-        $traverser = new NodeTraverser();
-        $nameResolver = new NameResolver();
-        $typeContextVisitor = new TypeContextVisitor(
-            nameContext: $nameResolver->getNameContext(),
-            reader: new ReflectPhpDocTypes(),
-            code: $code,
-            file: $resource->file,
-        );
-        $expressionCompilerVisitor = new ExpressionCompilerVisitor($resource->file);
-        $reflector = new PhpParserReflector($typeContextVisitor, $expressionCompilerVisitor);
-        $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
-        $traverser->addVisitor($nameResolver);
-        $traverser->addVisitor($typeContextVisitor);
-        $traverser->addVisitor($expressionCompilerVisitor);
-        $traverser->addVisitor($reflector);
-        $traverser->traverse($nodes);
-
-        foreach ($reflector->data as $declarationId => $data) {
-            $this->storage->stageForCommit(
-                $declarationId,
-                fn(): TypedMap => $this->buildHooks($resource->hooks)->reflect($declarationId, $baseData->merge($data)),
-            );
-        }
-
-        $data = $this->storage->get($id);
-
-        $this->storage->commit();
-
-        return $data;
+        return $cacheItem->get();
     }
 
-    /**
-     * @param list<ReflectionHook> $hooks
-     */
-    private function buildHooks(array $hooks = []): ReflectionHook
+    private function buildCacheItem(Resource $resource, NamedClassId|AnonymousClassId $id, TypedMap $data): DataCacheItem
     {
-        return new ReflectionHooks([
-            ...$hooks,
-            new ReflectPhpDocTypes(),
-            new CopyPromotedParametersToProperties(),
-            new CompleteEnumReflection(),
-            new AddStringableInterface(),
-            new ResolveClassInheritance($this),
-            new EnsureInterfaceMethodsAreAbstract(),
-            new EnsureReadonlyClassPropertiesAreReadonly(),
-            new ResolveAttributesRepeated(),
-            new ResolveParametersIndex(),
-            new ResolveChangeDetector(),
-            new CleanUp(),
-        ]);
+        return new DataCacheItem(function () use ($resource, $id, $data): TypedMap {
+            $data = $resource->baseData->merge($data);
+            $data = $resource->hook->reflect($id, $data, $this);
+
+            return $this->hook->reflect($id, $data, $this);
+        });
     }
 
-    /**
-     * @psalm-assert non-empty-string $file
-     */
-    private static function readFile(string $file): string
+    private function flush(): void
     {
-        $code = @file_get_contents($file);
-
-        if ($code === false) {
-            throw new FileNotReadable($file);
-        }
-
-        return $code;
+        $this->cache->setFrom($this->reflected);
+        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
+        $this->reflected = new IdMap();
     }
 }

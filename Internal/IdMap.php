@@ -9,17 +9,29 @@ use Typhoon\DeclarationId\Id;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
- * @template TId of Id
- * @template TValue
+ * @template-covariant TId of Id
+ * @template-covariant TValue
  * @implements \ArrayAccess<TId, TValue>
  * @implements \IteratorAggregate<TId, TValue>
+ * @psalm-suppress InvalidTemplateParam
  */
-final class DeclarationIdMap implements \ArrayAccess, \IteratorAggregate, \Countable
+final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
 {
     /**
      * @var array<non-empty-string, array{TId, TValue}>
      */
-    public array $values = [];
+    private array $values = [];
+
+    /**
+     * @param iterable<TId, TValue> $values
+     */
+    public function __construct(
+        iterable $values = [],
+    ) {
+        foreach ($values as $id => $value) {
+            $this->values[$id->toString()] = [$id, $value];
+        }
+    }
 
     /**
      * @template TNewId of Id
@@ -33,6 +45,24 @@ final class DeclarationIdMap implements \ArrayAccess, \IteratorAggregate, \Count
         /** @var self<TId|TNewId, TValue|TNewValue> */
         $copy = clone $this;
         $copy->values[$id->toString()] = [$id, $value];
+
+        return $copy;
+    }
+
+    /**
+     * @template TNewId of Id
+     * @template TNewValue
+     * @param iterable<TNewId, TNewValue> $values
+     * @return self<TId|TNewId, TValue|TNewValue>
+     */
+    public function withMultiple(iterable $values): self
+    {
+        /** @var self<TId|TNewId, TValue|TNewValue> */
+        $copy = clone $this;
+
+        foreach ($values as $id => $value) {
+            $copy->values[$id->toString()] = [$id, $value];
+        }
 
         return $copy;
     }
@@ -58,6 +88,23 @@ final class DeclarationIdMap implements \ArrayAccess, \IteratorAggregate, \Count
     }
 
     /**
+     * @template TNewValue
+     * @param callable(TValue, TId): TNewValue $mapper
+     * @return self<TId, TNewValue>
+     */
+    public function map(callable $mapper): self
+    {
+        $copy = clone $this;
+
+        foreach ($copy->values as [$id, &$_value]) {
+            $_value = $mapper($_value, $id);
+        }
+
+        /** @var self<TId, TNewValue> */
+        return $copy;
+    }
+
+    /**
      * @return \Generator<TId, TValue>
      */
     public function getIterator(): \Generator
@@ -67,6 +114,9 @@ final class DeclarationIdMap implements \ArrayAccess, \IteratorAggregate, \Count
         }
     }
 
+    /**
+     * @return non-negative-int
+     */
     public function count(): int
     {
         return \count($this->values);

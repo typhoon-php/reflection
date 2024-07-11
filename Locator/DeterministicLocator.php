@@ -8,20 +8,24 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Internal\IdMap;
 use Typhoon\Reflection\Locator;
 use Typhoon\Reflection\Resource;
 
 /**
  * @api
  */
-final class AnonymousClassLocator implements Locator
+final class DeterministicLocator implements Locator
 {
+    /**
+     * @param IdMap<ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId, \Typhoon\Reflection\Resource> $resources
+     */
+    public function __construct(
+        private IdMap $resources,
+    ) {}
+
     public function locate(ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId $id): ?Resource
     {
-        if ($id instanceof AnonymousClassId) {
-            return Resource::fromFile($id->file);
-        }
-
-        return null;
+        return $this->resources[$id] ?? null;
     }
 }

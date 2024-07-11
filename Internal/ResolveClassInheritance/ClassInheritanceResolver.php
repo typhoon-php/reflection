@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
+use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\ClassLikeReflection;
-use Typhoon\Reflection\ClassReflection;
-use Typhoon\Reflection\InterfaceReflection;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Reflector;
-use Typhoon\Reflection\TemplateReflection;
+use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\SelfParentStaticTypeResolver;
 use Typhoon\Type\Visitor\TemplateTypeResolver;
@@ -62,14 +59,14 @@ final class ClassInheritanceResolver
     private array $changeDetectors;
 
     private function __construct(
-        private readonly Reflector $reflector,
+        private readonly DataReflector $reflector,
         private readonly NamedClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
     ) {
         $this->changeDetectors = $data[Data::UnresolvedChangeDetectors];
     }
 
-    public static function resolve(Reflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public static function resolve(DataReflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         $resolver = new self($reflector, $id, $data);
         $resolver->own();
@@ -107,29 +104,30 @@ final class ClassInheritanceResolver
      */
     private function oneUsed(string $traitName, array $arguments): void
     {
-        $trait = $this->reflector->reflect(Id::namedClass($traitName));
+        $traitId = Id::namedClass($traitName);
+        $trait = $this->reflector->reflectData($traitId);
 
-        $this->changeDetectors[] = $trait->changeDetector();
+        $this->changeDetectors[] = $trait[Data::ChangeDetector] ?? new InMemoryChangeDetector();
 
-        $typeProcessor = $this->typeProcessor($trait, $arguments);
+        $typeProcessor = $this->typeProcessor($traitId, $trait, $arguments);
 
-        foreach ($trait->data[Data::ClassConstants] as $name => $constant) {
-            $this->constant($name)->addUsed($constant, $typeProcessor);
+        foreach ($trait[Data::ClassConstants] as $constantName => $constant) {
+            $this->constant($constantName)->addUsed($constant, $typeProcessor);
         }
 
-        foreach ($trait->data[Data::Properties] as $name => $property) {
-            $this->property($name)->addUsed($property, $typeProcessor);
+        foreach ($trait[Data::Properties] as $propertyName => $property) {
+            $this->property($propertyName)->addUsed($property, $typeProcessor);
         }
 
-        foreach ($trait->data[Data::Methods] as $name => $method) {
-            $precedence = $this->data[Data::TraitMethodPrecedence][$name] ?? null;
+        foreach ($trait[Data::Methods] as $methodName => $method) {
+            $precedence = $this->data[Data::TraitMethodPrecedence][$methodName] ?? null;
 
             if ($precedence !== null && $precedence !== $traitName) {
                 continue;
             }
 
             foreach ($this->data[Data::TraitMethodAliases] as $alias) {
-                if ($alias->trait !== $traitName || $alias->method !== $name) {
+                if ($alias->trait !== $traitName || $alias->method !== $methodName) {
                     continue;
                 }
 
@@ -139,10 +137,10 @@ final class ClassInheritanceResolver
                     $methodToUse = $methodToUse->set(Data::Visibility, $alias->newVisibility);
                 }
 
-                $this->method($alias->newName ?? $name)->addUsed($methodToUse, $typeProcessor);
+                $this->method($alias->newName ?? $methodName)->addUsed($methodToUse, $typeProcessor);
             }
 
-            $this->method($name)->addUsed($method, $typeProcessor);
+            $this->method($methodName)->addUsed($method, $typeProcessor);
         }
     }
 
@@ -165,54 +163,54 @@ final class ClassInheritanceResolver
      */
     private function oneInherited(string $className, array $arguments): void
     {
-        $class = $this->reflector->reflect(Id::namedClass($className));
+        $classId = Id::namedClass($className);
+        $class = $this->reflector->reflectData($classId);
 
-        $this->changeDetectors[] = $class->changeDetector();
+        $this->changeDetectors[] = $class[Data::ChangeDetector] ?? new InMemoryChangeDetector();
 
         $this->resolvedUpstreamInterfaces = [
             ...$this->resolvedUpstreamInterfaces,
-            ...$class->data[Data::Interfaces],
+            ...$class[Data::Interfaces],
         ];
 
-        if ($class instanceof InterfaceReflection) {
-            $this->resolvedOwnInterfaces[$class->name] ??= $arguments;
-        } elseif ($class instanceof ClassReflection) {
-            $this->resolvedParents = [
-                $class->name => $arguments,
-                ...$class->data[Data::Parents],
-            ];
+        /** @var class-string $className */
+        if ($class[Data::ClassKind] === ClassKind::Interface) {
+            $this->resolvedOwnInterfaces[$className] ??= $arguments;
         } else {
-            throw new \LogicException();
+            $this->resolvedParents = [$className => $arguments, ...$class[Data::Parents]];
         }
 
-        $typeProcessor = $this->typeProcessor($class, $arguments);
+        $typeProcessor = $this->typeProcessor($classId, $class, $arguments);
 
-        foreach ($class->data[Data::ClassConstants] as $name => $constant) {
-            $this->constant($name)->addInherited($constant, $typeProcessor);
+        foreach ($class[Data::ClassConstants] as $constantName => $constant) {
+            $this->constant($constantName)->addInherited($constant, $typeProcessor);
         }
 
-        foreach ($class->data[Data::Properties] as $name => $property) {
-            $this->property($name)->addInherited($property, $typeProcessor);
+        foreach ($class[Data::Properties] as $propertyName => $property) {
+            $this->property($propertyName)->addInherited($property, $typeProcessor);
         }
 
-        foreach ($class->data[Data::Methods] as $name => $method) {
-            $this->method($name)->addInherited($method, $typeProcessor);
+        foreach ($class[Data::Methods] as $methodName => $method) {
+            $this->method($methodName)->addInherited($method, $typeProcessor);
         }
     }
 
     /**
      * @param list<Type> $arguments
      */
-    private function typeProcessor(ClassLikeReflection $class, array $arguments): TypeProcessor
+    private function typeProcessor(NamedClassId $id, TypedMap $data, array $arguments): TypeProcessor
     {
         $processors = [];
+        $templates = $data[Data::Templates];
 
-        if (!$class->templates()->isEmpty()) {
-            $processors[] = new TemplateTypeResolver($class->templates()->map(
-                static fn(TemplateReflection $template): array => [
-                    $template->id,
-                    $arguments[$template->index] ?? $template->constraint(),
+        if ($templates !== []) {
+            $processors[] = new TemplateTypeResolver(array_map(
+                static fn(string $name, TypedMap $template): array => [
+                    Id::template($id, $name),
+                    $arguments[$template[Data::Index]] ?? $template[Data::Constraint],
                 ],
+                array_keys($templates),
+                $templates,
             ));
         }
 

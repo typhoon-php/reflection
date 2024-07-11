@@ -8,6 +8,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\TypedMap\TypedMap;
 
@@ -17,7 +18,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ResolveAttributesRepeated implements ReflectionHook
 {
-    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $this->resolveAttributesRepeated($data);

@@ -14,6 +14,7 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\ReflectionHook;
 use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
@@ -51,7 +52,7 @@ final class ReflectPhpDocTypes implements ReflectionHook, AnnotatedTypesDriver
         );
     }
 
-    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function reflect(FunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
         if ($id instanceof FunctionId) {
             return $this->reflectFunction($data);

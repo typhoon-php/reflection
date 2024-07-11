@@ -32,10 +32,10 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\DeclarationIdMap;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\Expression\ExpressionCompilerProvider;
 use Typhoon\Reflection\Internal\Expression\Value;
+use Typhoon\Reflection\Internal\IdMap;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
 use Typhoon\Reflection\Internal\TraitMethodAlias;
@@ -55,16 +55,16 @@ final class PhpParserReflector extends NodeVisitorAbstract
 {
     /**
      * @psalm-readonly-allow-private-mutation
-     * @var DeclarationIdMap<NamedClassId|AnonymousClassId, TypedMap>
+     * @var IdMap<NamedClassId|AnonymousClassId, TypedMap>
      */
-    public DeclarationIdMap $data;
+    public IdMap $reflected;
 
     public function __construct(
         private readonly TypeContextProvider $typeContextProvider,
         private readonly ExpressionCompilerProvider $expressionCompilerProvider,
     ) {
-        /** @var DeclarationIdMap<NamedClassId|AnonymousClassId, TypedMap> */
-        $this->data = new DeclarationIdMap();
+        /** @var IdMap<NamedClassId|AnonymousClassId, TypedMap> */
+        $this->reflected = new IdMap();
     }
 
     public function leaveNode(Node $node): ?int
@@ -73,13 +73,13 @@ final class PhpParserReflector extends NodeVisitorAbstract
             $typeContext = $this->typeContextProvider->get();
             $id = $typeContext->id;
             \assert($id instanceof NamedClassId || $id instanceof AnonymousClassId);
-            $data = $this->reflectClass($node, $typeContext);
 
-            $this->data = $this->data->with($id, $data);
+            $data = $this->reflectClass($node, $typeContext);
+            $this->reflected = $this->reflected->with($id, $data);
 
             // TODO: check 1 one line
             if ($id instanceof AnonymousClassId) {
-                $this->data = $this->data->with(Id::anonymousClass($id->file, $id->line), $data);
+                $this->reflected = $this->reflected->with(Id::anonymousClass($id->file, $id->line), $data);
             }
 
             return null;
