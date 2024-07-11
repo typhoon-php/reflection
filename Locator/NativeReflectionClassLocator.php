@@ -4,30 +4,22 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Locator;
 
-use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Locator;
 use Typhoon\Reflection\Resource;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api
  */
-final class NativeReflectionClassLocator implements Locator
+final class NativeReflectionClassLocator implements NamedClassLocator
 {
     public function __construct(
         private readonly bool $autoload = false,
     ) {}
 
-    public function locate(ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId $id): ?Resource
+    public function locate(NamedClassId $id): ?Resource
     {
-        if (!$id instanceof NamedClassId) {
-            return null;
-        }
-
         if (!$this->autoload
             && !class_exists($id->name, autoload: false)
             && !interface_exists($id->name, autoload: false)

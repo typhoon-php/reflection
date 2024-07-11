@@ -4,26 +4,18 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Locator;
 
-use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\ConstantId;
-use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Locator;
 use Typhoon\Reflection\Resource;
 use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api
  */
-final class NativeReflectionFunctionLocator implements Locator
+final class NativeReflectionFunctionLocator implements NamedFunctionLocator
 {
-    public function locate(ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId $id): ?Resource
+    public function locate(NamedFunctionId $id): ?Resource
     {
-        if (!$id instanceof NamedFunctionId) {
-            return null;
-        }
-
         try {
             /** @psalm-suppress ArgumentTypeCoercion */
             $reflection = new \ReflectionFunction($id->name);

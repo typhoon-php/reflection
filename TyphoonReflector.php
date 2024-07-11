@@ -38,10 +38,14 @@ use Typhoon\Reflection\Internal\IdMap;
 use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
-use Typhoon\Reflection\Locator\AnonymousClassLocator;
+use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
+use Typhoon\Reflection\Locator\ConstantLocator;
 use Typhoon\Reflection\Locator\DeterministicLocator;
+use Typhoon\Reflection\Locator\FileAnonymousLocator;
 use Typhoon\Reflection\Locator\Locators;
+use Typhoon\Reflection\Locator\NamedClassLocator;
+use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 use Typhoon\TypedMap\TypedMap;
@@ -58,7 +62,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
 
     private function __construct(
         private readonly CodeReflector $codeReflector,
-        private readonly Locator $locator,
+        private readonly Locators $locators,
         private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {
@@ -67,7 +71,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
     }
 
     /**
-     * @param ?list<Locator> $locators
+     * @param ?list<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
      */
     public static function build(
         ?array $locators = null,
@@ -76,7 +80,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
     ): Reflector {
         return new self(
             codeReflector: new CodeReflector($phpParser ?? (new ParserFactory())->createForHostVersion()),
-            locator: new Locators($locators ?? self::defaultLocators()),
+            locators: new Locators($locators ?? self::defaultLocators()),
             cache: new Cache($cache),
             hooks: new ReflectionHooks([
                 new ReflectPhpDocTypes(),
@@ -95,7 +99,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
     }
 
     /**
-     * @return list<Locator>
+     * @return list<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator>
      */
     public static function defaultLocators(): array
     {
@@ -111,7 +115,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
 
         $locators[] = new NativeReflectionClassLocator();
         $locators[] = new NativeReflectionFunctionLocator();
-        $locators[] = new AnonymousClassLocator();
+        $locators[] = new FileAnonymousLocator();
 
         return $locators;
     }
@@ -172,7 +176,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
 
         return new self(
             codeReflector: $this->codeReflector,
-            locator: new Locators([new DeterministicLocator($reflected->map(static fn(): Resource => $resource)), $this->locator]),
+            locators: new Locators([new DeterministicLocator($reflected->map(static fn(): Resource => $resource)), $this->locators]),
             cache: $this->cache,
             hooks: $this->hooks,
         );
@@ -186,7 +190,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
             return $cacheItem->get();
         }
 
-        $resource = $this->locator->locate($id);
+        $resource = $this->locators->locate($id);
 
         if ($resource === null) {
             throw new ClassDoesNotExist($id->name ?? $id->toString());
