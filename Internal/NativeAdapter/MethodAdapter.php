@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
-use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
@@ -345,8 +344,8 @@ final class MethodAdapter extends \ReflectionMethod
             return;
         }
 
-        $class = $this->reflection->id->class->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
-            "Cannot natively reflect anonymous class %s, because it's runtime name is not available",
+        $class = $this->reflection->id->class->name ?? throw new \LogicException(sprintf(
+            "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->class->toString(),
         ));
 

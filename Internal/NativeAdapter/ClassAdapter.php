@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\DeclarationId\Id;
-use Typhoon\DeclarationId\InvalidClassName;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\AnonymousClassReflection;
 use Typhoon\Reflection\ClassConstantReflection;
@@ -183,7 +181,7 @@ final class ClassAdapter extends \ReflectionClass
     public function getName(): string
     {
         /** @var class-string<T> */
-        return $this->reflection->id->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
+        return $this->reflection->id->name ?? throw new \LogicException(sprintf(
             'Runtime name of anonymous class %s is not available',
             $this->reflection->id->toString(),
         ));
@@ -300,7 +298,7 @@ final class ClassAdapter extends \ReflectionClass
         if (\is_string($interface)) {
             try {
                 $interfaceId = Id::class($interface);
-            } catch (InvalidClassName) {
+            } catch (\InvalidArgumentException) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
             }
 
@@ -425,7 +423,7 @@ final class ClassAdapter extends \ReflectionClass
 
             try {
                 $classId = Id::class($class);
-            } catch (InvalidClassName) {
+            } catch (\InvalidArgumentException) {
                 throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
             }
 
@@ -490,8 +488,8 @@ final class ClassAdapter extends \ReflectionClass
             return;
         }
 
-        $class = $this->reflection->id->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
-            "Cannot natively reflect anonymous class %s, because it's runtime name is not available",
+        $class = $this->reflection->id->name ?? throw new \LogicException(sprintf(
+            "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->toString(),
         ));
 

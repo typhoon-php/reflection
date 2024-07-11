@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\DeclarationId\FunctionId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
@@ -286,8 +285,8 @@ final class ParameterAdapter extends \ReflectionParameter
             return;
         }
 
-        $class = $functionId->class->name ?? throw new AnonymousClassNameNotAvailable(sprintf(
-            "Cannot natively reflect anonymous class %s, because it's runtime name is not available",
+        $class = $functionId->class->name ?? throw new \LogicException(sprintf(
+            "Cannot natively reflect %s, because it's runtime name is not available",
             $functionId->class->toString(),
         ));
 

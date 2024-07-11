@@ -28,6 +28,7 @@ use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
 use PhpParser\Node\UnionType;
 use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
@@ -70,8 +71,16 @@ final class PhpParserReflector extends NodeVisitorAbstract
     {
         if ($node instanceof ClassLike) {
             $typeContext = $this->typeContextProvider->get();
-            \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
-            $this->data = $this->data->with($typeContext->id, $this->reflectClass($node, $typeContext));
+            $id = $typeContext->id;
+            \assert($id instanceof NamedClassId || $id instanceof AnonymousClassId);
+            $data = $this->reflectClass($node, $typeContext);
+
+            $this->data = $this->data->with($id, $data);
+
+            // TODO: check 1 one line
+            if ($id instanceof AnonymousClassId) {
+                $this->data = $this->data->with(Id::anonymousClass($id->file, $id->line), $data);
+            }
 
             return null;
         }

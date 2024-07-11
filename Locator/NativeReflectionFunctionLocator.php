@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Locator;
 
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
@@ -17,7 +18,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class NativeReflectionFunctionLocator implements Locator
 {
-    public function locate(ConstantId|NamedFunctionId|NamedClassId $id): ?Resource
+    public function locate(ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId $id): ?Resource
     {
         if (!$id instanceof NamedFunctionId) {
             return null;

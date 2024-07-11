@@ -43,6 +43,7 @@ use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Storage\DataStorage;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
+use Typhoon\Reflection\Locator\AnonymousClassLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
@@ -92,6 +93,7 @@ final class TyphoonReflector extends Reflector
 
         $locators[] = new NativeReflectionClassLocator();
         $locators[] = new NativeReflectionFunctionLocator();
+        $locators[] = new AnonymousClassLocator();
 
         return $locators;
     }
@@ -146,7 +148,6 @@ final class TyphoonReflector extends Reflector
             return $cachedData;
         }
 
-        \assert($id instanceof NamedClassId);
         $resource = $this->locator->locate($id);
 
         if ($resource === null) {

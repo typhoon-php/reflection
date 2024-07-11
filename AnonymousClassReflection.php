@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\AnonymousClassNameNotAvailable;
 use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\TypedMap\TypedMap;
@@ -88,8 +87,8 @@ final class AnonymousClassReflection extends ClassLikeReflection
     public function newInstance(mixed ...$arguments): object
     {
         if ($this->name === null) {
-            throw new AnonymousClassNameNotAvailable(sprintf(
-                "Cannot create an instance of anonymous class %s, because it's runtime name is not available",
+            throw new \LogicException(sprintf(
+                "Cannot create an instance of %s, because it's runtime name is not available",
                 $this->id->toString(),
             ));
         }
@@ -100,8 +99,8 @@ final class AnonymousClassReflection extends ClassLikeReflection
     public function newInstanceWithoutConstructor(): object
     {
         if ($this->name === null) {
-            throw new AnonymousClassNameNotAvailable(sprintf(
-                "Cannot create an instance of anonymous class %s, because it's runtime name is not available",
+            throw new \LogicException(sprintf(
+                "Cannot create an instance of %s, because it's runtime name is not available",
                 $this->id->toString(),
             ));
         }
