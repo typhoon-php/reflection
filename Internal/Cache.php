@@ -46,6 +46,6 @@ final class Cache
 
     private static function key(Id $id): string
     {
-        return hash('xxh128', $id->toString());
+        return hash('xxh128', $id->encode());
     }
 }

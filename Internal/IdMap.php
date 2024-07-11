@@ -29,7 +29,7 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
         iterable $values = [],
     ) {
         foreach ($values as $id => $value) {
-            $this->values[$id->toString()] = [$id, $value];
+            $this->values[$id->encode()] = [$id, $value];
         }
     }
 
@@ -44,7 +44,7 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         /** @var self<TId|TNewId, TValue|TNewValue> */
         $copy = clone $this;
-        $copy->values[$id->toString()] = [$id, $value];
+        $copy->values[$id->encode()] = [$id, $value];
 
         return $copy;
     }
@@ -61,7 +61,7 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
         $copy = clone $this;
 
         foreach ($values as $id => $value) {
-            $copy->values[$id->toString()] = [$id, $value];
+            $copy->values[$id->encode()] = [$id, $value];
         }
 
         return $copy;
@@ -69,12 +69,12 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetExists(mixed $offset): bool
     {
-        return isset($this->values[$offset->toString()]);
+        return isset($this->values[$offset->encode()]);
     }
 
     public function offsetGet(mixed $offset): mixed
     {
-        return $this->values[$offset->toString()][1] ?? throw new \LogicException();
+        return $this->values[$offset->encode()][1] ?? throw new \LogicException();
     }
 
     public function offsetSet(mixed $offset, mixed $value): void
