@@ -19,6 +19,9 @@ use Typhoon\DeclarationId\TemplateId;
  */
 abstract class Reflector
 {
+    /**
+     * @param non-empty-string $class
+     */
     final public function classLikeExists(string $class): bool
     {
         try {
@@ -32,7 +35,7 @@ abstract class Reflector
 
     /**
      * @template T of object
-     * @param string|class-string<T>|T $nameOrObject
+     * @param non-empty-string|class-string<T>|T $nameOrObject
      * @return ClassLikeReflection<T, NamedClassId|AnonymousClassId>
      */
     final public function reflectClassLike(string|object $nameOrObject): ClassLikeReflection
@@ -43,7 +46,7 @@ abstract class Reflector
 
     /**
      * @template T of object
-     * @param string|class-string<T>|T $nameOrObject
+     * @param non-empty-string|class-string<T>|T $nameOrObject
      * @return ClassReflection<T>
      */
     final public function reflectClass(string|object $nameOrObject): ClassReflection
@@ -60,7 +63,7 @@ abstract class Reflector
 
     /**
      * @template T of object
-     * @param string|class-string<T> $name
+     * @param non-empty-string|class-string<T> $name
      * @return InterfaceReflection<T>
      */
     final public function reflectInterface(string $name): InterfaceReflection
@@ -77,7 +80,7 @@ abstract class Reflector
 
     /**
      * @template T of object
-     * @param string|class-string<T> $name
+     * @param non-empty-string|class-string<T> $name
      * @return TraitReflection<T>
      */
     final public function reflectTrait(string $name): TraitReflection
@@ -94,7 +97,7 @@ abstract class Reflector
 
     /**
      * @template T of \UnitEnum
-     * @param string|class-string<T>|T $nameOrEnum
+     * @param non-empty-string|class-string<T>|T $nameOrEnum
      * @return EnumReflection<T>
      */
     final public function reflectEnum(string|\UnitEnum $nameOrEnum): EnumReflection

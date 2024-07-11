@@ -31,6 +31,7 @@ final class AttributeAdapter extends \ReflectionAttribute
     ) {}
 
     /**
+     * @param ?non-empty-string $name
      * @param ListOf<AttributeReflection> $attributes
      * @return list<\ReflectionAttribute>
      */

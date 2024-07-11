@@ -159,9 +159,12 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
 
         if ($node->name === null) {
+            $startLine = $node->getStartLine();
+            \assert($startLine > 0);
+
             $classId = Id::anonymousClass(
                 file: $this->file ?? throw new \LogicException('No file for anonymous class'),
-                line: $node->getStartLine(),
+                line: $startLine,
                 column: $this->column($node),
             );
         } else {

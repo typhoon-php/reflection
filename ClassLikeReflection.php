@@ -148,6 +148,9 @@ abstract class ClassLikeReflection extends Reflection
         return $this->data[Data::ChangeDetector] ?? new InMemoryChangeDetector();
     }
 
+    /**
+     * @param non-empty-string|NamedClassId|AnonymousClassId $class
+     */
     final public function isInstanceOf(string|NamedClassId|AnonymousClassId $class): bool
     {
         if (\is_string($class)) {
