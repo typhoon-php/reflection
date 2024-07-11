@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\TypedMap\Key;
+use Typhoon\Reflection\Internal\TypedMap\Key;
 
 /**
  * @internal

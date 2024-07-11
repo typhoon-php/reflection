@@ -12,10 +12,10 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\SelfParentStaticTypeResolver;
 use Typhoon\Type\Visitor\TemplateTypeResolver;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

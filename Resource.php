@@ -10,7 +10,7 @@ use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\ConstantReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\FunctionReflectionHook;
-use Typhoon\TypedMap\TypedMap;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api

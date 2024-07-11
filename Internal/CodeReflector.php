@@ -14,7 +14,7 @@ use Typhoon\Reflection\Internal\PhpParserReflector\FixNodeStartLineVisitor;
 use Typhoon\Reflection\Internal\PhpParserReflector\PhpParserReflector;
 use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
-use Typhoon\TypedMap\TypedMap;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @internal

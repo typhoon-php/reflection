@@ -16,7 +16,7 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
-use Typhoon\TypedMap\TypedMap;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api

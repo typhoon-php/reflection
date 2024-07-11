@@ -11,7 +11,7 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
-use Typhoon\TypedMap\TypedMap;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api

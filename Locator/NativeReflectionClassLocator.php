@@ -6,8 +6,8 @@ namespace Typhoon\Reflection\Locator;
 
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Resource;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

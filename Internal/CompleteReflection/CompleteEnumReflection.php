@@ -11,9 +11,9 @@ use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\TypeData;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\types;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
 
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Internal\Visibility;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

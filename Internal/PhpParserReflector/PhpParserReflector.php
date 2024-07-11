@@ -42,10 +42,10 @@ use Typhoon\Reflection\Internal\TraitMethodAlias;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextProvider;
 use Typhoon\Reflection\Internal\TypeData;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

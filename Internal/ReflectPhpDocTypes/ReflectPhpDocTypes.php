@@ -21,8 +21,8 @@ use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
 use Typhoon\Reflection\Internal\TypeData;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\types;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

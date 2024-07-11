@@ -38,6 +38,7 @@ use Typhoon\Reflection\Internal\IdMap;
 use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectPhpDocTypes\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ResolveClassInheritance\ResolveClassInheritance;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
@@ -48,7 +49,6 @@ use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
-use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

@@ -6,7 +6,7 @@ namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\TypedMap\TypedMap;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api
@@ -19,7 +19,7 @@ abstract class Reflection
      * It will likely be available as part of the API in the near future.
      *
      * @internal
-     * @psalm-internal Typhoon\Reflection
+     * @psalm-internal Typhoon
      */
     public readonly TypedMap $data;
 
