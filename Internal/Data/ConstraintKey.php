@@ -6,13 +6,13 @@ namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\Reflection\Internal\TypedMap\OptionalKey;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
-use Typhoon\Type\Type as TypeAlias;
+use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<TypeAlias>
+ * @implements OptionalKey<Type>
  */
 enum ConstraintKey implements OptionalKey
 {

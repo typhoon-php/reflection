@@ -12,9 +12,21 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements OptionalKey<bool>
  */
-enum InternallyDefinedKey implements OptionalKey
+enum BoolKeys implements OptionalKey
 {
-    case Key;
+    case AttributeRepeated;
+    case InternallyDefined;
+    case IsAbstract;
+    case AnnotatedFinal;
+    case AnnotatedReadonly;
+    case ByReference;
+    case EnumCase;
+    case Generator;
+    case NativeFinal;
+    case NativeReadonly;
+    case Promoted;
+    case IsStatic;
+    case Variadic;
 
     public function default(TypedMap $map): mixed
     {

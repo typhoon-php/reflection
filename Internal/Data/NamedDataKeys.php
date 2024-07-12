@@ -10,14 +10,19 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<bool>
+ * @implements OptionalKey<array<non-empty-string, TypedMap>>
  */
-enum IsVariadicKey implements OptionalKey
+enum NamedDataKeys implements OptionalKey
 {
-    case Key;
+    case Aliases;
+    case ClassConstants;
+    case Methods;
+    case Parameters;
+    case Properties;
+    case Templates;
 
     public function default(TypedMap $map): mixed
     {
-        return false;
+        return [];
     }
 }
