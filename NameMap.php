@@ -99,6 +99,34 @@ final class NameMap implements \ArrayAccess, \IteratorAggregate, \Countable
         return $this->values;
     }
 
+    /**
+     * @param callable(T, non-empty-string): bool $predicate
+     */
+    public function any(callable $predicate): bool
+    {
+        foreach ($this->values as $name => $value) {
+            if ($predicate($value, $name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param callable(T, non-empty-string): bool $predicate
+     */
+    public function all(callable $predicate): bool
+    {
+        foreach ($this->values as $name => $value) {
+            if (!$predicate($value, $name)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function getIterator(): \Traversable
     {
         return new \ArrayIterator($this->values);

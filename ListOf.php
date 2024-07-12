@@ -84,6 +84,34 @@ final class ListOf implements \ArrayAccess, \IteratorAggregate, \Countable
     }
 
     /**
+     * @param callable(T, non-negative-int): bool $predicate
+     */
+    public function any(callable $predicate): bool
+    {
+        foreach ($this->values as $index => $value) {
+            if ($predicate($value, $index)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param callable(T, non-negative-int): bool $predicate
+     */
+    public function all(callable $predicate): bool
+    {
+        foreach ($this->values as $index => $value) {
+            if (!$predicate($value, $index)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @return non-negative-int
      */
     public function count(): int
