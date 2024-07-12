@@ -20,13 +20,6 @@ final class InMemoryCache implements CacheInterface
         private readonly int $capacity = 1000,
     ) {}
 
-    private static function validateKey(string $key): void
-    {
-        if (preg_match('#[{}()/\\\@:]#', $key)) {
-            throw new InvalidCacheKey($key);
-        }
-    }
-
     public function get(string $key, mixed $default = null): mixed
     {
         self::validateKey($key);
@@ -112,6 +105,13 @@ final class InMemoryCache implements CacheInterface
     {
         if (\count($this->values) > $this->capacity) {
             $this->values = \array_slice($this->values, -$this->capacity);
+        }
+    }
+
+    private static function validateKey(string $key): void
+    {
+        if (preg_match('#[{}()/\\\@:]#', $key)) {
+            throw new InvalidCacheKey($key);
         }
     }
 }

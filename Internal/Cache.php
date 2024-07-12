@@ -13,6 +13,14 @@ use Typhoon\DeclarationId\Id;
  */
 final class Cache
 {
+    /**
+     * This version should be incremented before release if any of the cacheable elements have changed.
+     * This should help to avoid deserialization errors.
+     */
+    private const VERSION = 0;
+
+    private const PREFIX = 'typhoon/reflection';
+
     public function __construct(
         private readonly CacheInterface $cache,
     ) {}
@@ -31,7 +39,7 @@ final class Cache
     /**
      * @param IdMap<Id, DataCacheItem> $data
      */
-    public function setFrom(IdMap $data): void
+    public function set(IdMap $data): void
     {
         $values = [];
 
@@ -46,6 +54,6 @@ final class Cache
 
     private static function key(Id $id): string
     {
-        return hash('xxh128', $id->encode());
+        return hash('xxh128', self::PREFIX . $id->encode() . self::VERSION);
     }
 }

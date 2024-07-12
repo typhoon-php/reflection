@@ -210,7 +210,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
 
     private function flush(): void
     {
-        $this->cache->setFrom($this->reflected);
+        $this->cache->set($this->reflected);
         /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
         $this->reflected = new IdMap();
     }
