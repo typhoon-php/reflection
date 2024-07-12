@@ -13,7 +13,7 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;

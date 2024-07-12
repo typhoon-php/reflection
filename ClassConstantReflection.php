@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassConstantAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
-use Typhoon\Reflection\Internal\Visibility;
 use Typhoon\Type\Type;
 
 /**

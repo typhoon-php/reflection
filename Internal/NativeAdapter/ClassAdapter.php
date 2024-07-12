@@ -10,7 +10,7 @@ use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\PropertyReflection;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\AliasId;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 

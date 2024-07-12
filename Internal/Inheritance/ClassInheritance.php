@@ -10,7 +10,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassKind;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;

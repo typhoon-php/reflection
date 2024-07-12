@@ -6,7 +6,6 @@ namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\Reflection\Internal\TypedMap\OptionalKey;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
-use Typhoon\Reflection\Internal\Visibility;
 
 /**
  * @internal

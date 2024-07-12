@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Inheritance;
 
-use Typhoon\Reflection\Internal\TypeData;
+use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Type\Type;
 
 /**

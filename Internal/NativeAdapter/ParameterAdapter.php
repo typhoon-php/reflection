@@ -10,7 +10,7 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\ClassReflection;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
 use Typhoon\Reflection\Internal\Expression\ConstantFetch;
 use Typhoon\Reflection\Kind;

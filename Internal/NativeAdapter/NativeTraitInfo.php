@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
-use Typhoon\Reflection\Internal\TraitMethodAlias;
+use Typhoon\Reflection\Internal\Data\TraitMethodAlias;
 
 /**
  * @internal

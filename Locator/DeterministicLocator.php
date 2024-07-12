@@ -9,7 +9,7 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\IdMap;
+use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Resource;
 
 /**

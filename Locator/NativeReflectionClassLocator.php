@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Locator;
 
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Resource;
 

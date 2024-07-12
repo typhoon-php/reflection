@@ -11,11 +11,11 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassReflectionHook;
-use Typhoon\Reflection\Internal\ConstantReflectionHook;
-use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DataReflector;
-use Typhoon\Reflection\Internal\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
+use Typhoon\Reflection\Internal\ReflectionHook\ConstantReflectionHook;
+use Typhoon\Reflection\Internal\ReflectionHook\FunctionReflectionHook;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
