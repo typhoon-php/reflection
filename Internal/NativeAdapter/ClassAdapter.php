@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\ClassConstantReflection;
+use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Data;
@@ -167,7 +168,7 @@ final class ClassAdapter extends \ReflectionClass
         }
 
         /** @var int-mask-of<\ReflectionClass::IS_*> */
-        return ($this->reflection->isAbstractClass() ? self::IS_EXPLICIT_ABSTRACT : 0)
+        return ($this->reflection->isAbstract() ? self::IS_EXPLICIT_ABSTRACT : 0)
             | ($this->isFinal() ? self::IS_FINAL : 0)
             | ($this->isReadonly() ? self::IS_READONLY : 0);
     }
@@ -317,7 +318,15 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isAbstract(): bool
     {
-        return $this->reflection->isAbstract();
+        if ($this->reflection->isAbstract()) {
+            return true;
+        }
+
+        if ($this->reflection->isInterface() || $this->reflection->isTrait()) {
+            return $this->reflection->methods()->any(static fn(MethodReflection $method): bool => $method->isAbstract());
+        }
+
+        return false;
     }
 
     public function isAnonymous(): bool
@@ -327,7 +336,9 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isCloneable(): bool
     {
-        return $this->reflection->isCloneable();
+        return $this->reflection->kind() === ClassKind::Class_
+            && !$this->reflection->isAbstract()
+            && (!isset($this->reflection->methods()['__clone']) || $this->reflection->methods()['__clone']->isPublic());
     }
 
     public function isEnum(): bool
@@ -366,7 +377,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isIterable(): bool
     {
-        return !$this->reflection->isInterface()
+        return ($this->reflection->kind() === ClassKind::Class_ || $this->reflection->kind() === ClassKind::Enum)
             && !$this->reflection->isAbstract()
             && $this->reflection->isInstanceOf(\Traversable::class);
     }

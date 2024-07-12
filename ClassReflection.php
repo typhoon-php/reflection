@@ -182,26 +182,15 @@ final class ClassReflection extends Reflection
             || \array_key_exists($class->name, $this->data[Data::Interfaces]);
     }
 
+    /**
+     * This method is different from {@see \ReflectionClass::isAbstract()}.
+     * It returns true only for explicitly abstract classes:
+     *     abstract class AC {} -> true
+     *     class C {} -> false
+     *     interface I { public function m() {} } -> false
+     *     trait T { abstract public function m() {} } -> false.
+     */
     public function isAbstract(): bool
-    {
-        if ($this->isAbstractClass()) {
-            return true;
-        }
-
-        if ($this->isInterface() || $this->isTrait()) {
-            foreach ($this->methods() as $method) {
-                if ($method->isAbstract()) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return false;
-    }
-
-    public function isAbstractClass(): bool
     {
         return $this->data[Data::Abstract];
     }
@@ -209,13 +198,6 @@ final class ClassReflection extends Reflection
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousClassId;
-    }
-
-    public function isCloneable(): bool
-    {
-        return !$this->isAbstract()
-            && $this->data[Data::ClassKind] === ClassKind::Class_
-            && (!isset($this->methods()['__clone']) || $this->methods()['__clone']->isPublic());
     }
 
     public function isTrait(): bool
@@ -239,8 +221,8 @@ final class ClassReflection extends Reflection
 
     public function isInstantiable(): bool
     {
-        return !$this->isAbstract()
-            && $this->data[Data::ClassKind] === ClassKind::Class_
+        return $this->data[Data::ClassKind] === ClassKind::Class_
+            && !$this->isAbstract()
             && (!isset($this->methods()['__construct']) || $this->methods()['__construct']->isPublic());
     }
 
@@ -376,7 +358,7 @@ final class ClassReflection extends Reflection
             throw new \LogicException(sprintf('Cannot instantiate trait %s', $this->name));
         }
 
-        if ($this->isAbstractClass()) {
+        if ($this->isAbstract()) {
             throw new \LogicException(sprintf('Cannot instantiate abstract class %s', $this->name));
         }
 
