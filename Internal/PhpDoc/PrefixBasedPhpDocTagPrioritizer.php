@@ -6,15 +6,21 @@ namespace Typhoon\Reflection\Internal\PhpDoc;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
-final class PrefixBasedTagPrioritizer implements TagPrioritizer
+final class PrefixBasedPhpDocTagPrioritizer implements PhpDocTagPrioritizer
 {
+    public const DEFAULT_PREFIX_PRIORITIES = [
+        '@psalm' => 3,
+        '@phpstan' => 2,
+        '@phan' => 1,
+    ];
+
     /**
      * @param array<non-empty-string, int> $prefixPriorities
      */
     public function __construct(
-        private readonly array $prefixPriorities = ['@psalm' => 3, '@phpstan' => 2, '@phan' => 1],
+        private readonly array $prefixPriorities = self::DEFAULT_PREFIX_PRIORITIES,
     ) {}
 
     public function priorityFor(string $tagName): int

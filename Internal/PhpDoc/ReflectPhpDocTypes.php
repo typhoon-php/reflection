@@ -65,7 +65,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
 
     private function reflectClass(TypedMap $data): TypedMap
     {
-        $typeReflector = new PhpDocTypeReflector($data[Data::TypeContext]);
+        $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
         if ($phpDoc !== null) {
@@ -104,7 +104,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
             });
     }
 
-    private function reflectParent(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): TypedMap
+    private function reflectParent(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): TypedMap
     {
         $parent = $data[Data::UnresolvedParent];
 
@@ -121,7 +121,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         return $data->set(Data::UnresolvedParent, $parent);
     }
 
-    private function reflectInterfaces(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): TypedMap
+    private function reflectInterfaces(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): TypedMap
     {
         $interfaces = $data[Data::UnresolvedInterfaces];
 
@@ -142,7 +142,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         return $data->set(Data::UnresolvedInterfaces, $interfaces);
     }
 
-    private function reflectUses(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectUses(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $uses = $data[Data::UnresolvedTraits];
 
@@ -168,7 +168,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
     /**
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectAliases(PhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    private function reflectAliases(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
     {
         $aliases = [];
 
@@ -189,7 +189,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
     /**
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectTemplates(PhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    private function reflectTemplates(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
     {
         $templates = [];
 
@@ -211,7 +211,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
             return $data;
         }
 
-        $typeReflector = new PhpDocTypeReflector($data[Data::TypeContext]);
+        $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
 
         $data = $data
             ->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc))
@@ -242,7 +242,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         return $data;
     }
 
-    private function reflectConstant(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectConstant(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -263,7 +263,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         return $data;
     }
 
-    private function reflectProperty(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectProperty(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -284,7 +284,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         return $data;
     }
 
-    private function reflectPromotedProperties(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectPromotedProperties(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         return $data->modifyIfSet(Data::Parameters, fn(array $parameters): array => array_map(
             fn(TypedMap $parameter): TypedMap => $parameter[Data::Promoted] ? $this->reflectProperty($typeReflector, $parameter) : $parameter,
@@ -292,7 +292,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         ));
     }
 
-    private function setAnnotatedType(PhpDocTypeReflector $typeReflector, TypeNode $node, TypedMap $data): TypedMap
+    private function setAnnotatedType(ContextualPhpDocTypeReflector $typeReflector, TypeNode $node, TypedMap $data): TypedMap
     {
         return $data->modify(
             Data::Type,

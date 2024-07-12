@@ -6,9 +6,9 @@ namespace Typhoon\Reflection\Internal\PhpDoc;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
-interface TagPrioritizer
+interface PhpDocTagPrioritizer
 {
     /**
      * @param non-empty-string $tagName tag name including @

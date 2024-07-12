@@ -23,34 +23,19 @@ use Typhoon\Type\Variance;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
 final class PhpDoc
 {
     private const VARIANCE_ATTRIBUTE = 'variance';
 
-    private static ?self $empty = null;
-
     /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection\PhpDocParser
      * @param array<PhpDocTagNode> $tags
      */
     public function __construct(
-        private readonly TagPrioritizer $tagPrioritizer,
+        private readonly PhpDocTagPrioritizer $tagPrioritizer,
         private array $tags,
     ) {}
-
-    /**
-     * @psalm-suppress PossiblyUnusedMethod
-     */
-    public static function empty(): self
-    {
-        return self::$empty ??= new self(
-            tagPrioritizer: new PrefixBasedTagPrioritizer(),
-            tags: [],
-        );
-    }
 
     public static function templateTagVariance(TemplateTagValueNode $tag): Variance
     {

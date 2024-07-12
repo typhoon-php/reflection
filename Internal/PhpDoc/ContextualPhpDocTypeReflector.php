@@ -34,9 +34,9 @@ use Typhoon\Type\types;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
-final class PhpDocTypeReflector
+final class ContextualPhpDocTypeReflector
 {
     public function __construct(
         private readonly TypeContext $typeContext = new TypeContext(),

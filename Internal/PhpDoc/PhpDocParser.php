@@ -12,12 +12,12 @@ use PHPStan\PhpDocParser\Parser\TypeParser;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
 final class PhpDocParser
 {
     public function __construct(
-        private readonly TagPrioritizer $tagPrioritizer = new PrefixBasedTagPrioritizer(),
+        private readonly PhpDocTagPrioritizer $tagPrioritizer = new PrefixBasedPhpDocTagPrioritizer(),
         private readonly PHPStanPhpDocParser $parser = new PHPStanPhpDocParser(
             typeParser: new TypeParser(new ConstExprParser()),
             constantExprParser: new ConstExprParser(),
