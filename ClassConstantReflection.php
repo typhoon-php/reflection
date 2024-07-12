@@ -141,9 +141,11 @@ final class ClassConstantReflection extends Reflection
         return $this->data[Data::Type]->byKind($kind);
     }
 
+    private ?ClassConstantAdapter $native = null;
+
     public function toNative(): \ReflectionClassConstant
     {
-        return new ClassConstantAdapter($this, $this->reflector);
+        return $this->native ??= new ClassConstantAdapter($this, $this->reflector);
     }
 
     private function declaringClass(): ClassReflection

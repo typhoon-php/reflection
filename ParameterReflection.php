@@ -117,8 +117,10 @@ final class ParameterReflection extends Reflection
         return $this->data[Data::Type]->byKind($kind);
     }
 
+    private ?ParameterAdapter $native = null;
+
     public function toNative(): \ReflectionParameter
     {
-        return new ParameterAdapter($this, $this->reflector);
+        return $this->native ??= new ParameterAdapter($this, $this->reflector);
     }
 }

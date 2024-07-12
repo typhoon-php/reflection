@@ -179,9 +179,11 @@ final class MethodReflection extends Reflection
         return $this->data[Data::ThrowsType];
     }
 
+    private ?MethodAdapter $native = null;
+
     public function toNative(): \ReflectionMethod
     {
-        return new MethodAdapter($this, $this->reflector);
+        return $this->native ??= new MethodAdapter($this, $this->reflector);
     }
 
     private function declaringClass(): ClassReflection

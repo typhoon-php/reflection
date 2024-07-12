@@ -125,9 +125,11 @@ final class PropertyReflection extends Reflection
         return $this->data[Data::Type]->byKind($kind);
     }
 
+    private ?PropertyAdapter $native = null;
+
     public function toNative(): \ReflectionProperty
     {
-        return new PropertyAdapter($this, $this->reflector);
+        return $this->native ??= new PropertyAdapter($this, $this->reflector);
     }
 
     private function declaringClass(): ClassReflection

@@ -374,8 +374,10 @@ final class ClassReflection extends Reflection
         }
     }
 
+    private ?ClassAdapter $native = null;
+
     public function toNative(): \ReflectionClass
     {
-        return new ClassAdapter($this, $this->reflector);
+        return $this->native ??= new ClassAdapter($this, $this->reflector);
     }
 }
