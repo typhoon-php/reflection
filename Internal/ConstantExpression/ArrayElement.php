@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\Expression;
+namespace Typhoon\Reflection\Internal\ConstantExpression;
 
 /**
  * @internal

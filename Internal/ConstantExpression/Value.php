@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\Expression;
+namespace Typhoon\Reflection\Internal\ConstantExpression;
 
 use Typhoon\Reflection\Reflector;
 
@@ -13,7 +13,7 @@ use Typhoon\Reflection\Reflector;
 final class Value implements Expression
 {
     public function __construct(
-        private readonly null|bool|int|float|string|array $value,
+        private readonly int|float|string|array $value,
     ) {}
 
     public function evaluate(?Reflector $reflector = null): mixed

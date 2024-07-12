@@ -31,14 +31,14 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassKind;
+use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerProvider;
+use Typhoon\Reflection\Internal\ConstantExpression\Expression;
+use Typhoon\Reflection\Internal\ConstantExpression\Values;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\Data\TraitMethodAlias;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
-use Typhoon\Reflection\Internal\Expression\Expression;
-use Typhoon\Reflection\Internal\Expression\ExpressionCompilerProvider;
-use Typhoon\Reflection\Internal\Expression\Value;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
@@ -61,7 +61,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     public function __construct(
         private readonly TypeContextProvider $typeContextProvider,
-        private readonly ExpressionCompilerProvider $expressionCompilerProvider,
+        private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
     ) {
         /** @var IdMap<NamedClassId|AnonymousClassId, TypedMap> */
         $this->reflected = new IdMap();
@@ -272,14 +272,14 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectArguments(array $nodes): array
     {
-        $expressionCompiler = $this->expressionCompilerProvider->get();
+        $compiler = $this->constantExpressionCompilerProvider->get();
         $arguments = [];
 
         foreach ($nodes as $node) {
             if ($node->name === null) {
-                $arguments[] = $expressionCompiler->compile($node->value);
+                $arguments[] = $compiler->compile($node->value);
             } else {
-                $arguments[$node->name->name] = $expressionCompiler->compile($node->value);
+                $arguments[$node->name->name] = $compiler->compile($node->value);
             }
         }
 
@@ -292,7 +292,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectConstants(TypeContext $typeContext, array $nodes): array
     {
-        $expressionCompiler = $this->expressionCompilerProvider->get();
+        $compiler = $this->constantExpressionCompilerProvider->get();
         $constants = [];
 
         foreach ($nodes as $node) {
@@ -304,7 +304,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->set(Data::Visibility, $this->reflectVisibility($node->flags));
 
             foreach ($node->consts as $const) {
-                $constants[$const->name->name] = $data->set(Data::ValueExpression, $expressionCompiler->compile($const->value));
+                $constants[$const->name->name] = $data->set(Data::ValueExpression, $compiler->compile($const->value));
             }
         }
 
@@ -317,7 +317,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectEnumCases(TypeContext $typeContext, array $nodes): array
     {
-        $expressionCompiler = $this->expressionCompilerProvider->get();
+        $compiler = $this->constantExpressionCompilerProvider->get();
         $cases = [];
 
         foreach ($nodes as $node) {
@@ -331,7 +331,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->set(Data::Visibility, Visibility::Public);
 
             if ($node->expr !== null) {
-                $data = $data->set(Data::EnumBackingValueExpression, $expressionCompiler->compile($node->expr));
+                $data = $data->set(Data::EnumBackingValueExpression, $compiler->compile($node->expr));
             }
 
             $cases[$name] = $data;
@@ -346,7 +346,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectProperties(TypeContext $typeContext, array $nodes): array
     {
-        $expressionCompiler = $this->expressionCompilerProvider->get();
+        $compiler = $this->constantExpressionCompilerProvider->get();
         $properties = [];
 
         foreach ($nodes as $node) {
@@ -359,10 +359,10 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->set(Data::Visibility, $this->reflectVisibility($node->flags));
 
             foreach ($node->props as $prop) {
-                $default = $expressionCompiler->compile($prop->default);
+                $default = $compiler->compile($prop->default);
 
                 if ($default === null && $node->type === null) {
-                    $default = new Value(null);
+                    $default = Values::null;
                 }
 
                 $properties[$prop->name->name] = $data->set(Data::DefaultValueExpression, $default);
@@ -404,7 +404,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectParameters(TypeContext $typeContext, array $nodes): array
     {
-        $expressionCompiler = $this->expressionCompilerProvider->get();
+        $compiler = $this->constantExpressionCompilerProvider->get();
         $parameters = [];
 
         foreach ($nodes as $node) {
@@ -418,7 +418,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                     nullable: $node->default instanceof ConstFetch && $node->default->name->toCodeString() === 'null',
                 )))
                 ->set(Data::ByReference, $node->byRef)
-                ->set(Data::DefaultValueExpression, $expressionCompiler->compile($node->default))
+                ->set(Data::DefaultValueExpression, $compiler->compile($node->default))
                 ->set(Data::Promoted, $node->flags !== 0)
                 ->set(Data::NativeReadonly, (bool) ($node->flags & Class_::MODIFIER_READONLY))
                 ->set(Data::Variadic, $node->variadic);

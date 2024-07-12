@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\Expression;
+namespace Typhoon\Reflection\Internal\ConstantExpression;
 
 use Typhoon\Reflection\Reflector;
 
@@ -10,17 +10,16 @@ use Typhoon\Reflection\Reflector;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ArrayFetchCoalesce implements Expression
+final class ArrayFetch implements Expression
 {
     public function __construct(
         private readonly Expression $array,
         private readonly Expression $key,
-        private readonly Expression $default,
     ) {}
 
     public function evaluate(?Reflector $reflector = null): mixed
     {
-        /** @psalm-suppress MixedArrayOffset */
-        return $this->array->evaluate($reflector)[$this->key->evaluate($reflector)] ?? $this->default->evaluate($reflector);
+        /** @psalm-suppress MixedArrayAccess, MixedArrayOffset */
+        return $this->array->evaluate($reflector)[$this->key->evaluate($reflector)];
     }
 }

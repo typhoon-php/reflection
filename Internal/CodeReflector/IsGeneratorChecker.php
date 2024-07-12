@@ -16,9 +16,9 @@ use PhpParser\NodeVisitorAbstract;
  */
 final class IsGeneratorChecker extends NodeVisitorAbstract
 {
-    public bool $isGenerator = false;
+    private bool $isGenerator = false;
 
-    public bool $enteredFirstFunction = false;
+    private bool $enteredFirstFunction = false;
 
     private function __construct() {}
 

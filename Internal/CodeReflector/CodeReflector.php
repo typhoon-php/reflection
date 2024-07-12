@@ -9,8 +9,8 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\Internal\ConstantExpression\ConstantConstantExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
-use Typhoon\Reflection\Internal\Expression\ExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -41,7 +41,7 @@ final class CodeReflector
             code: $code,
             file: $file,
         );
-        $expressionCompilerVisitor = new ExpressionCompilerVisitor($file ?? '');
+        $expressionCompilerVisitor = new ConstantConstantExpressionCompilerVisitor($file);
         $reflector = new PhpParserReflector($typeContextVisitor, $expressionCompilerVisitor);
         $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
         $traverser->addVisitor($nameResolver);
