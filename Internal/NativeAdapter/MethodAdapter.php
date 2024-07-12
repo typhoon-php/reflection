@@ -19,8 +19,6 @@ use Typhoon\Reflection\Reflector;
  */
 final class MethodAdapter extends \ReflectionMethod
 {
-    private bool $nativeLoaded = false;
-
     public function __construct(
         private readonly MethodReflection $reflection,
         private readonly Reflector $reflector,
@@ -336,6 +334,8 @@ final class MethodAdapter extends \ReflectionMethod
     }
 
     public function setAccessible(bool $accessible): void {}
+
+    private bool $nativeLoaded = false;
 
     private function loadNative(): void
     {

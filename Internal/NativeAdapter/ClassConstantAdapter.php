@@ -18,8 +18,6 @@ use Typhoon\Reflection\Reflector;
  */
 final class ClassConstantAdapter extends \ReflectionClassConstant
 {
-    private bool $nativeLoaded = false;
-
     public function __construct(
         private readonly ClassConstantReflection $reflection,
         private readonly Reflector $reflector,
@@ -141,6 +139,8 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
     {
         return $this->reflection->isPublic();
     }
+
+    private bool $nativeLoaded = false;
 
     private function loadNative(): void
     {

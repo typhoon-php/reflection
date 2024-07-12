@@ -26,6 +26,8 @@ use Typhoon\Reflection\Reflector;
  */
 final class ClassAdapter extends \ReflectionClass
 {
+    public const IS_READONLY = 65536;
+
     public static function normalizeNameForException(string $name): string
     {
         $nullBytePosition = strpos($name, "\0");
@@ -36,10 +38,6 @@ final class ClassAdapter extends \ReflectionClass
 
         return substr($name, 0, $nullBytePosition);
     }
-
-    public const IS_READONLY = 65536;
-
-    private bool $nativeLoaded = false;
 
     /**
      * @param ClassReflection<T, ?class-string<T>> $reflection
@@ -464,6 +462,8 @@ final class ClassAdapter extends \ReflectionClass
 
         parent::setStaticPropertyValue($name, $value);
     }
+
+    private bool $nativeLoaded = false;
 
     private function loadNative(): void
     {

@@ -18,8 +18,6 @@ use Typhoon\Reflection\Reflector;
  */
 final class PropertyAdapter extends \ReflectionProperty
 {
-    private bool $nativeLoaded = false;
-
     public function __construct(
         private readonly PropertyReflection $reflection,
         private readonly Reflector $reflector,
@@ -178,6 +176,8 @@ final class PropertyAdapter extends \ReflectionProperty
 
         parent::setValue($objectOrValue, $value);
     }
+
+    private bool $nativeLoaded = false;
 
     private function loadNative(): void
     {

@@ -19,7 +19,6 @@ final class Cache
      * This should help to avoid deserialization errors.
      */
     private const VERSION = 0;
-
     private const PREFIX = 'typhoon/reflection';
 
     public function __construct(

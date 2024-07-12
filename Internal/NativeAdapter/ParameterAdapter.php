@@ -27,8 +27,6 @@ use Typhoon\Type\Visitor\DefaultTypeVisitor;
  */
 final class ParameterAdapter extends \ReflectionParameter
 {
-    private bool $nativeLoaded = false;
-
     public function __construct(
         private readonly ParameterReflection $reflection,
         private readonly Reflector $reflector,
@@ -262,6 +260,8 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         return $this->reflection->isVariadic();
     }
+
+    private bool $nativeLoaded = false;
 
     private function loadNative(): void
     {
