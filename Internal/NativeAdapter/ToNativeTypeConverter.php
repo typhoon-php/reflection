@@ -13,7 +13,7 @@ use Typhoon\Type\Visitor\DefaultTypeVisitor;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
- * @extends DefaultTypeVisitor<\ReflectionType>
+ * @extends DefaultTypeVisitor<NamedTypeAdapter|UnionTypeAdapter|IntersectionTypeAdapter>
  * @todo check array is array<array-key, mixed>?
  */
 final class ToNativeTypeConverter extends DefaultTypeVisitor
@@ -111,29 +111,50 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
 
         $convertedTypes = [];
         $hasNull = false;
+        $hasIterable = false;
 
         foreach ($ofTypes as $ofType) {
             $convertedType = $ofType->accept($this);
 
-            if (!$convertedType instanceof \ReflectionNamedType && !$convertedType instanceof \ReflectionIntersectionType) {
+            if ($convertedType instanceof UnionTypeAdapter) {
                 throw new NonConvertableType($type);
             }
 
-            if ($convertedType instanceof \ReflectionNamedType && $convertedType->getName() === 'null') {
-                $hasNull = true;
+            if ($convertedType instanceof NamedTypeAdapter) {
+                if ($convertedType->isNull()) {
+                    $hasNull = true;
 
-                continue;
+                    continue;
+                }
+
+                if ($convertedType->isIterable()) {
+                    $hasIterable = true;
+
+                    continue;
+                }
             }
 
             $convertedTypes[] = $convertedType;
         }
 
         if ($hasNull) {
+            if (\count($convertedTypes) === 0 && $hasIterable) {
+                // here we assume that it was ?iterable
+                // if it was null|iterable, we should convert to null|array|Traversable,
+                // but we have no way to figure that out :(
+                return NamedTypeAdapter::iterable()->toNullable();
+            }
+
             if (\count($convertedTypes) === 1 && $convertedTypes[0] instanceof NamedTypeAdapter) {
                 return $convertedTypes[0]->toNullable();
             }
 
             $convertedTypes[] = NamedTypeAdapter::null();
+        }
+
+        if ($hasIterable) {
+            $convertedTypes[] = NamedTypeAdapter::array();
+            $convertedTypes[] = NamedTypeAdapter::namedObject(\Traversable::class);
         }
 
         \assert(\count($convertedTypes) > 1);
@@ -144,10 +165,10 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
     public function intersection(Type $type, array $ofTypes): mixed
     {
         return new IntersectionTypeAdapter(array_map(
-            function (Type $ofType) use ($type): \ReflectionNamedType {
+            function (Type $ofType) use ($type): NamedTypeAdapter {
                 $converted = $ofType->accept($this);
 
-                if ($converted instanceof \ReflectionNamedType) {
+                if ($converted instanceof NamedTypeAdapter) {
                     return $converted;
                 }
 

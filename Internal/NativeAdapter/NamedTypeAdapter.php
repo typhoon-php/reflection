@@ -10,25 +10,9 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
  */
 final class NamedTypeAdapter extends \ReflectionNamedType
 {
-    /**
-     * @var non-empty-string
-     */
-    private readonly string $_name;
-
-    /**
-     * @param non-empty-string $name
-     */
-    private function __construct(
-        string $name,
-        private readonly bool $builtIn = true,
-        private readonly bool $nullable = false,
-    ) {
-        $this->_name = $name;
-    }
-
     public static function null(): self
     {
-        return new self('null', nullable: true);
+        return new self('null');
     }
 
     public static function true(): self
@@ -83,7 +67,7 @@ final class NamedTypeAdapter extends \ReflectionNamedType
 
     public static function mixed(): self
     {
-        return new self('mixed', nullable: true);
+        return new self('mixed');
     }
 
     public static function void(): self
@@ -104,14 +88,35 @@ final class NamedTypeAdapter extends \ReflectionNamedType
         return new self($name, builtIn: false);
     }
 
-    public function toNullable(): self
+    /**
+     * @var non-empty-string
+     */
+    private readonly string $_name;
+
+    /**
+     * @param non-empty-string $name
+     */
+    private function __construct(
+        string $name,
+        private readonly bool $builtIn = true,
+        private readonly bool $nullable = false,
+    ) {
+        $this->_name = $name;
+    }
+
+    public function isNull(): bool
     {
-        return new self($this->_name, $this->builtIn, true);
+        return $this->_name === 'null';
+    }
+
+    public function isIterable(): bool
+    {
+        return $this->_name === 'iterable';
     }
 
     public function allowsNull(): bool
     {
-        return $this->nullable;
+        return $this->nullable || $this->_name === 'null' || $this->_name === 'mixed';
     }
 
     public function getName(): string
@@ -124,8 +129,13 @@ final class NamedTypeAdapter extends \ReflectionNamedType
         return $this->builtIn;
     }
 
+    public function toNullable(): self
+    {
+        return new self($this->_name, $this->builtIn, nullable: true);
+    }
+
     public function __toString(): string
     {
-        return $this->_name;
+        return ($this->nullable ? '?' : '') . $this->_name;
     }
 }

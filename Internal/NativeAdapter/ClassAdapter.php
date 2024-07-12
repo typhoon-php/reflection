@@ -26,6 +26,17 @@ use Typhoon\Reflection\Reflector;
  */
 final class ClassAdapter extends \ReflectionClass
 {
+    public static function normalizeNameForException(string $name): string
+    {
+        $nullBytePosition = strpos($name, "\0");
+
+        if ($nullBytePosition === false) {
+            return $name;
+        }
+
+        return substr($name, 0, $nullBytePosition);
+    }
+
     public const IS_READONLY = 65536;
 
     private bool $nativeLoaded = false;
@@ -288,24 +299,24 @@ final class ClassAdapter extends \ReflectionClass
             try {
                 $interfaceId = Id::class($interface);
             } catch (\InvalidArgumentException) {
-                throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
+                throw new \ReflectionException(sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
             }
 
             if ($interfaceId instanceof AnonymousClassId) {
-                throw new \ReflectionException(sprintf('%s is not an interface', ClassNameNormalizer::normalize($interface)));
+                throw new \ReflectionException(sprintf('%s is not an interface', self::normalizeNameForException($interface)));
             }
 
             try {
                 $interfaceReflection = $this->reflector->reflect($interfaceId)->toNative();
             } catch (ClassDoesNotExist) {
-                throw new \ReflectionException(sprintf('Interface "%s" does not exist', ClassNameNormalizer::normalize($interface)));
+                throw new \ReflectionException(sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
             }
         } else {
             $interfaceReflection = $interface;
         }
 
         if (!$interfaceReflection->isInterface()) {
-            throw new \ReflectionException(sprintf('%s is not an interface', ClassNameNormalizer::normalize($interfaceReflection->name)));
+            throw new \ReflectionException(sprintf('%s is not an interface', self::normalizeNameForException($interfaceReflection->name)));
         }
 
         return $this->reflection->isInstanceOf($interfaceReflection->name);
@@ -402,13 +413,13 @@ final class ClassAdapter extends \ReflectionClass
             try {
                 $classId = Id::class($class);
             } catch (\InvalidArgumentException) {
-                throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
+                throw new \ReflectionException(sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
             }
 
             try {
                 $this->reflector->reflect($classId);
             } catch (ClassDoesNotExist) {
-                throw new \ReflectionException(sprintf('Class "%s" does not exist', ClassNameNormalizer::normalize($class)));
+                throw new \ReflectionException(sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
             }
 
             return $this->reflection->isInstanceOf($class);

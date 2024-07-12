@@ -36,13 +36,9 @@ final class AttributeAdapter extends \ReflectionAttribute
     {
         if ($name !== null) {
             if ($flags & \ReflectionAttribute::IS_INSTANCEOF) {
-                $attributes = $attributes->filter(
-                    static fn(AttributeReflection $attribute): bool => $attribute->className() === $name,
-                );
+                $attributes = $attributes->filter(static fn(AttributeReflection $attribute): bool => $attribute->class()->isInstanceOf($name));
             } else {
-                $attributes = $attributes->filter(
-                    static fn(AttributeReflection $attribute): bool => $attribute->class()->isInstanceOf($name),
-                );
+                $attributes = $attributes->filter(static fn(AttributeReflection $attribute): bool => $attribute->className() === $name);
             }
         }
 
