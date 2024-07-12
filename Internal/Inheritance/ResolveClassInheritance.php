@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\ResolveClassInheritance;
+namespace Typhoon\Reflection\Internal\Inheritance;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
@@ -18,6 +18,6 @@ final class ResolveClassInheritance implements ClassReflectionHook
 {
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
     {
-        return ClassInheritanceResolver::resolve($reflector, $id, $data);
+        return ClassInheritance::resolve($reflector, $id, $data);
     }
 }
