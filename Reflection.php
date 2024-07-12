@@ -15,7 +15,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 abstract class Reflection
 {
     /**
-     * This property is public but internal for testing purposes.
+     * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
      *
      * @internal

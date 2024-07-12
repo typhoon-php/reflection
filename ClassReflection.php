@@ -23,6 +23,10 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 final class ClassReflection extends Reflection
 {
     /**
+     * This property is nullable, because anonymous class names are no longer available in a process different from the
+     * one they were loaded in. Also {@see Reflector::reflect()} and {@see TyphoonReflector::reflectAnonymousClass()}
+     * allow to reflect anonymous classes by file and line only.
+     *
      * @var TClass
      */
     public readonly ?string $name;
@@ -195,6 +199,9 @@ final class ClassReflection extends Reflection
         return $this->data[Data::Abstract];
     }
 
+    /**
+     * @psalm-assert-if-false !null $this->name
+     */
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousClassId;

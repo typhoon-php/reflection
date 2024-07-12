@@ -184,7 +184,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getPosition(): int
     {
-        return $this->reflection->index;
+        return $this->reflection->index();
     }
 
     public function getType(): ?\ReflectionType

@@ -23,12 +23,8 @@ use Typhoon\Reflection\ListOf;
  */
 final class AttributeAdapter extends \ReflectionAttribute
 {
-    /**
-     * @param non-negative-int $index
-     */
     public function __construct(
         private readonly AttributeReflection $reflection,
-        private readonly int $index,
     ) {}
 
     /**
@@ -57,11 +53,13 @@ final class AttributeAdapter extends \ReflectionAttribute
 
     public function __toString(): string
     {
-        if ($this->reflection->targetId instanceof AnonymousFunctionId) {
+        $targetId = $this->reflection->targetId();
+
+        if ($targetId instanceof AnonymousFunctionId) {
             throw new \LogicException('Cannot resolve string representation of anonymous function');
         }
 
-        return (string) $this->reflection->targetId->reflect()->getAttributes()[$this->index];
+        return (string) $targetId->reflect()->getAttributes()[$this->reflection->index()];
     }
 
     public function getArguments(): array
@@ -77,7 +75,7 @@ final class AttributeAdapter extends \ReflectionAttribute
     public function getTarget(): int
     {
         /** @psalm-suppress ParadoxicalCondition */
-        return match ($this->reflection->targetId::class) {
+        return match ($this->reflection->targetId()::class) {
             NamedFunctionId::class, AnonymousFunctionId::class => \Attribute::TARGET_FUNCTION,
             NamedClassId::class, AnonymousClassId::class => \Attribute::TARGET_CLASS,
             ClassConstantId::class => \Attribute::TARGET_CLASS_CONSTANT,

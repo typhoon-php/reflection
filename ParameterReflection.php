@@ -24,11 +24,6 @@ final class ParameterReflection extends Reflection
     public readonly string $name;
 
     /**
-     * @var non-negative-int
-     */
-    public readonly int $index;
-
-    /**
      * @var ?ListOf<AttributeReflection>
      */
     private ?ListOf $attributes = null;
@@ -39,8 +34,15 @@ final class ParameterReflection extends Reflection
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        $this->index = $data[Data::Index];
         parent::__construct($id, $data);
+    }
+
+    /**
+     * @return non-negative-int
+     */
+    public function index(): int
+    {
+        return $this->data[Data::Index];
     }
 
     /**

@@ -63,4 +63,15 @@ abstract class Reflector
         /** @var ClassReflection<T> */
         return $this->reflect(Id::class($nameOrObject));
     }
+
+    /**
+     * @param non-empty-string $file
+     * @param positive-int $line
+     * @param ?positive-int $column
+     * @return ClassReflection<object, ?class-string>
+     */
+    final public function reflectAnonymousClass(string $file, int $line, ?int $column = null): ClassReflection
+    {
+        return $this->reflect(Id::anonymousClass($file, $line, $column));
+    }
 }

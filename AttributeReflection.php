@@ -25,26 +25,61 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 final class AttributeReflection
 {
     /**
+     * This internal property is public for testing purposes.
+     * It will likely be available as part of the API in the near future.
+     *
+     * @internal
+     * @psalm-internal Typhoon
+     */
+    public readonly TypedMap $data;
+
+    /**
      * @param non-negative-int $index
      */
     public function __construct(
-        public readonly NamedFunctionId|AnonymousFunctionId|ParameterId|NamedClassId|AnonymousClassId|ClassConstantId|MethodId|PropertyId $targetId,
+        private readonly NamedFunctionId|AnonymousFunctionId|ParameterId|NamedClassId|AnonymousClassId|ClassConstantId|MethodId|PropertyId $targetId,
         private readonly int $index,
-        public readonly TypedMap $data,
+        TypedMap $data,
         private readonly Reflector $reflector,
-    ) {}
+    ) {
+        $this->data = $data;
+    }
 
     /**
-     * @return non-empty-string
+     * @return non-negative-int
+     */
+    public function index(): int
+    {
+        return $this->index;
+    }
+
+    /**
+     * Attribute's class.
+     *
+     * @return non-empty-string Not class-string, because the class might not exist. Same is true for {@see \ReflectionAttribute::getName()}.
      */
     public function className(): string
     {
         return $this->data[Data::AttributeClassName];
     }
 
+    /**
+     * Attribute's class reflection.
+     *
+     * @return ClassReflection<object, class-string>
+     */
     public function class(): ClassReflection
     {
-        return $this->reflector->reflect(Id::namedClass($this->className()));
+        $reflection = $this->reflector->reflect(Id::namedClass($this->className()));
+        \assert(!$reflection->isAnonymous());
+
+        /** @var ClassReflection<object, class-string> */
+        return $reflection;
+    }
+
+    public function targetId(): NamedFunctionId|AnonymousFunctionId|ParameterId|NamedClassId|AnonymousClassId|ClassConstantId|MethodId|PropertyId
+    {
+        return $this->targetId;
     }
 
     public function target(): Reflection
@@ -73,6 +108,6 @@ final class AttributeReflection
 
     public function toNative(): \ReflectionAttribute
     {
-        return new AttributeAdapter($this, $this->index);
+        return new AttributeAdapter($this);
     }
 }
