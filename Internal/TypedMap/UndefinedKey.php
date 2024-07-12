@@ -12,6 +12,6 @@ final class UndefinedKey extends \RuntimeException
 {
     public function __construct(Key $key)
     {
-        parent::__construct(sprintf('Key %s::%s is not defined in type map', $key::class, $key->name));
+        parent::__construct(sprintf('Key %s::%s is not defined', $key::class, $key->name));
     }
 }
