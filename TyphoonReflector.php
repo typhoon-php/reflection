@@ -62,12 +62,17 @@ final class TyphoonReflector extends Reflector implements DataReflector
         CacheInterface $cache = new InMemoryCache(),
         ?Parser $phpParser = null,
     ): self {
+        $reflectPhpDocTypes = new ReflectPhpDocTypes();
+
         return new self(
-            codeReflector: new CodeReflector($phpParser ?? (new ParserFactory())->createForHostVersion()),
+            codeReflector: new CodeReflector(
+                phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
+                annotatedTypesDriver: $reflectPhpDocTypes,
+            ),
             locators: new Locators($locators ?? self::defaultLocators()),
             cache: new Cache($cache),
             hooks: new ReflectionHooks([
-                new ReflectPhpDocTypes(),
+                $reflectPhpDocTypes,
                 new CopyPromotedParametersToProperties(),
                 new CompleteEnumReflection(),
                 new AddStringableInterface(),
@@ -148,7 +153,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
             $id instanceof ParameterId => $this->reflect($id->function)->parameters()[$id->name],
             $id instanceof AliasId => $this->reflect($id->class)->aliases()[$id->name],
             $id instanceof TemplateId => $this->reflect($id->site)->templates()[$id->name],
-            default => throw new \LogicException($id->toString() . ' not supported yet'),
+            default => throw new \LogicException($id->toString() . ' is not supported yet'),
         };
     }
 
@@ -163,7 +168,10 @@ final class TyphoonReflector extends Reflector implements DataReflector
 
         return new self(
             codeReflector: $this->codeReflector,
-            locators: new Locators([new DeterministicLocator($reflected->map(static fn(): Resource => $resource)), $this->locators]),
+            locators: new Locators([
+                new DeterministicLocator($reflected->map(static fn(): Resource => $resource)),
+                $this->locators,
+            ]),
             cache: $this->cache,
             hooks: $this->hooks,
         );

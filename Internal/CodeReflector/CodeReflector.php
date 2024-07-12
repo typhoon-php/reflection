@@ -11,7 +11,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantConstantExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
-use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
+use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
@@ -23,6 +23,7 @@ final class CodeReflector
 {
     public function __construct(
         private readonly Parser $phpParser,
+        private readonly AnnotatedTypesDriver $annotatedTypesDriver,
     ) {}
 
     /**
@@ -37,7 +38,7 @@ final class CodeReflector
         $nameResolver = new NameResolver();
         $typeContextVisitor = new TypeContextVisitor(
             nameContext: $nameResolver->getNameContext(),
-            reader: new ReflectPhpDocTypes(),
+            annotatedTypesDriver: $this->annotatedTypesDriver,
             code: $code,
             file: $file,
         );

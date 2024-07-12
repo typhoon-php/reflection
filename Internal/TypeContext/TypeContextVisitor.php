@@ -41,7 +41,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
      */
     public function __construct(
         private readonly NameContext $nameContext,
-        private readonly AnnotatedTypesDriver $reader,
+        private readonly AnnotatedTypesDriver $annotatedTypesDriver,
         private readonly string $code,
         private readonly ?string $file = null,
     ) {}
@@ -99,7 +99,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         if ($node instanceof ClassMethod) {
             $typeContext = $this->get();
             \assert($typeContext->id instanceof NamedClassId || $typeContext->id instanceof AnonymousClassId);
-            $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
+            $typeDeclarations = $this->annotatedTypesDriver->reflectTypeDeclarations($node);
             $methodId = Id::method($typeContext->id, $node->name->name);
 
             $this->contextStack[] = new TypeContext(
@@ -156,7 +156,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
     private function buildClassContext(ClassLike $node): TypeContext
     {
-        $typeDeclarations = $this->reader->reflectTypeDeclarations($node);
+        $typeDeclarations = $this->annotatedTypesDriver->reflectTypeDeclarations($node);
 
         if ($node->name === null) {
             $startLine = $node->getStartLine();
