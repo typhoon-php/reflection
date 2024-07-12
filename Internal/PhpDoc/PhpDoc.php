@@ -44,9 +44,6 @@ final class PhpDoc
         return $attribute instanceof Variance ? $attribute : Variance::Invariant;
     }
 
-    /**
-     * @psalm-suppress PossiblyUnusedMethod
-     */
     public function hasDeprecated(): bool
     {
         foreach ($this->tags as $tag) {
