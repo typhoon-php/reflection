@@ -68,7 +68,7 @@ final class ParameterReflection extends Reflection
         return $this->reflector->reflect($this->id->function);
     }
 
-    public function class(): ?ClassLikeReflection
+    public function class(): ?ClassReflection
     {
         if ($this->id->function instanceof MethodId) {
             return $this->reflector->reflect($this->id->function->class);

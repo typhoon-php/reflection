@@ -20,7 +20,6 @@ use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Cache;
-use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
@@ -56,28 +55,13 @@ use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 final class TyphoonReflector extends Reflector implements DataReflector
 {
     /**
-     * @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem>
-     */
-    private IdMap $reflected;
-
-    private function __construct(
-        private readonly CodeReflector $codeReflector,
-        private readonly Locators $locators,
-        private readonly Cache $cache,
-        private readonly ReflectionHooks $hooks,
-    ) {
-        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
-        $this->reflected = new IdMap();
-    }
-
-    /**
      * @param ?list<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
      */
     public static function build(
         ?array $locators = null,
         CacheInterface $cache = new InMemoryCache(),
         ?Parser $phpParser = null,
-    ): Reflector {
+    ): self {
         return new self(
             codeReflector: new CodeReflector($phpParser ?? (new ParserFactory())->createForHostVersion()),
             locators: new Locators($locators ?? self::defaultLocators()),
@@ -121,9 +105,24 @@ final class TyphoonReflector extends Reflector implements DataReflector
     }
 
     /**
+     * @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem>
+     */
+    private IdMap $reflected;
+
+    private function __construct(
+        private readonly CodeReflector $codeReflector,
+        private readonly Locators $locators,
+        private readonly Cache $cache,
+        private readonly ReflectionHooks $hooks,
+    ) {
+        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
+        $this->reflected = new IdMap();
+    }
+
+    /**
      * @return (
-     *     $id is NamedClassId ? ClassReflection|InterfaceReflection|TraitReflection|EnumReflection :
-     *     $id is AnonymousClassId ? AnonymousClassReflection :
+     *     $id is NamedClassId ? ClassReflection :
+     *     $id is AnonymousClassId ? ClassReflection :
      *     $id is ClassConstantId ? ClassConstantReflection :
      *     $id is PropertyId ? PropertyReflection :
      *     $id is MethodId ? MethodReflection :
@@ -135,23 +134,11 @@ final class TyphoonReflector extends Reflector implements DataReflector
      */
     public function reflect(Id $id): Reflection
     {
-        if ($id instanceof NamedClassId) {
+        if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
             $data = $this->reflectData($id);
             $this->flush();
 
-            return match ($data[Data::ClassKind]) {
-                ClassKind::Class_ => new ClassReflection($id, $data, $this),
-                ClassKind::Interface => new InterfaceReflection($id, $data, $this),
-                ClassKind::Trait => new TraitReflection($id, $data, $this),
-                ClassKind::Enum => new EnumReflection($id, $data, $this),
-            };
-        }
-
-        if ($id instanceof AnonymousClassId) {
-            $data = $this->reflectData($id);
-            $this->flush();
-
-            return new AnonymousClassReflection($id, $data, $this);
+            return new ClassReflection($id, $data, $this);
         }
 
         return match (true) {
@@ -182,6 +169,10 @@ final class TyphoonReflector extends Reflector implements DataReflector
         );
     }
 
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
     public function reflectData(NamedClassId|AnonymousClassId $id): TypedMap
     {
         $cacheItem = $this->reflected[$id] ?? $this->cache->get($id);

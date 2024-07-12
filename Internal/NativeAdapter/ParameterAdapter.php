@@ -9,8 +9,6 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\AnonymousClassReflection;
-use Typhoon\Reflection\ClassLikeReflection;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\ClassConstantFetch;
@@ -107,7 +105,7 @@ final class ParameterAdapter extends \ReflectionParameter
     public function getClass(): ?\ReflectionClass
     {
         return $this->reflection->type(Kind::Native)?->accept(
-            new /** @extends DefaultTypeVisitor<?ClassLikeReflection> */ class ($this->reflection, $this->reflector) extends DefaultTypeVisitor {
+            new /** @extends DefaultTypeVisitor<?ClassReflection> */ class ($this->reflection, $this->reflector) extends DefaultTypeVisitor {
                 public function __construct(
                     private readonly ParameterReflection $reflection,
                     private readonly Reflector $reflector,
@@ -125,13 +123,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
                 public function parent(Type $type, ?NamedClassId $resolvedClass, array $typeArguments): mixed
                 {
-                    $class = $this->reflection->class();
-
-                    if ($class instanceof ClassReflection || $class instanceof AnonymousClassReflection) {
-                        return $class->parent();
-                    }
-
-                    return null;
+                    return $this->reflection->class()?->parent();
                 }
 
                 protected function default(Type $type): mixed

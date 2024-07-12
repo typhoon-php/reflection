@@ -6,20 +6,14 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
-use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\AnonymousClassReflection;
 use Typhoon\Reflection\ClassConstantReflection;
-use Typhoon\Reflection\ClassLikeReflection;
 use Typhoon\Reflection\ClassReflection;
-use Typhoon\Reflection\EnumReflection;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\InterfaceReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\Reflector;
-use Typhoon\Reflection\TraitReflection;
 
 /**
  * @internal
@@ -27,7 +21,7 @@ use Typhoon\Reflection\TraitReflection;
  * @template-covariant T of object
  * @extends \ReflectionClass<T>
  * @property-read class-string<T> $name
- * @psalm-suppress PropertyNotSetInConstructor, RedundantConditionGivenDocblockType, DocblockTypeContradiction
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 final class ClassAdapter extends \ReflectionClass
 {
@@ -36,10 +30,10 @@ final class ClassAdapter extends \ReflectionClass
     private bool $nativeLoaded = false;
 
     /**
-     * @param ClassLikeReflection<T, NamedClassId|AnonymousClassId> $reflection
+     * @param ClassReflection<T> $reflection
      */
     public function __construct(
-        private readonly ClassLikeReflection $reflection,
+        private readonly ClassReflection $reflection,
         private readonly Reflector $reflector,
     ) {
         unset($this->name);
@@ -173,15 +167,14 @@ final class ClassAdapter extends \ReflectionClass
         }
 
         /** @var int-mask-of<\ReflectionClass::IS_*> */
-        return ($this->reflection instanceof ClassReflection && $this->reflection->isAbstract() ? self::IS_EXPLICIT_ABSTRACT : 0)
+        return ($this->reflection->isAbstractClass() ? self::IS_EXPLICIT_ABSTRACT : 0)
             | ($this->isFinal() ? self::IS_FINAL : 0)
             | ($this->isReadonly() ? self::IS_READONLY : 0);
     }
 
     public function getName(): string
     {
-        /** @var class-string<T> */
-        return $this->reflection->id->name ?? throw new \LogicException(sprintf(
+        return $this->reflection->name ?? throw new \ReflectionException(sprintf(
             'Runtime name of anonymous class %s is not available',
             $this->reflection->id->toString(),
         ));
@@ -194,11 +187,6 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getParentClass(): \ReflectionClass|false
     {
-        if (!$this->reflection instanceof ClassReflection
-            && !$this->reflection instanceof AnonymousClassReflection) {
-            return false;
-        }
-
         return $this->reflection->parent()?->toNative() ?? false;
     }
 
@@ -329,47 +317,27 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isAbstract(): bool
     {
-        if ($this->reflection instanceof ClassReflection) {
-            return $this->reflection->isAbstract();
-        }
-
-        if ($this->isInterface() || $this->isTrait()) {
-            foreach ($this->reflection->methods() as $method) {
-                if ($method->isAbstract()) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return false;
+        return $this->reflection->isAbstract();
     }
 
     public function isAnonymous(): bool
     {
-        return $this->reflection instanceof AnonymousClassReflection;
+        return $this->reflection->isAnonymous();
     }
 
     public function isCloneable(): bool
     {
-        return ($this->reflection instanceof ClassReflection || $this->reflection instanceof AnonymousClassReflection)
-            && $this->reflection->isCloneable();
+        return $this->reflection->isCloneable();
     }
 
     public function isEnum(): bool
     {
-        return $this->reflection instanceof EnumReflection;
+        return $this->reflection->isEnum();
     }
 
     public function isFinal(): bool
     {
-        if ($this->isEnum()) {
-            return true;
-        }
-
-        return $this->reflection instanceof ClassReflection
-            && $this->reflection->isFinal(Kind::Native);
+        return $this->reflection->isFinal(Kind::Native);
     }
 
     public function isInstance(object $object): bool
@@ -383,13 +351,12 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isInstantiable(): bool
     {
-        return ($this->reflection instanceof ClassReflection || $this->reflection instanceof AnonymousClassReflection)
-            && $this->reflection->isInstantiable();
+        return $this->reflection->isInstantiable();
     }
 
     public function isInterface(): bool
     {
-        return $this->reflection instanceof InterfaceReflection;
+        return $this->reflection->isInterface();
     }
 
     public function isInternal(): bool
@@ -399,8 +366,9 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isIterable(): bool
     {
-        return ($this->reflection instanceof ClassReflection || $this->reflection instanceof AnonymousClassReflection || $this->reflection instanceof EnumReflection)
-            && $this->reflection->isIterable();
+        return !$this->reflection->isInterface()
+            && !$this->reflection->isAbstract()
+            && $this->reflection->isInstanceOf(\Traversable::class);
     }
 
     public function isIterateable(): bool
@@ -410,8 +378,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isReadonly(): bool
     {
-        return $this->reflection instanceof ClassReflection
-            && $this->reflection->isReadonly(Kind::Native);
+        return $this->reflection->isReadonly(Kind::Native);
     }
 
     public function isSubclassOf(string|\ReflectionClass $class): bool
@@ -441,7 +408,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isTrait(): bool
     {
-        return $this->reflection instanceof TraitReflection;
+        return $this->reflection->isTrait();
     }
 
     public function isUserDefined(): bool
@@ -451,7 +418,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function newInstance(mixed ...$args): object
     {
-        return $this->newInstanceArgs($args);
+        return $this->reflection->newInstance(...$args);
     }
 
     /**
@@ -459,12 +426,6 @@ final class ClassAdapter extends \ReflectionClass
      */
     public function newInstanceArgs(array $args = []): object
     {
-        if (!$this->reflection instanceof ClassReflection
-        && !$this->reflection instanceof AnonymousClassReflection) {
-            throw new \ReflectionException('TODO');
-        }
-
-        /** @var T */
         return $this->reflection->newInstance(...$args);
     }
 
@@ -488,7 +449,7 @@ final class ClassAdapter extends \ReflectionClass
             return;
         }
 
-        $class = $this->reflection->id->name ?? throw new \LogicException(sprintf(
+        $class = $this->reflection->name ?? throw new \LogicException(sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->toString(),
         ));

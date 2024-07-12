@@ -8,7 +8,6 @@ use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\Reflector;
-use Typhoon\Reflection\TraitReflection;
 
 /**
  * @internal
@@ -67,7 +66,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
 
         $declaringClass = $this->reflector->reflect($declaringClassId);
 
-        if ($declaringClass instanceof TraitReflection) {
+        if ($declaringClass->isTrait()) {
             return $this->reflection->class()->toNative();
         }
 
