@@ -17,69 +17,67 @@ use PhpParser\Node\VariadicPlaceholder;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @todo add full anonymous classes and parent::class support
  */
 final class ConstantExpressionCompiler
 {
     private const ANONYMOUS_FUNCTION_NAME = '{closure}';
     private const ANONYMOUS_CLASS_NAME = '{anonymous-class}';
 
-    private readonly string $file;
-
-    private string $namespace = '';
-
-    private string $function = '';
-
-    private string $class = '';
-
     /**
-     * @var ?non-empty-string
+     * @param Expression<string> $file
+     * @param Expression<string> $namespace
+     * @param Expression<string> $function
+     * @param Expression<string> $class
+     * @param ?Expression<non-empty-string> $parent
+     * @param Expression<string> $trait
+     * @param Expression<string> $method
      */
-    private ?string $parent = null;
-
-    private string $trait = '';
-
-    private string $method = '';
+    private function __construct(
+        private readonly Expression $file,
+        private readonly Expression $namespace = new Value(''),
+        private Expression $function = new Value(''),
+        private Expression $class = new Value(''),
+        private ?Expression $parent = null,
+        private Expression $trait = new Value(''),
+        private Expression $method = new Value(''),
+    ) {}
 
     /**
      * @param ?non-empty-string $file
-     * @todo optimize by converting strings into Values on demand
      */
-    public function __construct(?string $file)
+    public static function start(?string $file): self
     {
-        $this->file = $file ?? '';
+        return new self(new Value($file ?? ''));
     }
 
     /**
      * @param ?non-empty-string $namespace
      */
-    public function atNamespace(?string $namespace): self
+    public function enterNamespace(?string $namespace): self
     {
-        $compiler = clone $this;
-        $compiler->namespace = $namespace ?? '';
-        $compiler->function = '';
-        $compiler->class = '';
-        $compiler->parent = null;
-        $compiler->trait = '';
-        $compiler->method = '';
-
-        return $compiler;
+        return new self(
+            file: $this->file,
+            namespace: new Value($namespace ?? ''),
+        );
     }
 
     /**
      * @param non-empty-string $name
      */
-    public function atFunction(string $name): self
+    public function enterFunction(string $name): self
     {
         $compiler = clone $this;
-        $compiler->function = $name;
+        $compiler->function = new Value($name);
 
         return $compiler;
     }
 
-    public function atAnonymousFunction(): self
+    public function enterAnonymousFunction(): self
     {
         $compiler = clone $this;
-        $compiler->function = ($this->namespace === '' ? '' : $this->namespace . '\\') . self::ANONYMOUS_FUNCTION_NAME;
+        $namespaceString = $this->namespace->evaluate();
+        $compiler->function = new Value(($namespaceString === '' ? '' : $namespaceString . '\\') . self::ANONYMOUS_FUNCTION_NAME);
 
         return $compiler;
     }
@@ -88,13 +86,13 @@ final class ConstantExpressionCompiler
      * @param non-empty-string $class
      * @param ?non-empty-string $parent
      */
-    public function atClass(string $class, ?string $parent, bool $trait): self
+    public function enterClass(string $class, ?string $parent, bool $trait): self
     {
         $compiler = clone $this;
-        $compiler->class = $class;
-        $compiler->parent = $parent;
-        $compiler->trait = $trait ? $class : '';
-        $compiler->method = '';
+        $compiler->class = new Value($class);
+        $compiler->parent = $parent === null ? null : new Value($parent);
+        $compiler->trait = $trait ? $compiler->class : new Value('');
+        $compiler->method = new Value('');
 
         return $compiler;
     }
@@ -102,13 +100,13 @@ final class ConstantExpressionCompiler
     /**
      * @param ?non-empty-string $parent
      */
-    public function atAnonymousClass(?string $parent): self
+    public function enterAnonymousClass(?string $parent): self
     {
         $compiler = clone $this;
-        $compiler->class = self::ANONYMOUS_CLASS_NAME;
-        $compiler->parent = $parent;
-        $compiler->trait = '';
-        $compiler->method = '';
+        $compiler->class = new Value(self::ANONYMOUS_CLASS_NAME);
+        $compiler->parent = $parent === null ? null : new Value($parent);
+        $compiler->trait = new Value('');
+        $compiler->method = new Value('');
 
         return $compiler;
     }
@@ -116,10 +114,10 @@ final class ConstantExpressionCompiler
     /**
      * @param non-empty-string $name
      */
-    public function atMethod(string $name): self
+    public function enterMethod(string $name): self
     {
         $compiler = clone $this;
-        $compiler->method = $this->class . '::' . $name;
+        $compiler->method = new Value($this->class->evaluate() . '::' . $name);
 
         return $compiler;
     }
@@ -131,26 +129,22 @@ final class ConstantExpressionCompiler
     {
         return match (true) {
             $expr === null => null,
-            $expr instanceof Scalar\String_ => $expr->value === '' ? Values::EmptyString : new Value($expr->value),
-            $expr instanceof Scalar\LNumber => match ($expr->value) {
-                -1 => Values::MinusOne,
-                0 => Values::Zero,
-                1 => Values::One,
-                default => new Value($expr->value),
-            },
+            $expr instanceof Scalar\String_,
+            $expr instanceof Scalar\LNumber,
             $expr instanceof Scalar\DNumber => new Value($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
             $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
-            $expr instanceof Scalar\MagicConst\File => new Value($this->file),
-            $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file)),
-            $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->namespace),
-            $expr instanceof Scalar\MagicConst\Function_ => new Value($this->function),
-            $expr instanceof Scalar\MagicConst\Class_ => new Value($this->class),
-            $expr instanceof Scalar\MagicConst\Trait_ => new Value($this->trait),
-            $expr instanceof Scalar\MagicConst\Method => new Value($this->method),
+            $expr instanceof Scalar\MagicConst\File => $this->file,
+            $expr instanceof Scalar\MagicConst\Dir => new Value(\dirname($this->file->evaluate())),
+            $expr instanceof Scalar\MagicConst\Namespace_ => $this->namespace,
+            $expr instanceof Scalar\MagicConst\Function_ => $this->function,
+            $expr instanceof Scalar\MagicConst\Class_ => $this->class,
+            $expr instanceof Scalar\MagicConst\Trait_ => $this->trait,
+            $expr instanceof Scalar\MagicConst\Method => $this->method,
             $expr instanceof Coalesce && $expr->left instanceof Expr\ArrayDimFetch => new ArrayFetchCoalesce(
                 array: $this->compile($expr->left->var),
-                key: $this->compile($expr->left->dim ?? throw new \LogicException()),
+                key: $this->compile($expr->left->dim
+                    ?? throw new \LogicException('Unexpected array append operation in a constant expression')),
                 default: $this->compile($expr->right),
             ),
             $expr instanceof Expr\BinaryOp => new BinaryOperation(
@@ -180,7 +174,7 @@ final class ConstantExpressionCompiler
                 if: $this->compile($expr->if),
                 else: $this->compile($expr->else),
             ),
-            default => throw new \LogicException($expr::class),
+            default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
         };
     }
 
@@ -189,15 +183,15 @@ final class ConstantExpressionCompiler
         $lowerStringName = $name->toLowerString();
 
         if ($lowerStringName === 'null') {
-            return Values::null;
+            return Values::Null;
         }
 
         if ($lowerStringName === 'true') {
-            return Values::true;
+            return Values::True;
         }
 
         if ($lowerStringName === 'false') {
-            return Values::false;
+            return Values::False;
         }
 
         $namespacedName = $name->getAttribute('namespacedName');
@@ -238,9 +232,9 @@ final class ConstantExpressionCompiler
         if ($name instanceof Name) {
             if ($name->isSpecialClassName()) {
                 return match ($name->toLowerString()) {
-                    'self' => new Value($this->class),
-                    'parent' => new Value($this->parent ?? throw new \LogicException('no parent')),
-                    'static' => throw new \LogicException('static'),
+                    'self' => $this->class,
+                    'parent' => $this->parent ?? throw new \LogicException('Cannot resolve parent class'),
+                    'static' => throw new \LogicException('Unexpected static type usage in a constant expression'),
                 };
             }
 

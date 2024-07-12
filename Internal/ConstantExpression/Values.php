@@ -9,27 +9,20 @@ use Typhoon\Reflection\Reflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @implements Expression<?bool>
  */
 enum Values implements Expression
 {
-    case null;
-    case true;
-    case false;
-    case MinusOne;
-    case Zero;
-    case One;
-    case EmptyString;
+    case Null;
+    case True;
+    case False;
 
-    public function evaluate(?Reflector $reflector = null): mixed
+    public function evaluate(?Reflector $reflector = null): ?bool
     {
         return match ($this) {
-            self::null => null,
-            self::true => true,
-            self::false => false,
-            self::MinusOne => -1,
-            self::Zero => 0,
-            self::One => 1,
-            self::EmptyString => '',
+            self::Null => null,
+            self::True => true,
+            self::False => false,
         };
     }
 }

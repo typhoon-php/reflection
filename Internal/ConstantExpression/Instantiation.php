@@ -9,6 +9,7 @@ use Typhoon\Reflection\Reflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @implements Expression<object>
  */
 final class Instantiation implements Expression
 {

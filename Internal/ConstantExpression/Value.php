@@ -9,11 +9,16 @@ use Typhoon\Reflection\Reflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @template-covariant TValue of int|float|string|array
+ * @implements Expression<TValue>
  */
 final class Value implements Expression
 {
+    /**
+     * @param TValue $value
+     */
     public function __construct(
-        private readonly int|float|string|array $value,
+        public readonly int|float|string|array $value,
     ) {}
 
     public function evaluate(?Reflector $reflector = null): mixed

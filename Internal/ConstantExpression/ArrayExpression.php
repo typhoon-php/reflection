@@ -9,6 +9,7 @@ use Typhoon\Reflection\Reflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @implements Expression<array>
  */
 final class ArrayExpression implements Expression
 {

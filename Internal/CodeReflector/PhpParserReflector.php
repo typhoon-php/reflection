@@ -362,7 +362,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 $default = $compiler->compile($prop->default);
 
                 if ($default === null && $node->type === null) {
-                    $default = Values::null;
+                    $default = Values::Null;
                 }
 
                 $properties[$prop->name->name] = $data->set(Data::DefaultValueExpression, $default);

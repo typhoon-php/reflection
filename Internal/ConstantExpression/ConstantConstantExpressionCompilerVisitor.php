@@ -48,7 +48,7 @@ final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstrac
 
     public function beforeTraverse(array $nodes): ?array
     {
-        $this->compilers = [new ConstantExpressionCompiler($this->file)];
+        $this->compilers = [ConstantExpressionCompiler::start($this->file)];
 
         return null;
     }
@@ -56,7 +56,7 @@ final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstrac
     public function enterNode(Node $node): ?int
     {
         if ($node instanceof Namespace_) {
-            $this->compilers[] = $this->get()->atNamespace($node->name?->toString());
+            $this->compilers[] = $this->get()->enterNamespace($node->name?->toString());
 
             return null;
         }
@@ -66,13 +66,13 @@ final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstrac
                 throw new \LogicException(sprintf('Name resolution via %s is required for %s', NameResolver::class, self::class));
             }
 
-            $this->compilers[] = $this->get()->atFunction($node->namespacedName->toString());
+            $this->compilers[] = $this->get()->enterFunction($node->namespacedName->toString());
 
             return null;
         }
 
         if ($node instanceof ArrowFunction || $node instanceof Closure) {
-            $this->compilers[] = $this->get()->atAnonymousFunction();
+            $this->compilers[] = $this->get()->enterAnonymousFunction();
 
             return null;
         }
@@ -80,7 +80,7 @@ final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstrac
         if ($node instanceof ClassLike) {
             if ($node->name === null) {
                 \assert($node instanceof Class_, 'Null name is only possible in anonymous classes');
-                $this->compilers[] = $this->get()->atAnonymousClass($node->extends?->toString());
+                $this->compilers[] = $this->get()->enterAnonymousClass($node->extends?->toString());
 
                 return null;
             }
@@ -89,7 +89,7 @@ final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstrac
                 throw new \LogicException(sprintf('Name resolution via %s is required for %s', NameResolver::class, self::class));
             }
 
-            $this->compilers[] = $this->get()->atClass(
+            $this->compilers[] = $this->get()->enterClass(
                 class: $node->namespacedName->toString(),
                 parent: $node instanceof Class_ ? $node->extends?->toString() : null,
                 trait: $node instanceof Trait_,
@@ -99,7 +99,7 @@ final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstrac
         }
 
         if ($node instanceof ClassMethod) {
-            $this->compilers[] = $this->get()->atMethod($node->name->name);
+            $this->compilers[] = $this->get()->enterMethod($node->name->name);
 
             return null;
         }

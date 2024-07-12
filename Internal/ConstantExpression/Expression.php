@@ -9,8 +9,12 @@ use Typhoon\Reflection\Reflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @template-covariant T
  */
 interface Expression
 {
+    /**
+     * @return T
+     */
     public function evaluate(?Reflector $reflector = null): mixed;
 }

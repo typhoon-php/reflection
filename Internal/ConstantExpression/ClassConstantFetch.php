@@ -10,6 +10,7 @@ use Typhoon\Reflection\Reflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @implements Expression<mixed>
  */
 final class ClassConstantFetch implements Expression
 {

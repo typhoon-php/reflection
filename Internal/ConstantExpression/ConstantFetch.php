@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
-use Typhoon\Reflection\Reflection;
 use Typhoon\Reflection\Reflector;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
+ * @implements Expression<mixed>
  */
 final class ConstantFetch implements Expression
 {
