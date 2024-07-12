@@ -13,7 +13,7 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;

@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DataReflector;

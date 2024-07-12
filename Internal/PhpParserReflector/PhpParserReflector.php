@@ -30,7 +30,7 @@ use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\Internal\ClassKind;
+use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Expression\Expression;
 use Typhoon\Reflection\Internal\Expression\ExpressionCompilerProvider;

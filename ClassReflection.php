@@ -9,7 +9,6 @@ use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\Internal\ClassKind;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -66,6 +65,11 @@ final class ClassReflection extends Reflection
         /** @var TClass */
         $this->name = $id->name;
         parent::__construct($id, $data);
+    }
+
+    public function kind(): ClassKind
+    {
+        return $this->data[Data::ClassKind];
     }
 
     /**
