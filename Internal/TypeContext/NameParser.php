@@ -14,6 +14,9 @@ use PhpParser\Node\Name\Relative;
  */
 final class NameParser
 {
+    public const RELATIVE_NAME_PREFIX = 'namespace\\';
+    public const RELATIVE_NAME_PREFIX_LENGTH = 10;
+
     private function __construct() {}
 
     public static function parse(string $name): Name
@@ -26,8 +29,8 @@ final class NameParser
             return new FullyQualified(substr($name, 1));
         }
 
-        if (str_starts_with($name, 'namespace\\')) {
-            return new Relative(substr($name, 10));
+        if (str_starts_with($name, self::RELATIVE_NAME_PREFIX)) {
+            return new Relative(substr($name, self::RELATIVE_NAME_PREFIX_LENGTH));
         }
 
         return new Name($name);
