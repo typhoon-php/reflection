@@ -36,6 +36,7 @@ abstract class Reflector
 
     /**
      * @param non-empty-string $class
+     * @psalm-assert-if-true class-string $class
      */
     final public function classExists(string $class): bool
     {
@@ -51,7 +52,11 @@ abstract class Reflector
     /**
      * @template T of object
      * @param non-empty-string|class-string<T>|T $nameOrObject
-     * @return ClassReflection<T>
+     * @return (
+     *     $nameOrObject is T ? ClassReflection<T, class-string<T>> :
+     *     $nameOrObject is class-string<T> ? ClassReflection<T, class-string<T>> :
+     *     ClassReflection<object, ?class-string>
+     *  )
      */
     final public function reflectClass(string|object $nameOrObject): ClassReflection
     {

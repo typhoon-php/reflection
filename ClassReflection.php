@@ -19,11 +19,12 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @readonly
  * @extends Reflection<NamedClassId|AnonymousClassId>
  * @template-covariant TObject of object
+ * @template-covariant TClass of ?class-string<TObject>
  */
 final class ClassReflection extends Reflection
 {
     /**
-     * @var ?class-string<TObject>
+     * @var TClass
      */
     public readonly ?string $name;
 
@@ -62,7 +63,7 @@ final class ClassReflection extends Reflection
         TypedMap $data,
         private readonly Reflector $reflector,
     ) {
-        /** @var ?class-string<TObject> */
+        /** @var TClass */
         $this->name = $id->name;
         parent::__construct($id, $data);
     }
@@ -177,9 +178,6 @@ final class ClassReflection extends Reflection
             || \array_key_exists($class->name, $this->data[Data::Interfaces]);
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->name
-     */
     public function isAbstract(): bool
     {
         if ($this->isAbstractClass()) {
@@ -199,17 +197,11 @@ final class ClassReflection extends Reflection
         return false;
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->name
-     */
     public function isAbstractClass(): bool
     {
         return $this->data[Data::Abstract];
     }
 
-    /**
-     * @psalm-assert-if-false !null $this->name
-     */
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousClassId;
@@ -222,17 +214,11 @@ final class ClassReflection extends Reflection
             && (!isset($this->methods()['__clone']) || $this->methods()['__clone']->isPublic());
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->name
-     */
     public function isTrait(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Trait;
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->name
-     */
     public function isEnum(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Enum;
@@ -254,9 +240,6 @@ final class ClassReflection extends Reflection
             && (!isset($this->methods()['__construct']) || $this->methods()['__construct']->isPublic());
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->name
-     */
     public function isInterface(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Interface;
@@ -343,9 +326,6 @@ final class ClassReflection extends Reflection
         return $this->data[Data::File];
     }
 
-    /**
-     * @psalm-assert-if-true !null $this->name
-     */
     public function isInternallyDefined(): bool
     {
         return $this->data[Data::InternallyDefined];
@@ -357,12 +337,7 @@ final class ClassReflection extends Reflection
      */
     public function newInstance(mixed ...$arguments): object
     {
-        if ($this->name === null) {
-            throw new \LogicException(sprintf(
-                "Cannot create an instance of anonymous class %s, because it's runtime name is not available",
-                $this->id->toString(),
-            ));
-        }
+        $this->ensureInstantiable();
 
         return new $this->name(...$arguments);
     }
@@ -372,14 +347,38 @@ final class ClassReflection extends Reflection
      */
     public function newInstanceWithoutConstructor(): object
     {
+        $this->ensureInstantiable();
+
+        return (new \ReflectionClass($this->name))->newInstanceWithoutConstructor();
+    }
+
+    /**
+     * @psalm-assert class-string<TObject> $this->name
+     */
+    private function ensureInstantiable(): void
+    {
         if ($this->name === null) {
             throw new \LogicException(sprintf(
-                "Cannot create an instance of anonymous class %s, because it's runtime name is not available",
+                "Cannot instantiate anonymous class %s, because it's runtime name is not available",
                 $this->id->toString(),
             ));
         }
 
-        return (new \ReflectionClass($this->name))->newInstanceWithoutConstructor();
+        if ($this->isInterface()) {
+            throw new \LogicException(sprintf('Cannot instantiate interface %s', $this->name));
+        }
+
+        if ($this->isTrait()) {
+            throw new \LogicException(sprintf('Cannot instantiate trait %s', $this->name));
+        }
+
+        if ($this->isAbstractClass()) {
+            throw new \LogicException(sprintf('Cannot instantiate abstract class %s', $this->name));
+        }
+
+        if ($this->isEnum()) {
+            throw new \LogicException(sprintf('Cannot instantiate enum %s', $this->name));
+        }
     }
 
     public function toNative(): \ReflectionClass

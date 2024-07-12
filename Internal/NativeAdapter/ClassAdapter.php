@@ -30,7 +30,7 @@ final class ClassAdapter extends \ReflectionClass
     private bool $nativeLoaded = false;
 
     /**
-     * @param ClassReflection<T> $reflection
+     * @param ClassReflection<T, ?class-string<T>> $reflection
      */
     public function __construct(
         private readonly ClassReflection $reflection,
