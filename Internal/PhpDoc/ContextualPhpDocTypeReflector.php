@@ -77,6 +77,10 @@ final class ContextualPhpDocTypeReflector
         }
 
         if ($node instanceof ArrayShapeNode) {
+            if ($node->kind === ArrayShapeNode::KIND_LIST) {
+                return $this->reflectListShape($node);
+            }
+
             return $this->reflectArrayShape($node);
         }
 
@@ -216,32 +220,69 @@ final class ContextualPhpDocTypeReflector
         return (int) $type->constExpr->value;
     }
 
-    private function reflectArrayShape(ArrayShapeNode $node): Type
+    private function reflectListShape(ArrayShapeNode $node): Type
     {
         $elements = [];
 
         foreach ($node->items as $item) {
+            $keyName = $item->keyName;
             $type = new ShapeElement($this->reflectType($item->valueType), $item->optional);
 
-            if ($item->keyName === null) {
+            if ($keyName === null) {
                 $elements[] = $type;
 
                 continue;
             }
 
+            if ($keyName instanceof ConstExprIntegerNode) {
+                $key = (int) $keyName->value;
+
+                if ($key < 0) {
+                    throw new InvalidPhpDocType(sprintf('Unexpected negative key %d in a list shape', $key));
+                }
+
+                $elements[$key] = $type;
+
+                continue;
+            }
+
+            throw new InvalidPhpDocType(sprintf('Unexpected key "%s" in a list shape', $keyName::class));
+        }
+
+        if ($node->sealed) {
+            return types::listShapeSealed($elements);
+        }
+
+        return types::listShape($elements);
+    }
+
+    private function reflectArrayShape(ArrayShapeNode $node): Type
+    {
+        $elements = [];
+
+        foreach ($node->items as $item) {
             $keyName = $item->keyName;
+            $type = new ShapeElement($this->reflectType($item->valueType), $item->optional);
 
-            $key = match ($keyName::class) {
-                ConstExprIntegerNode::class => $keyName->value,
-                ConstExprStringNode::class => $keyName->value,
-                IdentifierTypeNode::class => $keyName->name,
-                default => throw new InvalidPhpDocType(sprintf('%s is not supported', $keyName::class)),
+            if ($keyName === null) {
+                $elements[] = $type;
+
+                continue;
+            }
+
+            $key = match (true) {
+                $keyName instanceof ConstExprIntegerNode => (int) $keyName->value,
+                $keyName instanceof ConstExprStringNode => $keyName->value,
+                $keyName instanceof IdentifierTypeNode => $keyName->name,
             };
-
             $elements[$key] = $type;
         }
 
-        return types::arrayShape($elements, value: $node->sealed ? types::never : types::mixed);
+        if ($node->sealed) {
+            return types::arrayShapeSealed($elements);
+        }
+
+        return types::arrayShape($elements);
     }
 
     private function reflectObjectShape(ObjectShapeNode $node): Type
