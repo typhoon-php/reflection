@@ -88,7 +88,7 @@ final class ParameterReflection
         return $this->data[Data::PhpDoc];
     }
 
-    public function function(): MethodReflection
+    public function function(): FunctionReflection|MethodReflection
     {
         return $this->reflector->reflect($this->id->function);
     }

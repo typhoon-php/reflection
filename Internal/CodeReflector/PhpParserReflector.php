@@ -9,6 +9,7 @@ use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\ComplexType;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\IntersectionType;
 use PhpParser\Node\Name;
@@ -19,6 +20,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\EnumCase;
+use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
@@ -30,6 +32,7 @@ use PhpParser\NodeVisitorAbstract;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerProvider;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
@@ -55,7 +58,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
 {
     /**
      * @psalm-readonly-allow-private-mutation
-     * @var IdMap<NamedClassId|AnonymousClassId, TypedMap>
+     * @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap>
      */
     public IdMap $reflected;
 
@@ -64,7 +67,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
         private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
         private readonly TypedMap $baseData = new TypedMap(),
     ) {
-        /** @var IdMap<NamedClassId|AnonymousClassId, TypedMap> */
+        /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap> */
         $this->reflected = new IdMap();
     }
 
@@ -82,6 +85,19 @@ final class PhpParserReflector extends NodeVisitorAbstract
             if ($id instanceof AnonymousClassId) {
                 $this->reflected = $this->reflected->with(Id::anonymousClass($id->file, $id->line), $data);
             }
+
+            return null;
+        }
+
+        if ($node instanceof Function_) {
+            $typeContext = $this->typeContextProvider->get();
+            $id = $typeContext->id;
+            \assert($id instanceof NamedFunctionId);
+
+            $data = $this
+                ->baseData->merge($this->reflectFunctionLike($node, $typeContext))
+                ->set(Data::Namespace, $typeContext->namespace()?->toString() ?? '');
+            $this->reflected = $this->reflected->with($id, $data);
 
             return null;
         }
@@ -388,6 +404,19 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return $properties;
     }
 
+    private function reflectFunctionLike(FunctionLike $node, ?TypeContext $typeContext = null): TypedMap
+    {
+        $typeContext ??= $this->typeContextProvider->get();
+
+        return $this->reflectNode($node)
+            ->set(Data::TypeContext, $typeContext)
+            ->set(Data::Type, new TypeData($this->reflectType($typeContext, $node->getReturnType())))
+            ->set(Data::ByReference, $node->returnsByRef())
+            ->set(Data::Generator, IsGeneratorChecker::check($node))
+            ->set(Data::Attributes, $this->reflectAttributes($node->getAttrGroups()))
+            ->set(Data::Parameters, $this->reflectParameters($typeContext, $node->getParams()));
+    }
+
     /**
      * @param array<ClassMethod> $nodes
      * @return array<non-empty-string, TypedMap>
@@ -397,18 +426,11 @@ final class PhpParserReflector extends NodeVisitorAbstract
         $methods = [];
 
         foreach ($nodes as $node) {
-            $typeContext = $this->typeContextProvider->get();
-            $methods[$node->name->name] = $this->reflectNode($node)
-                ->set(Data::TypeContext, $typeContext)
+            $methods[$node->name->name] = $this->reflectFunctionLike($node)
+                ->set(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->set(Data::Static, $node->isStatic())
                 ->set(Data::NativeFinal, $node->isFinal())
-                ->set(Data::Abstract, $node->isAbstract())
-                ->set(Data::Type, new TypeData($this->reflectType($typeContext, $node->returnType)))
-                ->set(Data::Visibility, $this->reflectVisibility($node->flags))
-                ->set(Data::ByReference, $node->byRef)
-                ->set(Data::Generator, IsGeneratorChecker::check($node))
-                ->set(Data::Attributes, $this->reflectAttributes($node->attrGroups))
-                ->set(Data::Parameters, $this->reflectParameters($typeContext, $node->params));
+                ->set(Data::Abstract, $node->isAbstract());
         }
 
         return $methods;

@@ -298,7 +298,7 @@ final class ClassReflection
         }
 
         $shortName = substr($this->name, $lastSlashPosition + 1);
-        \assert($shortName !== '', 'A valid class name cannot end with a \\');
+        \assert($shortName !== '', 'A valid class name cannot end with a backslash');
 
         return $shortName;
     }

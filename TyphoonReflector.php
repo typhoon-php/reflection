@@ -13,6 +13,7 @@ use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\DeclarationId\TemplateId;
@@ -113,6 +114,15 @@ final class TyphoonReflector
     ) {}
 
     /**
+     * @template T of object
+     * @param non-empty-string $name
+     */
+    public function reflectFunction(string $name): FunctionReflection
+    {
+        return $this->reflect(Id::namedFunction($name));
+    }
+
+    /**
      * @param non-empty-string $class
      * @psalm-assert-if-true class-string $class
      */
@@ -155,6 +165,7 @@ final class TyphoonReflector
 
     /**
      * @return (
+     *     $id is NamedFunctionId ? FunctionReflection :
      *     $id is NamedClassId ? ClassReflection :
      *     $id is AnonymousClassId ? ClassReflection :
      *     $id is ClassConstantId ? ClassConstantReflection :
@@ -166,8 +177,20 @@ final class TyphoonReflector
      *     never
      * )
      */
-    public function reflect(Id $id): ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
+    public function reflect(Id $id): FunctionReflection|ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
+        if ($id instanceof NamedFunctionId) {
+            $data = ReflectorSession::reflectId(
+                codeReflector: $this->codeReflector,
+                locators: $this->locators,
+                cache: $this->cache,
+                hooks: $this->hooks,
+                id: $id,
+            );
+
+            return new FunctionReflection($id, $data, $this);
+        }
+
         if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
             $data = ReflectorSession::reflectId(
                 codeReflector: $this->codeReflector,

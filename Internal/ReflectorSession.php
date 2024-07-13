@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\Cache\DataCacheItem;
@@ -23,7 +24,7 @@ use Typhoon\Reflection\Resource;
 final class ReflectorSession implements Reflector
 {
     /**
-     * @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem>
+     * @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem>
      */
     private IdMap $buffer;
 
@@ -33,7 +34,7 @@ final class ReflectorSession implements Reflector
         private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {
-        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
+        /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem> */
         $this->buffer = new IdMap();
     }
 
@@ -42,7 +43,7 @@ final class ReflectorSession implements Reflector
         Locators $locators,
         Cache $cache,
         ReflectionHooks $hooks,
-        NamedClassId|AnonymousClassId $id,
+        NamedFunctionId|NamedClassId|AnonymousClassId $id,
     ): TypedMap {
         $session = new self(
             codeReflector: $codeReflector,
@@ -57,7 +58,7 @@ final class ReflectorSession implements Reflector
     }
 
     /**
-     * @return list<NamedClassId|AnonymousClassId>
+     * @return list<NamedFunctionId|NamedClassId|AnonymousClassId>
      */
     public static function reflectResource(
         CodeReflector $codeReflector,
@@ -78,7 +79,7 @@ final class ReflectorSession implements Reflector
         return $session->buffer->ids();
     }
 
-    public function reflect(NamedClassId|AnonymousClassId $id): TypedMap
+    public function reflect(NamedFunctionId|NamedClassId|AnonymousClassId $id): TypedMap
     {
         $cacheItem = $this->buffer[$id] ?? $this->cache->get($id);
 
@@ -103,7 +104,7 @@ final class ReflectorSession implements Reflector
     {
         $reflected = $this->codeReflector
             ->reflectCode($resource->code, $resource->baseData)
-            ->map(fn(TypedMap $data, NamedClassId|AnonymousClassId $id): DataCacheItem => new DataCacheItem(
+            ->map(fn(TypedMap $data, NamedFunctionId|NamedClassId|AnonymousClassId $id): DataCacheItem => new DataCacheItem(
                 function () use ($resource, $id, $data): TypedMap {
                     $data = $resource->hooks->process($id, $data, $this);
 

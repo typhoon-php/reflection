@@ -10,6 +10,7 @@ use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\PropertyProperty;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
@@ -46,6 +47,11 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         private readonly ?string $file = null,
     ) {}
 
+    public function get(): TypeContext
+    {
+        return end($this->contextStack) ?: new TypeContext($this->nameContext);
+    }
+
     public function beforeTraverse(array $nodes): ?array
     {
         $this->contextStack = [];
@@ -55,6 +61,12 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
     public function enterNode(Node $node): ?int
     {
+        if ($node instanceof Function_) {
+            $this->contextStack[] = $this->buildFunctionContext($node);
+
+            return null;
+        }
+
         if ($node instanceof ClassLike) {
             $this->contextStack[] = $this->buildClassContext($node);
 
@@ -125,7 +137,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
     public function leaveNode(Node $node)
     {
-        if ($node instanceof ClassLike || $node instanceof PropertyProperty || $node instanceof ClassMethod) {
+        if ($node instanceof Function_ || $node instanceof ClassLike || $node instanceof PropertyProperty || $node instanceof ClassMethod) {
             array_pop($this->contextStack);
 
             return null;
@@ -149,9 +161,25 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
         return null;
     }
 
-    public function get(): TypeContext
+    private function buildFunctionContext(Function_ $node): TypeContext
     {
-        return end($this->contextStack) ?: new TypeContext($this->nameContext);
+        $typeContext = $this->get();
+        $typeDeclarations = $this->annotatedTypesDriver->reflectTypeDeclarations($node);
+
+        \assert($node->namespacedName !== null);
+        $functionId = Id::namedFunction($node->namespacedName->toString());
+
+        return new TypeContext(
+            nameContext: $this->nameContext,
+            id: $functionId,
+            self: $typeContext->self,
+            parent: $typeContext->parent,
+            aliases: $typeContext->aliases,
+            templates: array_map(
+                static fn(string $name): TemplateId => Id::template($functionId, $name),
+                $typeDeclarations->templateNames,
+            ),
+        );
     }
 
     private function buildClassContext(ClassLike $node): TypeContext

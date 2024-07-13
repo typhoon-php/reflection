@@ -81,7 +81,7 @@ final class AttributeReflection
         return $this->targetId;
     }
 
-    public function target(): ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
+    public function target(): FunctionReflection|ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
         return $this->reflector->reflect($this->targetId);
     }

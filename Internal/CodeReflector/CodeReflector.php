@@ -9,6 +9,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantConstantExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
@@ -28,7 +29,7 @@ final class CodeReflector
     ) {}
 
     /**
-     * @return IdMap<NamedClassId|AnonymousClassId, TypedMap>
+     * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap>
      */
     public function reflectCode(string $code, TypedMap $baseData = new TypedMap()): IdMap
     {
