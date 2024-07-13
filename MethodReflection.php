@@ -49,7 +49,7 @@ final class MethodReflection
     public function __construct(
         public readonly MethodId $id,
         TypedMap $data,
-        private readonly Reflector $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         $this->name = $id->name;
         $this->data = $data;

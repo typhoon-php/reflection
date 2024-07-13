@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -20,7 +20,7 @@ final class ArrayExpression implements Expression
         private readonly array $elements,
     ) {}
 
-    public function evaluate(?Reflector $reflector = null): mixed
+    public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         $array = [];
 

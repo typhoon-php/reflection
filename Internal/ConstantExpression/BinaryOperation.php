@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -19,7 +19,7 @@ final class BinaryOperation implements Expression
         private readonly string $operator,
     ) {}
 
-    public function evaluate(?Reflector $reflector = null): mixed
+    public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         /** @psalm-suppress MixedOperand */
         return match ($this->operator) {

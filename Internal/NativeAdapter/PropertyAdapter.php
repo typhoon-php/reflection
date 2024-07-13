@@ -7,7 +7,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\PropertyReflection;
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -20,7 +20,7 @@ final class PropertyAdapter extends \ReflectionProperty
 {
     public function __construct(
         private readonly PropertyReflection $reflection,
-        private readonly Reflector $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         unset($this->name, $this->class);
     }

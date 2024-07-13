@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -25,7 +25,7 @@ final class ConstantFetch implements Expression
     /**
      * @return non-empty-string
      */
-    public function name(?Reflector $_reflector = null): string
+    public function name(?TyphoonReflector $_reflector = null): string
     {
         if ($this->globalName === null || \defined($this->name)) {
             return $this->name;
@@ -34,7 +34,7 @@ final class ConstantFetch implements Expression
         return $this->globalName;
     }
 
-    public function evaluate(?Reflector $reflector = null): mixed
+    public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         // todo via reflection
         return \constant($this->name($reflector));

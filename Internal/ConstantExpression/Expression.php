@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -16,5 +16,5 @@ interface Expression
     /**
      * @return T
      */
-    public function evaluate(?Reflector $reflector = null): mixed;
+    public function evaluate(?TyphoonReflector $reflector = null): mixed;
 }

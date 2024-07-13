@@ -18,9 +18,7 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
-use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Cache\Cache;
-use Typhoon\Reflection\Internal\Cache\DataCacheItem;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
@@ -31,13 +29,11 @@ use Typhoon\Reflection\Internal\CompleteReflection\EnsureReadonlyClassProperties
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
-use Typhoon\Reflection\Internal\Data\Data;
-use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\Internal\ReflectorSession;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
@@ -52,7 +48,7 @@ use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 /**
  * @api
  */
-final class TyphoonReflector extends Reflector implements DataReflector
+final class TyphoonReflector
 {
     /**
      * @param ?list<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
@@ -109,19 +105,52 @@ final class TyphoonReflector extends Reflector implements DataReflector
         return $locators;
     }
 
-    /**
-     * @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem>
-     */
-    private IdMap $reflected;
-
     private function __construct(
         private readonly CodeReflector $codeReflector,
         private readonly Locators $locators,
         private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
-    ) {
-        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
-        $this->reflected = new IdMap();
+    ) {}
+
+    /**
+     * @param non-empty-string $class
+     * @psalm-assert-if-true class-string $class
+     */
+    public function classExists(string $class): bool
+    {
+        try {
+            $this->reflectClass($class);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * @template T of object
+     * @param non-empty-string|class-string<T>|T $nameOrObject
+     * @return (
+     *     $nameOrObject is T ? ClassReflection<T, class-string<T>> :
+     *     $nameOrObject is class-string<T> ? ClassReflection<T, class-string<T>> :
+     *     ClassReflection<object, ?class-string>
+     *  )
+     */
+    public function reflectClass(string|object $nameOrObject): ClassReflection
+    {
+        /** @var ClassReflection<T> */
+        return $this->reflect(Id::class($nameOrObject));
+    }
+
+    /**
+     * @param non-empty-string $file
+     * @param positive-int $line
+     * @param ?positive-int $column
+     * @return ClassReflection<object, ?class-string>
+     */
+    public function reflectAnonymousClass(string $file, int $line, ?int $column = null): ClassReflection
+    {
+        return $this->reflect(Id::anonymousClass($file, $line, $column));
     }
 
     /**
@@ -140,8 +169,13 @@ final class TyphoonReflector extends Reflector implements DataReflector
     public function reflect(Id $id): ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
         if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
-            $data = $this->reflectData($id);
-            $this->flush();
+            $data = ReflectorSession::reflectId(
+                codeReflector: $this->codeReflector,
+                locators: $this->locators,
+                cache: $this->cache,
+                hooks: $this->hooks,
+                id: $id,
+            );
 
             return new ClassReflection($id, $data, $this);
         }
@@ -157,69 +191,28 @@ final class TyphoonReflector extends Reflector implements DataReflector
         };
     }
 
-    public function reflectResource(Resource $resource): static
+    public function withResource(Resource $resource): self
     {
-        $reflected = $this->codeReflector->reflectCode($resource->code, $resource->baseData[Data::File]);
-        $this->reflected = $this->reflected->withMultiple((function () use ($reflected, $resource): \Generator {
-            foreach ($reflected as $id => $data) {
-                yield $id => $this->buildCacheItem($resource, $id, $data);
-            }
-        })());
+        $ids = ReflectorSession::reflectResource(
+            codeReflector: $this->codeReflector,
+            locators: $this->locators,
+            cache: $this->cache,
+            hooks: $this->hooks,
+            resource: $resource,
+        );
 
         return new self(
             codeReflector: $this->codeReflector,
             locators: new Locators([
-                new DeterministicLocator($reflected->map(static fn(): Resource => $resource)),
+                new DeterministicLocator(new IdMap((static function () use ($ids, $resource): \Generator {
+                    foreach ($ids as $id) {
+                        yield $id => $resource;
+                    }
+                })())),
                 $this->locators,
             ]),
             cache: $this->cache,
             hooks: $this->hooks,
         );
-    }
-
-    /**
-     * @internal
-     * @psalm-internal Typhoon\Reflection
-     */
-    public function reflectData(NamedClassId|AnonymousClassId $id): TypedMap
-    {
-        $cacheItem = $this->reflected[$id] ?? $this->cache->get($id);
-
-        if ($cacheItem instanceof DataCacheItem) {
-            return $cacheItem->get();
-        }
-
-        $resource = $this->locators->locate($id);
-
-        if ($resource === null) {
-            throw new ClassDoesNotExist($id->name ?? $id->toString());
-        }
-
-        $this->reflected = $this->reflected->withMultiple((function () use ($resource): \Generator {
-            foreach ($this->codeReflector->reflectCode($resource->code, $resource->baseData[Data::File]) as $id => $data) {
-                yield $id => $this->buildCacheItem($resource, $id, $data);
-            }
-        })());
-
-        $cacheItem = $this->reflected[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->toString());
-
-        return $cacheItem->get();
-    }
-
-    private function buildCacheItem(Resource $resource, NamedClassId|AnonymousClassId $id, TypedMap $data): DataCacheItem
-    {
-        return new DataCacheItem(function () use ($resource, $id, $data): TypedMap {
-            $data = $resource->baseData->merge($data);
-            $data = (new ReflectionHooks($resource->hooks))->process($id, $data, $this);
-
-            return $this->hooks->process($id, $data, $this);
-        });
-    }
-
-    private function flush(): void
-    {
-        $this->cache->set($this->reflected);
-        /** @var IdMap<NamedClassId|AnonymousClassId, DataCacheItem> */
-        $this->reflected = new IdMap();
     }
 }

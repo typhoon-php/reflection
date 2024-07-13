@@ -8,7 +8,7 @@ use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\ParameterReflection;
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -21,7 +21,7 @@ final class MethodAdapter extends \ReflectionMethod
 {
     public function __construct(
         private readonly MethodReflection $reflection,
-        private readonly Reflector $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         unset($this->name, $this->class);
     }

@@ -40,7 +40,7 @@ final class AttributeReflection
         private readonly NamedFunctionId|AnonymousFunctionId|ParameterId|NamedClassId|AnonymousClassId|ClassConstantId|MethodId|PropertyId $targetId,
         private readonly int $index,
         TypedMap $data,
-        private readonly Reflector $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         $this->data = $data;
     }

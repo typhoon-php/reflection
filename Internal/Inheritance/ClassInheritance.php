@@ -11,7 +11,7 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\Data\Data;
-use Typhoon\Reflection\Internal\DataReflector;
+use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\RelativeClassTypeResolver;
@@ -59,14 +59,14 @@ final class ClassInheritance
     private array $parents = [];
 
     private function __construct(
-        private readonly DataReflector $reflector,
+        private readonly Reflector $reflector,
         private readonly NamedClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
     ) {
         $this->changeDetectors = $data[Data::UnresolvedChangeDetectors];
     }
 
-    public static function resolve(DataReflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public static function resolve(Reflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         $resolver = new self($reflector, $id, $data);
         $resolver->applyOwn();
@@ -105,7 +105,7 @@ final class ClassInheritance
     private function applyOneUsed(string $traitName, array $arguments): void
     {
         $traitId = Id::namedClass($traitName);
-        $traitData = $this->reflector->reflectData($traitId);
+        $traitData = $this->reflector->reflect($traitId);
 
         $this->changeDetectors[] = $traitData[Data::ChangeDetector] ?? new InMemoryChangeDetector();
 
@@ -164,7 +164,7 @@ final class ClassInheritance
     private function addInherited(string $className, array $arguments): void
     {
         $classId = Id::namedClass($className);
-        $classData = $this->reflector->reflectData($classId);
+        $classData = $this->reflector->reflect($classId);
 
         $this->changeDetectors[] = $classData[Data::ChangeDetector] ?? new InMemoryChangeDetector();
 

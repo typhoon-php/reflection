@@ -15,7 +15,7 @@ use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\ParameterReflection;
-use Typhoon\Reflection\Reflector;
+use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\DefaultTypeVisitor;
 
@@ -29,7 +29,7 @@ final class ParameterAdapter extends \ReflectionParameter
 {
     public function __construct(
         private readonly ParameterReflection $reflection,
-        private readonly Reflector $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         unset($this->name);
     }
@@ -106,7 +106,7 @@ final class ParameterAdapter extends \ReflectionParameter
             new /** @extends DefaultTypeVisitor<?ClassReflection> */ class ($this->reflection, $this->reflector) extends DefaultTypeVisitor {
                 public function __construct(
                     private readonly ParameterReflection $reflection,
-                    private readonly Reflector $reflector,
+                    private readonly TyphoonReflector $reflector,
                 ) {}
 
                 public function namedObject(Type $type, NamedClassId $class, array $typeArguments): mixed

@@ -10,8 +10,8 @@ use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
+use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\types;
 
@@ -21,7 +21,7 @@ use Typhoon\Type\types;
  */
 final class CompleteEnumReflection implements ClassReflectionHook
 {
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         if ($data[Data::ClassKind] !== ClassKind::Enum) {
             return $data;

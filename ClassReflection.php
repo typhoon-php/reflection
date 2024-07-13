@@ -23,7 +23,7 @@ final class ClassReflection
 {
     /**
      * This property is nullable, because anonymous class names are no longer available in a process different from the
-     * one they were loaded in. Also {@see Reflector::reflect()} and {@see TyphoonReflector::reflectAnonymousClass()}
+     * one they were loaded in. Also {@see TyphoonReflector::reflect()} and {@see TyphoonReflector::reflectAnonymousClass()}
      * allow to reflect anonymous classes by file and line only.
      *
      * @var TClass
@@ -72,7 +72,7 @@ final class ClassReflection
     public function __construct(
         public readonly NamedClassId|AnonymousClassId $id,
         TypedMap $data,
-        private readonly Reflector $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         /** @var TClass */
         $this->name = $id->name;

@@ -34,6 +34,14 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
     }
 
     /**
+     * @return list<TId>
+     */
+    public function ids(): array
+    {
+        return array_column($this->values, 0);
+    }
+
+    /**
      * @template TNewId of Id
      * @template TNewValue
      * @param TNewId $id

@@ -9,9 +9,9 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data\Data;
-use Typhoon\Reflection\Internal\DataReflector;
 use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHook\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -20,7 +20,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 final class ResolveAttributesRepeated implements FunctionReflectionHook, ClassReflectionHook
 {
-    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, DataReflector $reflector): TypedMap
+    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         $data = $this->resolveAttributesRepeated($data);
 
