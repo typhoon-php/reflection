@@ -16,6 +16,7 @@ enum LineKeys implements OptionalKey
 {
     case Start;
     case End;
+    case PhpDocStart;
 
     public function default(TypedMap $map): mixed
     {

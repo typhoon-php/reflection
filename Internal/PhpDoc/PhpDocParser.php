@@ -16,14 +16,22 @@ use PHPStan\PhpDocParser\Parser\TypeParser;
  */
 final class PhpDocParser
 {
+    private readonly Lexer $lexer;
+
+    private readonly PHPStanPhpDocParser $parser;
+
     public function __construct(
         private readonly PhpDocTagPrioritizer $tagPrioritizer = new PrefixBasedPhpDocTagPrioritizer(),
-        private readonly PHPStanPhpDocParser $parser = new PHPStanPhpDocParser(
-            typeParser: new TypeParser(new ConstExprParser()),
-            constantExprParser: new ConstExprParser(),
-        ),
-        private readonly Lexer $lexer = new Lexer(),
-    ) {}
+        bool $lines = true,
+    ) {
+        $this->lexer = new Lexer();
+        $constExprParser = new ConstExprParser();
+        $this->parser = new PHPStanPhpDocParser(
+            typeParser: new TypeParser($constExprParser),
+            constantExprParser: $constExprParser,
+            usedAttributes: ['lines' => $lines],
+        );
+    }
 
     public function parse(string $comment): PhpDoc
     {

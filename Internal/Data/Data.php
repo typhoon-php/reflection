@@ -18,6 +18,7 @@ enum Data
     public const ClassKind = ClassKindKey::Key;
     public const DeclaringClassId = DeclaringClassIdKey::Key;
     public const DefaultValueExpression = DefaultValueExpressionKey::Key;
+    public const PhpDocStartLine = LineKeys::PhpDocStart;
     public const StartLine = LineKeys::Start;
     public const EndLine = LineKeys::End;
     public const EnumCase = BoolKeys::EnumCase;

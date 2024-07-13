@@ -149,14 +149,27 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     private function reflectNode(Node $node): TypedMap
     {
-        $startLine = $node->getStartLine();
-        $endLine = $node->getEndLine();
-        $phpDoc = $node->getDocComment()?->getText();
+        $data = new TypedMap();
 
-        return (new TypedMap())
-            ->set(Data::StartLine, $startLine > 0 ? $startLine : null)
-            ->set(Data::EndLine, $endLine > 0 ? $endLine : null)
-            ->set(Data::PhpDoc, $phpDoc === '' ? null : $phpDoc);
+        if ($node->getStartLine() > 0) {
+            $data = $data->set(Data::StartLine, $node->getStartLine());
+
+            if ($node->getEndLine() > 0) {
+                $data = $data->set(Data::EndLine, $node->getEndLine());
+            }
+        }
+
+        $docComment = $node->getDocComment();
+
+        if ($docComment !== null && $docComment->getText() !== '') {
+            $data = $data->set(Data::PhpDoc, $docComment->getText());
+
+            if ($docComment->getStartLine() > 0) {
+                $data = $data->set(Data::PhpDocStartLine, $docComment->getStartLine());
+            }
+        }
+
+        return $data;
     }
 
     /**

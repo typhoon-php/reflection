@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal\PhpDoc;
 
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassLike;
+use PHPStan\PhpDocParser\Ast\Node;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use Typhoon\DeclarationId\AnonymousClassId;
@@ -77,8 +78,8 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
                 $data = $data->set(Data::AnnotatedReadonly, true);
             }
 
-            $data = $data->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc));
-            $data = $data->set(Data::Aliases, $this->reflectAliases($typeReflector, $phpDoc));
+            $data = $data->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc, $data[Data::PhpDocStartLine]));
+            $data = $data->set(Data::Aliases, $this->reflectAliases($typeReflector, $phpDoc, $data[Data::PhpDocStartLine]));
             $data = $this->reflectParent($typeReflector, $data, $phpDoc);
             $data = $this->reflectInterfaces($typeReflector, $data, $phpDoc);
             $data = $this->reflectUses($typeReflector, $data);
@@ -166,38 +167,43 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
     }
 
     /**
+     * @param ?positive-int $phpDocStartLine
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectAliases(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    private function reflectAliases(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc, ?int $phpDocStartLine): array
     {
         $aliases = [];
 
         foreach ($phpDoc->typeAliases() as $alias) {
-            $aliases[$alias->alias] = (new TypedMap())->set(Data::AliasType, $typeReflector->reflectType($alias->type));
+            $data = (new TypedMap())->set(Data::AliasType, $typeReflector->reflectType($alias->type));
+            $aliases[$alias->alias] = $this->setLines($data, $alias, $phpDocStartLine);
         }
 
         foreach ($phpDoc->typeAliasImports() as $aliasImport) {
-            $aliases[$aliasImport->importedAs ?? $aliasImport->importedAlias] = (new TypedMap())->set(
+            $data = (new TypedMap())->set(
                 Data::AliasType,
                 types::alias(Id::alias($typeReflector->resolveClass($aliasImport->importedFrom), $aliasImport->importedAlias)),
             );
+            $aliases[$aliasImport->importedAs ?? $aliasImport->importedAlias] = $this->setLines($data, $aliasImport, $phpDocStartLine);
         }
 
         return $aliases;
     }
 
     /**
+     * @param ?positive-int $phpDocStartLine
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectTemplates(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    private function reflectTemplates(ContextualPhpDocTypeReflector $typeReflector, PhpDoc $phpDoc, ?int $phpDocStartLine): array
     {
         $templates = [];
 
         foreach ($phpDoc->templates() as $index => $template) {
-            $templates[$template->name] = (new TypedMap())
+            $data = (new TypedMap())
                 ->set(Data::Index, $index)
                 ->set(Data::Constraint, $typeReflector->reflectType($template->bound) ?? types::mixed)
                 ->set(Data::Variance, PhpDoc::templateTagVariance($template));
+            $templates[$template->name] = $this->setLines($data, $template, $phpDocStartLine);
         }
 
         return $templates;
@@ -214,7 +220,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
 
         $data = $data
-            ->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc))
+            ->set(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc, $data[Data::PhpDocStartLine]))
             ->modifyIfSet(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
                 $types = $phpDoc->paramTypes();
 
@@ -298,6 +304,27 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
             Data::Type,
             static fn(TypeData $type): TypeData => $type->withAnnotated($typeReflector->reflectType($node)),
         );
+    }
+
+    /**
+     * @param ?positive-int $phpDocStartLine
+     */
+    private function setLines(TypedMap $data, Node $node, ?int $phpDocStartLine): TypedMap
+    {
+        if ($phpDocStartLine === null) {
+            return $data;
+        }
+
+        $startLine = $node->getAttribute('startLine');
+        $endLine = $node->getAttribute('endLine');
+
+        if (\is_int($startLine) && $startLine > 0 && \is_int($endLine) && $endLine > 0) {
+            $data = $data
+                ->set(Data::StartLine, $phpDocStartLine - 1 + $startLine)
+                ->set(Data::EndLine, $phpDocStartLine - 1 + $endLine);
+        }
+
+        return $data;
     }
 
     /**
