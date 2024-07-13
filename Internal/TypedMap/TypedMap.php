@@ -133,4 +133,29 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
     {
         return \count($this->values);
     }
+
+    public function __serialize(): array
+    {
+        $data = [];
+
+        foreach ($this as $key => $value) {
+            $data[$key::class . '::' . $key->name] = $value;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array<non-empty-string, mixed> $data
+     */
+    public function __unserialize(array $data): void
+    {
+        $this->values = new \SplObjectStorage();
+
+        foreach ($data as $enum => $value) {
+            $key = \constant($enum);
+            \assert($key instanceof Key);
+            $this->values->attach($key, $value);
+        }
+    }
 }
