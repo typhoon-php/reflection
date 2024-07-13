@@ -32,7 +32,7 @@ abstract class Reflector
      *     never
      * )
      */
-    abstract public function reflect(Id $id): Reflection;
+    abstract public function reflect(Id $id): ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection;
 
     /**
      * @param non-empty-string $class

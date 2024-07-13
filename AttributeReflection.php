@@ -82,9 +82,25 @@ final class AttributeReflection
         return $this->targetId;
     }
 
-    public function target(): Reflection
+    public function target(): ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
         return $this->reflector->reflect($this->targetId);
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function startLine(): ?int
+    {
+        return $this->data[Data::StartLine];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function endLine(): ?int
+    {
+        return $this->data[Data::EndLine];
     }
 
     public function isRepeated(): bool

@@ -137,7 +137,7 @@ final class TyphoonReflector extends Reflector implements DataReflector
      *     never
      * )
      */
-    public function reflect(Id $id): Reflection
+    public function reflect(Id $id): ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
         if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
             $data = $this->reflectData($id);

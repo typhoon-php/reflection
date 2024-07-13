@@ -14,9 +14,8 @@ use Typhoon\Type\Type;
 /**
  * @api
  * @readonly
- * @extends Reflection<ParameterId>
  */
-final class ParameterReflection extends Reflection
+final class ParameterReflection
 {
     /**
      * @var non-empty-string
@@ -24,17 +23,26 @@ final class ParameterReflection extends Reflection
     public readonly string $name;
 
     /**
+     * This internal property is public for testing purposes.
+     * It will likely be available as part of the API in the near future.
+     *
+     * @internal
+     * @psalm-internal Typhoon
+     */
+    public readonly TypedMap $data;
+
+    /**
      * @var ?ListOf<AttributeReflection>
      */
     private ?ListOf $attributes = null;
 
     public function __construct(
-        ParameterId $id,
+        public readonly ParameterId $id,
         TypedMap $data,
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        parent::__construct($id, $data);
+        $this->data = $data;
     }
 
     /**
@@ -43,6 +51,22 @@ final class ParameterReflection extends Reflection
     public function index(): int
     {
         return $this->data[Data::Index];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function startLine(): ?int
+    {
+        return $this->data[Data::StartLine];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function endLine(): ?int
+    {
+        return $this->data[Data::EndLine];
     }
 
     /**

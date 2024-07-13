@@ -11,20 +11,45 @@ use Typhoon\Type\Type;
 
 /**
  * @api
- * @extends Reflection<AliasId>
  */
-final class AliasReflection extends Reflection
+final class AliasReflection
 {
     /**
      * @var non-empty-string
      */
     public readonly string $name;
 
-    public function __construct(AliasId $id, TypedMap $data)
-    {
-        $this->name = $id->name;
+    /**
+     * This internal property is public for testing purposes.
+     * It will likely be available as part of the API in the near future.
+     *
+     * @internal
+     * @psalm-internal Typhoon
+     */
+    public readonly TypedMap $data;
 
-        parent::__construct($id, $data);
+    public function __construct(
+        public readonly AliasId $id,
+        TypedMap $data,
+    ) {
+        $this->name = $id->name;
+        $this->data = $data;
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function startLine(): ?int
+    {
+        return $this->data[Data::StartLine];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function endLine(): ?int
+    {
+        return $this->data[Data::EndLine];
     }
 
     public function type(): Type

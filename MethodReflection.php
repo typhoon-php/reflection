@@ -14,14 +14,22 @@ use Typhoon\Type\Type;
 
 /**
  * @api
- * @extends Reflection<MethodId>
  */
-final class MethodReflection extends Reflection
+final class MethodReflection
 {
     /**
      * @var non-empty-string
      */
     public readonly string $name;
+
+    /**
+     * This internal property is public for testing purposes.
+     * It will likely be available as part of the API in the near future.
+     *
+     * @internal
+     * @psalm-internal Typhoon
+     */
+    public readonly TypedMap $data;
 
     /**
      * @var ?NameMap<TemplateReflection>
@@ -39,12 +47,12 @@ final class MethodReflection extends Reflection
     private ?NameMap $parameters;
 
     public function __construct(
-        MethodId $id,
+        public readonly MethodId $id,
         TypedMap $data,
         private readonly Reflector $reflector,
     ) {
         $this->name = $id->name;
-        parent::__construct($id, $data);
+        $this->data = $data;
     }
 
     /**
@@ -106,6 +114,22 @@ final class MethodReflection extends Reflection
         }
 
         return $this->declaringClass()->file();
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function startLine(): ?int
+    {
+        return $this->data[Data::StartLine];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function endLine(): ?int
+    {
+        return $this->data[Data::EndLine];
     }
 
     public function isInternallyDefined(): bool

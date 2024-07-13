@@ -12,9 +12,8 @@ use Typhoon\Type\Variance;
 
 /**
  * @api
- * @extends Reflection<TemplateId>
  */
-final class TemplateReflection extends Reflection
+final class TemplateReflection
 {
     /**
      * @var non-empty-string
@@ -26,12 +25,22 @@ final class TemplateReflection extends Reflection
      */
     public readonly int $index;
 
-    public function __construct(TemplateId $id, TypedMap $data)
-    {
+    /**
+     * This internal property is public for testing purposes.
+     * It will likely be available as part of the API in the near future.
+     *
+     * @internal
+     * @psalm-internal Typhoon
+     */
+    public readonly TypedMap $data;
+
+    public function __construct(
+        public readonly TemplateId $id,
+        TypedMap $data,
+    ) {
         $this->name = $id->name;
         $this->index = $data[Data::Index];
-
-        parent::__construct($id, $data);
+        $this->data = $data;
     }
 
     public function variance(): Variance
@@ -42,5 +51,21 @@ final class TemplateReflection extends Reflection
     public function constraint(): Type
     {
         return $this->data[Data::Constraint];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function startLine(): ?int
+    {
+        return $this->data[Data::StartLine];
+    }
+
+    /**
+     * @return ?positive-int
+     */
+    public function endLine(): ?int
+    {
+        return $this->data[Data::EndLine];
     }
 }
