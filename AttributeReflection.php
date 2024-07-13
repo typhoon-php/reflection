@@ -20,7 +20,6 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api
- * @readonly
  */
 final class AttributeReflection
 {

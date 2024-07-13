@@ -15,7 +15,6 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api
- * @readonly
  * @template-covariant TObject of object
  * @template-covariant TClass of ?class-string<TObject>
  */

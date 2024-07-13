@@ -13,7 +13,6 @@ use Typhoon\Type\Type;
 
 /**
  * @api
- * @readonly
  */
 final class ParameterReflection
 {
