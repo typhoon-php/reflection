@@ -10,7 +10,6 @@ use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\Cache\DataCacheItem;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
-use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -52,7 +51,7 @@ final class ReflectorSession implements Reflector
             hooks: $hooks,
         );
         $data = $session->reflect($id);
-        $session->persist();
+        $cache->set($session->buffer);
 
         return $data;
     }
@@ -73,10 +72,10 @@ final class ReflectorSession implements Reflector
             cache: $cache,
             hooks: $hooks,
         );
-        $ids = $session->doReflectResource($resource);
-        $session->persist();
+        $session->reflectResourceIntoBuffer($resource);
+        $cache->set($session->buffer);
 
-        return $ids;
+        return $session->buffer->ids();
     }
 
     public function reflect(NamedClassId|AnonymousClassId $id): TypedMap
@@ -93,35 +92,24 @@ final class ReflectorSession implements Reflector
             throw new ClassDoesNotExist($id->name ?? $id->toString());
         }
 
-        $this->doReflectResource($resource);
+        $this->reflectResourceIntoBuffer($resource);
 
         $cacheItem = $this->buffer[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->toString());
 
         return $cacheItem->get();
     }
 
-    /**
-     * @return list<NamedClassId|AnonymousClassId>
-     */
-    private function doReflectResource(Resource $resource): array
+    private function reflectResourceIntoBuffer(Resource $resource): void
     {
         $reflected = $this->codeReflector
-            ->reflectCode($resource->code, $resource->baseData[Data::File])
+            ->reflectCode($resource->code, $resource->baseData)
             ->map(fn(TypedMap $data, NamedClassId|AnonymousClassId $id): DataCacheItem => new DataCacheItem(
                 function () use ($resource, $id, $data): TypedMap {
-                    $data = $resource->baseData->merge($data);
-                    $data = (new ReflectionHooks($resource->hooks))->process($id, $data, $this);
+                    $data = $resource->hooks->process($id, $data, $this);
 
-                    return $this->hooks->process($id, $data, $this);
+                    return $this->hooks->process($id, $resource->hooks->process($id, $data, $this), $this);
                 },
             ));
         $this->buffer = $this->buffer->withMultiple($reflected);
-
-        return $reflected->ids();
-    }
-
-    private function persist(): void
-    {
-        $this->cache->set($this->buffer);
     }
 }

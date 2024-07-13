@@ -10,6 +10,7 @@ use PhpParser\Parser;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantConstantExpressionCompilerVisitor;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
@@ -27,14 +28,13 @@ final class CodeReflector
     ) {}
 
     /**
-     * @param ?non-empty-string $file
      * @return IdMap<NamedClassId|AnonymousClassId, TypedMap>
      */
-    public function reflectCode(string $code, ?string $file = null): IdMap
+    public function reflectCode(string $code, TypedMap $baseData = new TypedMap()): IdMap
     {
+        $file = $baseData[Data::File];
         $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
 
-        $traverser = new NodeTraverser();
         $nameResolver = new NameResolver();
         $typeContextVisitor = new TypeContextVisitor(
             nameContext: $nameResolver->getNameContext(),
@@ -43,7 +43,9 @@ final class CodeReflector
             file: $file,
         );
         $expressionCompilerVisitor = new ConstantConstantExpressionCompilerVisitor($file);
-        $reflector = new PhpParserReflector($typeContextVisitor, $expressionCompilerVisitor);
+        $reflector = new PhpParserReflector($typeContextVisitor, $expressionCompilerVisitor, $baseData);
+
+        $traverser = new NodeTraverser();
         $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($typeContextVisitor);

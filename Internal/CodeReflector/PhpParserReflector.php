@@ -62,6 +62,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
     public function __construct(
         private readonly TypeContextProvider $typeContextProvider,
         private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
+        private readonly TypedMap $baseData = new TypedMap(),
     ) {
         /** @var IdMap<NamedClassId|AnonymousClassId, TypedMap> */
         $this->reflected = new IdMap();
@@ -90,7 +91,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     private function reflectClass(ClassLike $node, TypeContext $typeContext): TypedMap
     {
-        $data = $this->reflectNode($node)
+        $data = $this->baseData
+            ->merge($this->reflectNode($node))
             ->set(Data::TypeContext, $typeContext)
             ->set(Data::Attributes, $this->reflectAttributes($node->attrGroups));
 

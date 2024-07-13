@@ -10,6 +10,7 @@ use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHook\ConstantReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHook\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -17,14 +18,18 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 final class Resource
 {
+    public readonly ReflectionHooks $hooks;
+
     /**
      * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
      */
     public function __construct(
         public readonly string $code,
         public readonly TypedMap $baseData = new TypedMap(),
-        public readonly array $hooks = [],
-    ) {}
+        array $hooks = [],
+    ) {
+        $this->hooks = new ReflectionHooks($hooks);
+    }
 
     /**
      * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
