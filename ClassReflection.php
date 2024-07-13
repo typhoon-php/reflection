@@ -254,20 +254,13 @@ final class ClassReflection
         };
     }
 
+    /**
+     * Unlike {@see \ReflectionClass::getNamespaceName()}, this method returns the actual namespace
+     * an anonymous class is defined in.
+     */
     public function namespace(): string
     {
-        if ($this->name === null) {
-            // todo
-            return '';
-        }
-
-        $lastSlashPosition = strrpos($this->name, '\\');
-
-        if ($lastSlashPosition === false) {
-            return '';
-        }
-
-        return substr($this->name, 0, $lastSlashPosition);
+        return $this->data[Data::Namespace];
     }
 
     public function parent(): ?self
@@ -305,7 +298,7 @@ final class ClassReflection
         }
 
         $shortName = substr($this->name, $lastSlashPosition + 1);
-        \assert($shortName !== '');
+        \assert($shortName !== '', 'A valid class name cannot end with a \\');
 
         return $shortName;
     }

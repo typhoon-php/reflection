@@ -56,9 +56,6 @@ final class TypeContext
         $this->templates = array_column($templates, null, 'name');
     }
 
-    /**
-     * @psalm-suppress PossiblyUnusedMethod
-     */
     public function namespace(): ?Name
     {
         return $this->nameContext->getNamespace();

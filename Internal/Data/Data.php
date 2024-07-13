@@ -16,6 +16,7 @@ enum Data
     public const Attributes = AttributesKey::Key;
     public const ClassConstants = NamedDataKeys::ClassConstants;
     public const ClassKind = ClassKindKey::Key;
+    public const Namespace = NamespaceKey::Key;
     public const DeclaringClassId = DeclaringClassIdKey::Key;
     public const DefaultValueExpression = DefaultValueExpressionKey::Key;
     public const PhpDocStartLine = LineKeys::PhpDocStart;

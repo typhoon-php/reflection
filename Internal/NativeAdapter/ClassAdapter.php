@@ -192,7 +192,17 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getNamespaceName(): string
     {
-        return $this->reflection->namespace();
+        if (!$this->isAnonymous()) {
+            return $this->reflection->namespace();
+        }
+
+        $lastSlashPosition = strrpos($this->reflection->name ?? '', '\\');
+
+        if ($lastSlashPosition === false) {
+            return '';
+        }
+
+        return substr($this->name, 0, $lastSlashPosition);
     }
 
     public function getParentClass(): \ReflectionClass|false

@@ -93,6 +93,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
     {
         $data = $this->baseData
             ->merge($this->reflectNode($node))
+            ->set(Data::Namespace, $typeContext->namespace()?->toString() ?? '')
             ->set(Data::TypeContext, $typeContext)
             ->set(Data::Attributes, $this->reflectAttributes($node->attrGroups));
 
