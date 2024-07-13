@@ -7,10 +7,10 @@ namespace Typhoon\Reflection;
 /**
  * @api
  */
-enum ClassKind: string
+enum ClassKind
 {
-    case Class_ = 'class';
-    case Interface = 'interface';
-    case Enum = 'enum';
-    case Trait = 'trait';
+    case Class_;
+    case Interface;
+    case Enum;
+    case Trait;
 }
