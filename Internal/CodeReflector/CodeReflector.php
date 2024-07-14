@@ -13,6 +13,8 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantConstantExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
+use Typhoon\Reflection\Internal\PhpParser\FixNodeStartLineVisitor;
+use Typhoon\Reflection\Internal\PhpParser\PhpParserChecker;
 use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\TypeContext\TypeContextVisitor;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -52,11 +54,20 @@ final class CodeReflector
         $reflector = new PhpParserReflector($typeContextVisitor, $expressionCompilerVisitor, $baseData);
 
         $traverser = new NodeTraverser();
+
+        if (!PhpParserChecker::isVisitorLeaveReversed()) {
+            $traverser->addVisitor($reflector);
+        }
+
         $traverser->addVisitor($linesFixer);
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($typeContextVisitor);
         $traverser->addVisitor($expressionCompilerVisitor);
-        $traverser->addVisitor($reflector);
+
+        if (PhpParserChecker::isVisitorLeaveReversed()) {
+            $traverser->addVisitor($reflector);
+        }
+
         $traverser->traverse($nodes);
 
         return $reflector->reflected;
