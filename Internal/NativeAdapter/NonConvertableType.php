@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\Type\Type;
-use function Typhoon\TypeStringifier\stringify;
+use function Typhoon\Type\stringify;
 
 /**
  * @internal
