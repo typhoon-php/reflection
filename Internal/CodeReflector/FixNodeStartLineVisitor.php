@@ -22,6 +22,11 @@ final class FixNodeStartLineVisitor extends NodeVisitorAbstract
         private readonly array $tokens,
     ) {}
 
+    public static function fromCode(string $code): self
+    {
+        return new self(\PhpToken::tokenize($code));
+    }
+
     public function enterNode(Node $node): ?int
     {
         if ($node instanceof Node\Stmt\ClassLike && $node->attrGroups !== []) {

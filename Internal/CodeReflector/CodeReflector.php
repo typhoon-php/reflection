@@ -36,6 +36,11 @@ final class CodeReflector
         $file = $baseData[Data::File];
         $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
 
+        /** @psalm-suppress MixedArgument, UnusedPsalmSuppress */
+        $linesFixer = method_exists($this->phpParser, 'getTokens')
+            ? new FixNodeStartLineVisitor($this->phpParser->getTokens())
+            : FixNodeStartLineVisitor::fromCode($code);
+
         $nameResolver = new NameResolver();
         $typeContextVisitor = new TypeContextVisitor(
             nameContext: $nameResolver->getNameContext(),
@@ -47,7 +52,7 @@ final class CodeReflector
         $reflector = new PhpParserReflector($typeContextVisitor, $expressionCompilerVisitor, $baseData);
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new FixNodeStartLineVisitor($this->phpParser->getTokens()));
+        $traverser->addVisitor($linesFixer);
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($typeContextVisitor);
         $traverser->addVisitor($expressionCompilerVisitor);
