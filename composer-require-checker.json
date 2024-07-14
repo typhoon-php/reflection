@@ -1,5 +1,6 @@
 {
     "symbol-whitelist" : [
-        "Composer\\Autoload\\ClassLoader"
+        "Composer\\Autoload\\ClassLoader",
+        "Typhoon\\PhpStormReflectionStubs\\PhpStormStubsLocator"
     ]
 }
