@@ -16,19 +16,10 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 /**
  * @api
  * @template-covariant TObject of object
- * @template-covariant TClass of ?class-string<TObject>
+ * @template-covariant TId of NamedClassId<class-string<TObject>>|AnonymousClassId<?class-string<TObject>>
  */
 final class ClassReflection
 {
-    /**
-     * This property is nullable, because anonymous class names are no longer available in a process different from the
-     * one they were loaded in. Also {@see TyphoonReflector::reflect()} and {@see TyphoonReflector::reflectAnonymousClass()}
-     * allow to reflect anonymous classes by file and line only.
-     *
-     * @var TClass
-     */
-    public readonly ?string $name;
-
     /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
@@ -68,13 +59,14 @@ final class ClassReflection
      */
     private ?NameMap $methods = null;
 
+    /**
+     * @param TId $id
+     */
     public function __construct(
         public readonly NamedClassId|AnonymousClassId $id,
         TypedMap $data,
         private readonly TyphoonReflector $reflector,
     ) {
-        /** @var TClass */
-        $this->name = $id->name;
         $this->data = $data;
     }
 
@@ -206,9 +198,6 @@ final class ClassReflection
         return $this->data[Data::Abstract];
     }
 
-    /**
-     * @psalm-assert-if-false !null $this->name
-     */
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousClassId;
@@ -287,17 +276,19 @@ final class ClassReflection
      */
     public function shortName(): string
     {
-        if ($this->name === null) {
+        $name = $this->id->name;
+
+        if ($name === null) {
             return $this->id->toString();
         }
 
-        $lastSlashPosition = strrpos($this->name, '\\');
+        $lastSlashPosition = strrpos($name, '\\');
 
         if ($lastSlashPosition === false) {
-            return $this->name;
+            return $name;
         }
 
-        $shortName = substr($this->name, $lastSlashPosition + 1);
+        $shortName = substr($name, $lastSlashPosition + 1);
         \assert($shortName !== '', 'A valid class name cannot end with a backslash');
 
         return $shortName;
@@ -346,9 +337,16 @@ final class ClassReflection
      */
     public function newInstance(mixed ...$arguments): object
     {
-        $this->ensureInstantiable();
+        if (!$this->isInstantiable()) {
+            throw new \LogicException(sprintf('Class "%s" is not instantiable', $this->id->toString()));
+        }
 
-        return new $this->name(...$arguments);
+        $name = $this->id->name ?? throw new \LogicException(sprintf(
+            "Cannot instantiate anonymous class %s, because it's runtime name is not available",
+            $this->id->toString(),
+        ));
+
+        return new $name(...$arguments);
     }
 
     /**
@@ -356,38 +354,16 @@ final class ClassReflection
      */
     public function newInstanceWithoutConstructor(): object
     {
-        $this->ensureInstantiable();
-
-        return (new \ReflectionClass($this->name))->newInstanceWithoutConstructor();
-    }
-
-    /**
-     * @psalm-assert class-string<TObject> $this->name
-     */
-    private function ensureInstantiable(): void
-    {
-        if ($this->name === null) {
-            throw new \LogicException(sprintf(
-                "Cannot instantiate anonymous class %s, because it's runtime name is not available",
-                $this->id->toString(),
-            ));
+        if ($this->kind() !== ClassKind::Class_) {
+            throw new \LogicException(sprintf('Class "%s" is not instantiable', $this->id->toString()));
         }
 
-        if ($this->isInterface()) {
-            throw new \LogicException(sprintf('Cannot instantiate interface %s', $this->name));
-        }
+        $name = $this->id->name ?? throw new \LogicException(sprintf(
+            "Cannot instantiate anonymous class %s, because it's runtime name is not available",
+            $this->id->toString(),
+        ));
 
-        if ($this->isTrait()) {
-            throw new \LogicException(sprintf('Cannot instantiate trait %s', $this->name));
-        }
-
-        if ($this->isAbstract()) {
-            throw new \LogicException(sprintf('Cannot instantiate abstract class %s', $this->name));
-        }
-
-        if ($this->isEnum()) {
-            throw new \LogicException(sprintf('Cannot instantiate enum %s', $this->name));
-        }
+        return (new \ReflectionClass($name))->newInstanceWithoutConstructor();
     }
 
     private ?ClassAdapter $native = null;

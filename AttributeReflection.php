@@ -7,7 +7,6 @@ namespace Typhoon\Reflection;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ClassConstantId;
-use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
@@ -65,15 +64,12 @@ final class AttributeReflection
     /**
      * Attribute's class reflection.
      *
-     * @return ClassReflection<object, class-string>
+     * @return ClassReflection<object, NamedClassId<class-string>>
      */
     public function class(): ClassReflection
     {
-        $reflection = $this->reflector->reflect(Id::namedClass($this->className()));
-        \assert(!$reflection->isAnonymous());
-
-        /** @var ClassReflection<object, class-string> */
-        return $reflection;
+        /** @var ClassReflection<object, NamedClassId<class-string>> */
+        return $this->reflector->reflectClass($this->className());
     }
 
     public function targetId(): NamedFunctionId|AnonymousFunctionId|ParameterId|NamedClassId|AnonymousClassId|ClassConstantId|MethodId|PropertyId

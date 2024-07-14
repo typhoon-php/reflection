@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\ClassReflection;
@@ -40,7 +41,7 @@ final class ClassAdapter extends \ReflectionClass
     }
 
     /**
-     * @param ClassReflection<T, ?class-string<T>> $reflection
+     * @param ClassReflection<T, NamedClassId<class-string<T>>|AnonymousClassId<?class-string<T>>> $reflection
      */
     public function __construct(
         private readonly ClassReflection $reflection,
@@ -184,7 +185,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getName(): string
     {
-        return $this->reflection->name ?? throw new \ReflectionException(sprintf(
+        return $this->reflection->id->name ?? throw new \ReflectionException(sprintf(
             'Runtime name of anonymous class %s is not available',
             $this->reflection->id->toString(),
         ));
@@ -192,17 +193,19 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getNamespaceName(): string
     {
-        if (!$this->isAnonymous()) {
-            return $this->reflection->namespace();
+        $name = $this->reflection->id->name;
+
+        if ($name === null) {
+            return '';
         }
 
-        $lastSlashPosition = strrpos($this->reflection->name ?? '', '\\');
+        $lastSlashPosition = strrpos($name, '\\');
 
         if ($lastSlashPosition === false) {
             return '';
         }
 
-        return substr($this->name, 0, $lastSlashPosition);
+        return substr($name, 0, $lastSlashPosition);
     }
 
     public function getParentClass(): \ReflectionClass|false
@@ -481,7 +484,7 @@ final class ClassAdapter extends \ReflectionClass
             return;
         }
 
-        $class = $this->reflection->name ?? throw new \LogicException(sprintf(
+        $class = $this->reflection->id->name ?? throw new \LogicException(sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->toString(),
         ));

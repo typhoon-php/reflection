@@ -138,36 +138,35 @@ final class TyphoonReflector
     }
 
     /**
-     * @template T of object
-     * @param non-empty-string|class-string<T>|T $nameOrObject
-     * @return (
-     *     $nameOrObject is T ? ClassReflection<T, class-string<T>> :
-     *     $nameOrObject is class-string<T> ? ClassReflection<T, class-string<T>> :
-     *     ClassReflection<object, ?class-string>
-     *  )
+     * @template TObject of object
+     * @param non-empty-string|class-string<TObject> $name
+     * @return ($name is class-string<TObject>
+     *     ? ClassReflection<TObject, NamedClassId<class-string<TObject>>|AnonymousClassId<class-string<TObject>>>
+     *     : ClassReflection<object, NamedClassId<class-string>|AnonymousClassId<?class-string>>)
      */
-    public function reflectClass(string|object $nameOrObject): ClassReflection
+    public function reflectClass(string $name): ClassReflection
     {
-        /** @var ClassReflection<T> */
-        return $this->reflect(Id::class($nameOrObject));
+        return $this->reflect(Id::class($name));
     }
 
     /**
      * @param non-empty-string $file
      * @param positive-int $line
      * @param ?positive-int $column
-     * @return ClassReflection<object, ?class-string>
+     * @return ClassReflection<object, AnonymousClassId<null>>
      */
     public function reflectAnonymousClass(string $file, int $line, ?int $column = null): ClassReflection
     {
+        /** @var ClassReflection<object, AnonymousClassId<null>> */
         return $this->reflect(Id::anonymousClass($file, $line, $column));
     }
 
     /**
      * @return (
      *     $id is NamedFunctionId ? FunctionReflection :
-     *     $id is NamedClassId ? ClassReflection :
-     *     $id is AnonymousClassId ? ClassReflection :
+     *     $id is NamedClassId ? ClassReflection<object, NamedClassId<class-string>> :
+     *     $id is AnonymousClassId<null> ? ClassReflection<object, AnonymousClassId<null>> :
+     *     $id is AnonymousClassId<class-string> ? ClassReflection<object, AnonymousClassId<class-string>> :
      *     $id is ClassConstantId ? ClassConstantReflection :
      *     $id is PropertyId ? PropertyReflection :
      *     $id is MethodId ? MethodReflection :
@@ -176,6 +175,7 @@ final class TyphoonReflector
      *     $id is TemplateId ? TemplateReflection :
      *     never
      * )
+     * @psalm-suppress InvalidReturnType, InvalidReturnStatement
      */
     public function reflect(Id $id): FunctionReflection|ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
@@ -200,6 +200,7 @@ final class TyphoonReflector
                 id: $id,
             );
 
+            /** @var NamedClassId<class-string>|AnonymousClassId<?class-string> $id */
             return new ClassReflection($id, $data, $this);
         }
 
