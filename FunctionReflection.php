@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection;
 
+use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedFunctionId;
@@ -157,6 +158,11 @@ final class FunctionReflection
     public function endLine(): ?int
     {
         return $this->data[Data::EndLine];
+    }
+
+    public function changeDetector(): ChangeDetector
+    {
+        return $this->data[Data::ChangeDetector];
     }
 
     public function isInternallyDefined(): bool
