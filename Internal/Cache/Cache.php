@@ -6,7 +6,6 @@ namespace Typhoon\Reflection\Internal\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 use Typhoon\DeclarationId\Id;
-use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -38,19 +37,19 @@ final class Cache
     }
 
     /**
-     * @param IdMap<Id, TypedMap> $data
+     * @param iterable<Id, TypedMap> $data
      */
-    public function set(IdMap $data): void
+    public function set(iterable $data): void
     {
-        $values = [];
-
-        foreach ($data as $id => $item) {
-            $values[self::key($id)] = $item;
+        if ($data === []) {
+            return;
         }
 
-        if ($values !== []) {
-            $this->cache->setMultiple($values);
-        }
+        $this->cache->setMultiple((static function () use ($data): \Generator {
+            foreach ($data as $id => $item) {
+                yield self::key($id) => $item;
+            }
+        })());
     }
 
     private static function key(Id $id): string
