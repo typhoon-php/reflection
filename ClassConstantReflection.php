@@ -133,14 +133,20 @@ final class ClassConstantReflection
         return $this->data[Data::EnumCase];
     }
 
-    /**
-     * @psalm-suppress MixedReturnStatement, MixedInferredReturnType
-     */
+    public function isBackedEnumCase(): bool
+    {
+        return isset($this->data[Data::EnumBackingValueExpression]);
+    }
+
     public function backingValue(): int|string
     {
-        $expression = $this->data[Data::EnumBackingValueExpression] ?? throw new \LogicException('Not a backed enum');
+        $expression = $this->data[Data::EnumBackingValueExpression];
 
-        /** @psalm-suppress PossiblyNullReference */
+        if ($expression === null) {
+            throw new \LogicException('Not a backed enum');
+        }
+
+        /** @var int|string */
         return $expression->evaluate($this->reflector);
     }
 
@@ -152,11 +158,11 @@ final class ClassConstantReflection
         return $this->data[Data::Type]->byKind($kind);
     }
 
-    private ?ClassConstantAdapter $native = null;
+    private ?\ReflectionClassConstant $native = null;
 
     public function toNative(): \ReflectionClassConstant
     {
-        return $this->native ??= new ClassConstantAdapter($this, $this->reflector);
+        return $this->native ??= ClassConstantAdapter::create($this, $this->reflector);
     }
 
     private function declaringClass(): ClassReflection

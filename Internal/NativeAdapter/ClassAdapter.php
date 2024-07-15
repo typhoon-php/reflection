@@ -43,7 +43,7 @@ final class ClassAdapter extends \ReflectionClass
     /**
      * @param ClassReflection<T, NamedClassId<class-string<T>>|AnonymousClassId<?class-string<T>>> $reflection
      */
-    public function __construct(
+    private function __construct(
         private readonly ClassReflection $reflection,
         private readonly TyphoonReflector $reflector,
     ) {
@@ -51,8 +51,25 @@ final class ClassAdapter extends \ReflectionClass
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
+     * @template TObject of object
+     * @param ClassReflection<TObject, NamedClassId<class-string<TObject>>|AnonymousClassId<?class-string<TObject>>> $reflection
+     * @return \ReflectionClass<TObject>
      */
+    public static function create(ClassReflection $reflection, TyphoonReflector $reflector): \ReflectionClass
+    {
+        $adapter = new self($reflection, $reflector);
+
+        if ($reflection->isEnum()) {
+            /**
+             * @psalm-suppress ArgumentTypeCoercion
+             * @var \ReflectionClass<TObject>
+             */
+            return new EnumAdapter($adapter, $reflection);
+        }
+
+        return $adapter;
+    }
+
     public function __get(string $name): mixed
     {
         return match ($name) {

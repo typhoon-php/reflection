@@ -19,16 +19,28 @@ use Typhoon\Reflection\TyphoonReflector;
  */
 final class ClassConstantAdapter extends \ReflectionClassConstant
 {
-    public function __construct(
+    private function __construct(
         private readonly ClassConstantReflection $reflection,
         private readonly TyphoonReflector $reflector,
     ) {
         unset($this->name, $this->class);
     }
 
-    /**
-     * @psalm-suppress PossiblyUnusedMethod
-     */
+    public static function create(ClassConstantReflection $reflection, TyphoonReflector $reflector): \ReflectionClassConstant
+    {
+        $adapter = new self($reflection, $reflector);
+
+        if ($reflection->isBackedEnumCase()) {
+            return new EnumBackedCaseAdapter($adapter, $reflection);
+        }
+
+        if ($reflection->isEnumCase()) {
+            return new EnumUnitCaseAdapter($adapter);
+        }
+
+        return $adapter;
+    }
+
     public function __get(string $name)
     {
         return match ($name) {

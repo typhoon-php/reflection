@@ -12,6 +12,7 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Type\Type;
 
 /**
  * @api
@@ -43,6 +44,11 @@ final class ClassReflection
      * @var ?ListOf<AttributeReflection>
      */
     private ?ListOf $attributes = null;
+
+    /**
+     * @var ?NameMap<ClassConstantReflection>
+     */
+    private ?NameMap $enumCases = null;
 
     /**
      * @var ?NameMap<ClassConstantReflection>
@@ -113,6 +119,16 @@ final class ClassReflection
         return $this->attributes ??= (new ListOf($this->data[Data::Attributes]))->map(
             fn(TypedMap $data, int $index): AttributeReflection => new AttributeReflection($this->id, $index, $data, $this->reflector),
         );
+    }
+
+    /**
+     * @return ClassConstantReflection[]
+     * @psalm-return NameMap<ClassConstantReflection>
+     * @phpstan-return NameMap<ClassConstantReflection>
+     */
+    public function enumCases(): NameMap
+    {
+        return $this->enumCases ??= $this->constants()->filter(static fn(ClassConstantReflection $reflection): bool => $reflection->isEnumCase());
     }
 
     /**
@@ -211,6 +227,16 @@ final class ClassReflection
     public function isEnum(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Enum;
+    }
+
+    public function isBackedEnum(): bool
+    {
+        return $this->data[Data::EnumBackingType] !== null;
+    }
+
+    public function enumBackingType(): ?Type
+    {
+        return $this->data[Data::EnumBackingType];
     }
 
     public function isFinal(Kind $kind = Kind::Resolved): bool
@@ -366,10 +392,16 @@ final class ClassReflection
         return (new \ReflectionClass($name))->newInstanceWithoutConstructor();
     }
 
-    private ?ClassAdapter $native = null;
+    /**
+     * @var ?\ReflectionClass<TObject>
+     */
+    private ?\ReflectionClass $native = null;
 
+    /**
+     * @return \ReflectionClass<TObject>
+     */
     public function toNative(): \ReflectionClass
     {
-        return $this->native ??= new ClassAdapter($this, $this->reflector);
+        return $this->native ??= ClassAdapter::create($this, $this->reflector);
     }
 }
