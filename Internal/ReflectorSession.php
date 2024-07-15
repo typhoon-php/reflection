@@ -27,6 +27,11 @@ use Typhoon\Reflection\Resource;
 final class ReflectorSession implements Reflector
 {
     /**
+     * @var \WeakReference<Cache>
+     */
+    private readonly \WeakReference $cache;
+
+    /**
      * @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem>
      */
     private IdMap $buffer;
@@ -34,9 +39,10 @@ final class ReflectorSession implements Reflector
     private function __construct(
         private readonly CodeReflector $codeReflector,
         private readonly Locators $locators,
-        private readonly Cache $cache,
+        Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {
+        $this->cache = \WeakReference::create($cache);
         /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem> */
         $this->buffer = new IdMap();
     }
@@ -54,7 +60,14 @@ final class ReflectorSession implements Reflector
             cache: $cache,
             hooks: $hooks,
         );
-        $data = $session->reflect($id);
+
+        try {
+            $data = $session->reflect($id);
+            $cache->set($session->buffer);
+        } finally {
+            /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem> */
+            $session->buffer = new IdMap();
+        }
 
         if ($id instanceof AnonymousClassId && isset($data[Data::AnonymousClassColumns])) {
             throw new \RuntimeException(sprintf(
@@ -64,8 +77,6 @@ final class ReflectorSession implements Reflector
                 implode(', ', $data[Data::AnonymousClassColumns]),
             ));
         }
-
-        $cache->set($session->buffer);
 
         return $data;
     }
@@ -94,7 +105,7 @@ final class ReflectorSession implements Reflector
 
     public function reflect(NamedFunctionId|NamedClassId|AnonymousClassId $id): TypedMap
     {
-        $cacheItem = $this->buffer[$id] ?? $this->cache->get($id);
+        $cacheItem = $this->buffer[$id] ?? $this->cache->get()?->get($id);
 
         if ($cacheItem !== null) {
             return $cacheItem->get();
