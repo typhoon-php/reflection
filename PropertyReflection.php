@@ -64,15 +64,6 @@ final class PropertyReflection
         return $this->data[Data::PhpDoc];
     }
 
-    public function file(): ?string
-    {
-        if ($this->data[Data::InternallyDefined]) {
-            return null;
-        }
-
-        return $this->declaringClass()->file();
-    }
-
     /**
      * @return ?positive-int
      */
@@ -153,10 +144,5 @@ final class PropertyReflection
     public function toNative(): \ReflectionProperty
     {
         return $this->native ??= new PropertyAdapter($this, $this->reflector);
-    }
-
-    private function declaringClass(): ClassReflection
-    {
-        return $this->reflector->reflect($this->data[Data::DeclaringClassId]);
     }
 }

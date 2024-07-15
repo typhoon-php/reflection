@@ -57,18 +57,6 @@ final class ClassConstantReflection
     }
 
     /**
-     * @return ?non-empty-string
-     */
-    public function file(): ?string
-    {
-        if ($this->data[Data::InternallyDefined]) {
-            return null;
-        }
-
-        return $this->declaringClass()->file();
-    }
-
-    /**
      * @return ?positive-int
      */
     public function startLine(): ?int
