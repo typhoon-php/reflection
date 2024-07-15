@@ -48,11 +48,6 @@ final class ClassReflection
     /**
      * @var ?NameMap<ClassConstantReflection>
      */
-    private ?NameMap $enumCases = null;
-
-    /**
-     * @var ?NameMap<ClassConstantReflection>
-     */
     private ?NameMap $constants = null;
 
     /**
@@ -128,7 +123,7 @@ final class ClassReflection
      */
     public function enumCases(): NameMap
     {
-        return $this->enumCases ??= $this->constants()->filter(static fn(ClassConstantReflection $reflection): bool => $reflection->isEnumCase());
+        return $this->constants()->filter(static fn(ClassConstantReflection $reflection): bool => $reflection->isEnumCase());
     }
 
     /**
