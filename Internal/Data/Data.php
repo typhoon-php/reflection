@@ -24,7 +24,7 @@ enum Data
     public const EndLine = LineKeys::End;
     public const EnumCase = BoolKeys::EnumCase;
     public const EnumBackingValueExpression = EnumBackingValueExpressionKey::Key;
-    public const EnumScalarType = EnumScalarTypeKey::Key;
+    public const EnumBackingType = EnumBackingTypeKey::Key;
     public const File = FileKey::Key;
     public const Index = ParameterIndexKey::Key;
     public const Abstract = BoolKeys::IsAbstract;

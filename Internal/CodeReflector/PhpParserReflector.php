@@ -130,14 +130,14 @@ final class PhpParserReflector extends NodeVisitorAbstract
         }
 
         if ($node instanceof Enum_) {
-            $scalarType = $this->reflectType($typeContext, $node->scalarType);
+            $backingType = $this->reflectType($typeContext, $node->scalarType);
 
             return $data
                 ->set(Data::ClassKind, ClassKind::Enum)
                 ->set(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->implements))
                 ->merge($this->reflectTraitUses($node->getTraitUses()))
                 ->set(Data::NativeFinal, true)
-                ->set(Data::EnumScalarType, $scalarType)
+                ->set(Data::EnumBackingType, $backingType)
                 ->set(Data::ClassConstants, [
                     ...$this->reflectConstants($typeContext, $node->getConstants()),
                     ...$this->reflectEnumCases($typeContext, array_filter(

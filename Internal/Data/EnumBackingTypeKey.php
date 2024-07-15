@@ -13,7 +13,7 @@ use Typhoon\Type\Type;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements OptionalKey<?Type>
  */
-enum EnumScalarTypeKey implements OptionalKey
+enum EnumBackingTypeKey implements OptionalKey
 {
     case Key;
 

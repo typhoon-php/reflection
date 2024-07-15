@@ -27,7 +27,7 @@ final class CompleteEnumReflection implements ClassReflectionHook
             return $data;
         }
 
-        $scalarType = $data[Data::EnumScalarType];
+        $backingType = $data[Data::EnumBackingType];
         $interfaces = $data[Data::UnresolvedInterfaces];
         $properties = $data[Data::Properties];
         $methods = $data[Data::Methods];
@@ -46,18 +46,18 @@ final class CompleteEnumReflection implements ClassReflectionHook
             ->set(Data::Visibility, Visibility::Public)
             ->set(Data::InternallyDefined, true);
 
-        if ($scalarType !== null) {
+        if ($backingType !== null) {
             $interfaces[\BackedEnum::class] = [];
 
             $properties['value'] = (new TypedMap())
                 ->set(Data::NativeReadonly, true)
-                ->set(Data::Type, new TypeData($scalarType))
+                ->set(Data::Type, new TypeData($backingType))
                 ->set(Data::Visibility, Visibility::Public);
 
             $methods['from'] = $methods['cases']
                 ->set(Data::Type, new TypeData($staticType))
                 ->set(Data::Parameters, [
-                    'value' => (new TypedMap())->set(Data::Type, new TypeData(types::arrayKey, $scalarType)),
+                    'value' => (new TypedMap())->set(Data::Type, new TypeData(types::arrayKey, $backingType)),
                 ]);
 
             $methods['tryFrom'] = $methods['from']
