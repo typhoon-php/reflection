@@ -280,10 +280,10 @@ final class ContextualPhpDocTypeReflector
         }
 
         if ($node->sealed) {
-            return types::arrayShapeSealed($elements);
+            return types::arrayShape($elements);
         }
 
-        return types::arrayShape($elements);
+        return types::arrayShapeUnsealed($elements);
     }
 
     private function reflectObjectShape(ObjectShapeNode $node): Type
