@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal;
 
-use Typhoon\ChangeDetector\FileChangeDetector;
+use Typhoon\ChangeDetector\ChangeDetectors;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
@@ -149,33 +149,34 @@ final class ReflectorSession implements Reflector
                 return $this->hooks->process($id, $resource->hooks->process($id, $data, $this), $this);
             });
         $this->buffer = $this->buffer->withMultiple($reflected);
-        $this->addNoColumnAnonymousClassesToBuffer($reflected->ids());
+        $this->addNoColumnAnonymousClassesToBuffer($resource, $reflected->ids());
     }
 
-    private function addNoColumnAnonymousClassesToBuffer(array $reflectedIds): void
+    /**
+     * @param list<Id> $reflectedIds
+     */
+    private function addNoColumnAnonymousClassesToBuffer(Resource $resource, array $reflectedIds): void
     {
         $lineToIds = [];
-        $file = null;
         $changeDetector = null;
 
         foreach ($reflectedIds as $reflectedId) {
             if ($reflectedId instanceof AnonymousClassId) {
-                $file ??= $reflectedId->file;
                 $lineToIds[$reflectedId->line][] = $reflectedId;
             }
         }
 
-        foreach ($lineToIds as $line => $ids) {
-            \assert($file !== null);
-            $noColumnId = Id::anonymousClass($file, $line);
+        foreach ($lineToIds as $ids) {
+            $firstId = $ids[0];
+            $noColumnId = $firstId->withoutColumn();
 
             if (\count($ids) === 1) {
-                $this->buffer = $this->buffer->with($noColumnId, $this->buffer[$ids[0]]);
+                $this->buffer = $this->buffer->with($noColumnId, $this->buffer[$firstId]);
 
                 continue;
             }
 
-            $changeDetector ??= FileChangeDetector::fromFile($file);
+            $changeDetector ??= ChangeDetectors::from($resource->baseData[Data::UnresolvedChangeDetectors] ?: throw new \LogicException('Change detector is required for anonymous class resolution'));
 
             $this->buffer = $this->buffer->with($noColumnId, (new TypedMap())
                 ->set(Data::ChangeDetector, $changeDetector)
