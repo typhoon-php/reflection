@@ -26,8 +26,9 @@ final class ResolveChangeDetector implements ConstantReflectionHook, FunctionRef
 {
     public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
-        $unresolved = $data[Data::UnresolvedChangeDetectors];
-
-        return $data->set(Data::ChangeDetector, $unresolved === [] ? new InMemoryChangeDetector() : ChangeDetectors::from($unresolved));
+        return $data->set(
+            Data::ChangeDetector,
+            ChangeDetectors::from($data[Data::UnresolvedChangeDetectors] ?: [new InMemoryChangeDetector()]),
+        );
     }
 }

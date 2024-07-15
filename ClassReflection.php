@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
@@ -172,7 +171,7 @@ final class ClassReflection
 
     public function changeDetector(): ChangeDetector
     {
-        return $this->data[Data::ChangeDetector] ?? new InMemoryChangeDetector();
+        return $this->data[Data::ChangeDetector];
     }
 
     /**

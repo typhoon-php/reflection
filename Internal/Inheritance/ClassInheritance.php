@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\Inheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
-use Typhoon\ChangeDetector\InMemoryChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
@@ -107,7 +106,7 @@ final class ClassInheritance
         $traitId = Id::namedClass($traitName);
         $traitData = $this->reflector->reflect($traitId);
 
-        $this->changeDetectors[] = $traitData[Data::ChangeDetector] ?? new InMemoryChangeDetector();
+        $this->changeDetectors[] = $traitData[Data::ChangeDetector];
 
         $typeResolvers = $this->buildTypeResolvers($traitId, $traitData, $arguments);
 
@@ -166,7 +165,7 @@ final class ClassInheritance
         $classId = Id::namedClass($className);
         $classData = $this->reflector->reflect($classId);
 
-        $this->changeDetectors[] = $classData[Data::ChangeDetector] ?? new InMemoryChangeDetector();
+        $this->changeDetectors[] = $classData[Data::ChangeDetector];
 
         $this->inheritedInterfaces = [
             ...$this->inheritedInterfaces,
