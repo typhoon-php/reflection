@@ -312,6 +312,9 @@ final class EnumAdapter extends \ReflectionEnum
         return $this->_class->isIterateable();
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedMethod, UnusedPsalmSuppress
+     */
     public function isReadonly(): bool
     {
         return $this->_class->isReadonly();
