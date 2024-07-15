@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\PhpParser;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -31,6 +32,15 @@ final class FixNodeStartLineVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node): ?int
     {
+        if ($node instanceof Function_ && $node->attrGroups !== []) {
+            $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
+                end($node->attrGroups)->getEndFilePos(),
+                [T_FUNCTION],
+            ));
+
+            return null;
+        }
+
         if ($node instanceof ClassLike && $node->attrGroups !== []) {
             $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
                 end($node->attrGroups)->getEndFilePos(),
