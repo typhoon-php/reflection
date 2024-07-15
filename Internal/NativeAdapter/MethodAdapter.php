@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
@@ -94,8 +95,8 @@ final class MethodAdapter extends \ReflectionMethod
     {
         $declaringClassId = $this->reflection->data[Data::DeclaringClassId];
 
-        if ($declaringClassId->equals($this->reflection->id->class)) {
-            $declaringClassId = $this->reflection->id->class;
+        if ($declaringClassId instanceof AnonymousClassId) {
+            return $this->reflector->reflect($this->reflection->id->class)->toNative();
         }
 
         $declaringClass = $this->reflector->reflect($declaringClassId);
