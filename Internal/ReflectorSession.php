@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal;
 
+use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\Cache\DataCacheItem;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
+use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -52,6 +55,16 @@ final class ReflectorSession implements Reflector
             hooks: $hooks,
         );
         $data = $session->reflect($id);
+
+        if ($id instanceof AnonymousClassId && isset($data[Data::AnonymousClassColumns])) {
+            throw new \RuntimeException(sprintf(
+                'Cannot reflect %s, because %d anonymous classes are declared at columns %s. Use TyphoonReflector::reflectAnonymousClass() with a $column argument to reflect the exact class you need',
+                $id->toString(),
+                \count($data[Data::AnonymousClassColumns]),
+                implode(', ', $data[Data::AnonymousClassColumns]),
+            ));
+        }
+
         $cache->set($session->buffer);
 
         return $data;
@@ -112,5 +125,42 @@ final class ReflectorSession implements Reflector
                 },
             ));
         $this->buffer = $this->buffer->withMultiple($reflected);
+        $this->addNoColumnAnonymousClassesToBuffer($reflected->ids());
+    }
+
+    private function addNoColumnAnonymousClassesToBuffer(array $reflectedIds): void
+    {
+        $lineToIds = [];
+        $file = null;
+        $changeDetector = null;
+
+        foreach ($reflectedIds as $reflectedId) {
+            if ($reflectedId instanceof AnonymousClassId) {
+                $file ??= $reflectedId->file;
+                $lineToIds[$reflectedId->line][] = $reflectedId;
+            }
+        }
+
+        foreach ($lineToIds as $line => $ids) {
+            \assert($file !== null);
+            $noColumnId = Id::anonymousClass($file, $line);
+
+            if (\count($ids) === 1) {
+                $this->buffer = $this->buffer->with($noColumnId, $this->buffer[$ids[0]]);
+
+                continue;
+            }
+
+            $changeDetector ??= FileChangeDetector::fromFile($file);
+
+            $this->buffer = $this->buffer->with($noColumnId, new DataCacheItem(
+                static fn(): TypedMap => (new TypedMap())
+                    ->set(Data::ChangeDetector, $changeDetector)
+                    ->set(Data::AnonymousClassColumns, array_map(
+                        static fn(AnonymousClassId $id): int => $id->column ?? throw new \LogicException(),
+                        $ids,
+                    )),
+            ));
+        }
     }
 }

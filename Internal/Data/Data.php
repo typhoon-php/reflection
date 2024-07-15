@@ -63,4 +63,5 @@ enum Data
     public const Variance = VarianceKey::Key;
     public const Constraint = ConstraintKey::Key;
     public const UsePhpDocs = UsePhpDocsKey::Key;
+    public const AnonymousClassColumns = AnonymousClassColumnsKey::Key;
 }
