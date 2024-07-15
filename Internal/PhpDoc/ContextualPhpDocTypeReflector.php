@@ -158,6 +158,7 @@ final class ContextualPhpDocTypeReflector
             },
             'literal-int' => types::literalInt,
             'literal-string' => types::literalString,
+            'literal-float' => types::literalFloat,
             'callable-string' => types::intersection(types::callable, types::string),
             'interface-string', 'enum-string', 'trait-string' => types::classString,
             'callable-array' => types::intersection(types::callable, types::array),
