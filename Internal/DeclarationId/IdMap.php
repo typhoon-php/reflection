@@ -80,6 +80,10 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
         return isset($this->values[$offset->encode()]);
     }
 
+    /**
+     * @param TId $offset
+     * @return TValue
+     */
     public function offsetGet(mixed $offset): mixed
     {
         return $this->values[$offset->encode()][1] ?? throw new \LogicException();
