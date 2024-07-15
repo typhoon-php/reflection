@@ -11,7 +11,6 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
 use Typhoon\Reflection\Internal\Cache\Cache;
-use Typhoon\Reflection\Internal\Cache\DataCacheItem;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
@@ -27,23 +26,17 @@ use Typhoon\Reflection\Resource;
 final class ReflectorSession implements Reflector
 {
     /**
-     * @var \WeakReference<Cache>
-     */
-    private readonly \WeakReference $cache;
-
-    /**
-     * @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem>
+     * @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap|\Closure(): TypedMap>
      */
     private IdMap $buffer;
 
     private function __construct(
         private readonly CodeReflector $codeReflector,
         private readonly Locators $locators,
-        Cache $cache,
+        private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {
-        $this->cache = \WeakReference::create($cache);
-        /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem> */
+        /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap|\Closure(): TypedMap> */
         $this->buffer = new IdMap();
     }
 
@@ -63,10 +56,9 @@ final class ReflectorSession implements Reflector
 
         try {
             $data = $session->reflect($id);
-            $cache->set($session->buffer);
+            $session->persist();
         } finally {
-            /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, DataCacheItem> */
-            $session->buffer = new IdMap();
+            $session->clear();
         }
 
         if ($id instanceof AnonymousClassId && isset($data[Data::AnonymousClassColumns])) {
@@ -97,18 +89,36 @@ final class ReflectorSession implements Reflector
             cache: $cache,
             hooks: $hooks,
         );
-        $session->reflectResourceIntoBuffer($resource);
-        $cache->set($session->buffer);
 
-        return $session->buffer->ids();
+        try {
+            $session->reflectResourceIntoBuffer($resource);
+            $session->persist();
+
+            return $session->buffer->ids();
+        } finally {
+            $session->clear();
+        }
     }
 
     public function reflect(NamedFunctionId|NamedClassId|AnonymousClassId $id): TypedMap
     {
-        $cacheItem = $this->buffer[$id] ?? $this->cache->get()?->get($id);
+        $data = $this->buffer[$id] ?? null;
 
-        if ($cacheItem !== null) {
-            return $cacheItem->get();
+        if ($data !== null) {
+            if ($data instanceof \Closure) {
+                $data = $data();
+                $this->buffer = $this->buffer->with($id, $data);
+            }
+
+            return $data;
+        }
+
+        $data = $this->cache->get($id);
+
+        if ($data !== null) {
+            $this->buffer = $this->buffer->with($id, $data);
+
+            return $data;
         }
 
         $resource = $this->locators->locate($id);
@@ -119,22 +129,25 @@ final class ReflectorSession implements Reflector
 
         $this->reflectResourceIntoBuffer($resource);
 
-        $cacheItem = $this->buffer[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->toString());
+        $data = $this->buffer[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->toString());
 
-        return $cacheItem->get();
+        if ($data instanceof \Closure) {
+            $data = $data();
+            $this->buffer = $this->buffer->with($id, $data);
+        }
+
+        return $data;
     }
 
     private function reflectResourceIntoBuffer(Resource $resource): void
     {
         $reflected = $this->codeReflector
             ->reflectCode($resource->code, $resource->baseData)
-            ->map(fn(TypedMap $data, NamedFunctionId|NamedClassId|AnonymousClassId $id): DataCacheItem => new DataCacheItem(
-                function () use ($resource, $id, $data): TypedMap {
-                    $data = $resource->hooks->process($id, $data, $this);
+            ->map(fn(TypedMap $data, NamedFunctionId|NamedClassId|AnonymousClassId $id): \Closure => function () use ($resource, $id, $data): TypedMap {
+                $data = $resource->hooks->process($id, $data, $this);
 
-                    return $this->hooks->process($id, $resource->hooks->process($id, $data, $this), $this);
-                },
-            ));
+                return $this->hooks->process($id, $resource->hooks->process($id, $data, $this), $this);
+            });
         $this->buffer = $this->buffer->withMultiple($reflected);
         $this->addNoColumnAnonymousClassesToBuffer($reflected->ids());
     }
@@ -164,14 +177,22 @@ final class ReflectorSession implements Reflector
 
             $changeDetector ??= FileChangeDetector::fromFile($file);
 
-            $this->buffer = $this->buffer->with($noColumnId, new DataCacheItem(
-                static fn(): TypedMap => (new TypedMap())
-                    ->set(Data::ChangeDetector, $changeDetector)
-                    ->set(Data::AnonymousClassColumns, array_map(
-                        static fn(AnonymousClassId $id): int => $id->column ?? throw new \LogicException(),
-                        $ids,
-                    )),
-            ));
+            $this->buffer = $this->buffer->with($noColumnId, (new TypedMap())
+                ->set(Data::ChangeDetector, $changeDetector)
+                ->set(Data::AnonymousClassColumns, array_map(
+                    static fn(AnonymousClassId $id): int => $id->column ?? throw new \LogicException(),
+                    $ids,
+                )));
         }
+    }
+
+    private function persist(): void
+    {
+        $this->cache->set($this->buffer->map(static fn(TypedMap|\Closure $data): TypedMap => $data instanceof \Closure ? $data() : $data));
+    }
+
+    private function clear(): void
+    {
+        $this->buffer = $this->buffer->toEmpty();
     }
 }

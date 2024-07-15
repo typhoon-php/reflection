@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\Cache;
 use Psr\SimpleCache\CacheInterface;
 use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @internal
@@ -25,11 +26,11 @@ final class Cache
         private readonly CacheInterface $cache,
     ) {}
 
-    public function get(Id $id): ?DataCacheItem
+    public function get(Id $id): ?TypedMap
     {
         $value = $this->cache->get(self::key($id));
 
-        if ($value instanceof DataCacheItem) {
+        if ($value instanceof TypedMap) {
             return $value;
         }
 
@@ -37,7 +38,7 @@ final class Cache
     }
 
     /**
-     * @param IdMap<Id, DataCacheItem> $data
+     * @param IdMap<Id, TypedMap> $data
      */
     public function set(IdMap $data): void
     {

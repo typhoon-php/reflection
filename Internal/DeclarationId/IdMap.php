@@ -25,9 +25,8 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
     /**
      * @param iterable<TId, TValue> $values
      */
-    public function __construct(
-        iterable $values = [],
-    ) {
+    public function __construct(iterable $values = [])
+    {
         foreach ($values as $id => $value) {
             $this->values[$id->encode()] = [$id, $value];
         }
@@ -73,6 +72,15 @@ final class IdMap implements \ArrayAccess, \IteratorAggregate, \Countable
         }
 
         return $copy;
+    }
+
+    /**
+     * @return self<TId, TValue>
+     */
+    public function toEmpty(): self
+    {
+        /** @var self<TId, TValue> */
+        return new self();
     }
 
     public function offsetExists(mixed $offset): bool

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Cache;
 
 use Psr\SimpleCache\CacheInterface;
-use Typhoon\Reflection\Internal\Cache\DataCacheItem;
+use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api
@@ -16,15 +17,22 @@ final class FreshCache implements CacheInterface
         private readonly CacheInterface $cache,
     ) {}
 
+    private static function isStale(mixed $value): bool
+    {
+        if (!$value instanceof TypedMap) {
+            return false;
+        }
+
+        $changeDetector = $value[Data::ChangeDetector] ?? null;
+
+        return $changeDetector !== null && $changeDetector->changed();
+    }
+
     public function get(string $key, mixed $default = null): mixed
     {
         $value = $this->cache->get($key, $default);
 
-        if ($value instanceof DataCacheItem && $value->changed()) {
-            return $default;
-        }
-
-        return $value;
+        return self::isStale($value) ? $default : $value;
     }
 
     public function set(string $key, mixed $value, null|\DateInterval|int $ttl = null): bool
@@ -44,21 +52,13 @@ final class FreshCache implements CacheInterface
 
     /**
      * @param iterable<string> $keys
-     * @return array<string, mixed>
+     * @return \Generator<string, mixed>
      */
     public function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        $values = [];
-
         foreach ($this->cache->getMultiple($keys) as $key => $value) {
-            if ($value instanceof DataCacheItem && $value->changed()) {
-                $value = $default;
-            }
-
-            $values[$key] = $value;
+            yield $key => self::isStale($value) ? $default : $value;
         }
-
-        return $values;
     }
 
     public function setMultiple(iterable $values, null|\DateInterval|int $ttl = null): bool
@@ -73,12 +73,6 @@ final class FreshCache implements CacheInterface
 
     public function has(string $key): bool
     {
-        $value = $this->cache->get($key);
-
-        if ($value instanceof DataCacheItem && $value->changed()) {
-            return false;
-        }
-
-        return true;
+        return $this->cache->get($key, $this) !== $this;
     }
 }
