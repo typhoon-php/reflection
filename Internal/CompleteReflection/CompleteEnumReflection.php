@@ -31,7 +31,7 @@ final class CompleteEnumReflection implements ClassReflectionHook
         $interfaces = $data[Data::UnresolvedInterfaces];
         $properties = $data[Data::Properties];
         $methods = $data[Data::Methods];
-        $staticType = types::static($id);
+        $staticType = types::static(resolvedClass: $id);
 
         $interfaces[\UnitEnum::class] = [];
 

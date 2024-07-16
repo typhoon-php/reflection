@@ -73,16 +73,16 @@ final class TypeContext
     {
         if ($name->isSpecialClassName()) {
             return match ($name->toLowerString()) {
-                'self' => types::self($this->self, ...$arguments),
-                'parent' => types::parent($this->parent, ...$arguments),
-                default => types::static($this->self, ...$arguments),
+                'self' => types::self($arguments, $this->self),
+                'parent' => types::parent($arguments, $this->parent),
+                default => types::static($arguments, $this->self),
             };
         }
 
         $stringName = $name->toString();
 
         if (isset($this->aliases[$stringName])) {
-            return types::alias($this->aliases[$stringName], ...$arguments);
+            return types::alias($this->aliases[$stringName], $arguments);
         }
 
         if (isset($this->templates[$stringName])) {
@@ -93,6 +93,6 @@ final class TypeContext
             return types::template($this->templates[$stringName]);
         }
 
-        return types::object($this->nameContext->getResolvedClassName($name)->toString(), ...$arguments);
+        return types::object($this->nameContext->getResolvedClassName($name)->toString(), $arguments);
     }
 }
