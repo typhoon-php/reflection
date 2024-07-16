@@ -353,7 +353,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->set(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                 ->set(Data::NativeFinal, false)
                 ->set(Data::EnumCase, true)
-                ->set(Data::Type, new TypeData(types::classConstant($typeContext->resolveType(new Name('self')), $name)))
+                ->set(Data::Type, new TypeData(types::classConst($typeContext->resolveType(new Name('self')), $name)))
                 ->set(Data::Visibility, Visibility::Public);
 
             if ($node->expr !== null) {
