@@ -18,16 +18,6 @@ final class TemplateReflection
     public readonly TemplateId $id;
 
     /**
-     * @var non-empty-string
-     */
-    public readonly string $name;
-
-    /**
-     * @var non-negative-int
-     */
-    public readonly int $index;
-
-    /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
      *
@@ -43,9 +33,15 @@ final class TemplateReflection
     public function __construct(TemplateId $id, TypedMap $data)
     {
         $this->id = $id;
-        $this->name = $id->name;
-        $this->index = $data[Data::Index];
         $this->data = $data;
+    }
+
+    /**
+     * @return non-negative-int
+     */
+    public function index(): int
+    {
+        return $this->data[Data::Index];
     }
 
     public function variance(): Variance

@@ -40,7 +40,7 @@ final class ParameterAdapter extends \ReflectionParameter
     public function __get(string $name): mixed
     {
         return match ($name) {
-            'name' => $this->reflection->name,
+            'name' => $this->reflection->id->name,
             default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
@@ -177,7 +177,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getName(): string
     {
-        return $this->reflection->name;
+        return $this->reflection->id->name;
     }
 
     public function getPosition(): int

@@ -17,11 +17,6 @@ final class AliasReflection
     public readonly AliasId $id;
 
     /**
-     * @var non-empty-string
-     */
-    public readonly string $name;
-
-    /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
      *
@@ -37,7 +32,6 @@ final class AliasReflection
     public function __construct(AliasId $id, TypedMap $data)
     {
         $this->id = $id;
-        $this->name = $id->name;
         $this->data = $data;
     }
 

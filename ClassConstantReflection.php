@@ -19,11 +19,6 @@ final class ClassConstantReflection
     public readonly ClassConstantId $id;
 
     /**
-     * @var non-empty-string
-     */
-    public readonly string $name;
-
-    /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
      *
@@ -47,7 +42,6 @@ final class ClassConstantReflection
         private readonly TyphoonReflector $reflector,
     ) {
         $this->id = $id;
-        $this->name = $id->name;
         $this->data = $data;
     }
 
@@ -103,7 +97,7 @@ final class ClassConstantReflection
         if ($this->isEnumCase()) {
             \assert($this->id->class->name !== null);
 
-            return \constant($this->id->class->name . '::' . $this->name);
+            return \constant($this->id->class->name . '::' . $this->id->name);
         }
 
         return $this->data[Data::ValueExpression]->evaluate($this->reflector);

@@ -32,7 +32,7 @@ final class PropertyAdapter extends \ReflectionProperty
     public function __get(string $name)
     {
         return match ($name) {
-            'name' => $this->reflection->name,
+            'name' => $this->reflection->id->name,
             'class' => $this->getDeclaringClass()->name,
             default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
         };
@@ -93,7 +93,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function getName(): string
     {
-        return $this->reflection->name;
+        return $this->reflection->id->name;
     }
 
     public function getType(): ?\ReflectionType
