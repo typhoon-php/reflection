@@ -262,7 +262,7 @@ final class ContextualPhpDocTypeReflector
             return types::listShape($elements);
         }
 
-        return types::listShapeUnsealed($elements);
+        return types::unsealedListShape($elements);
     }
 
     private function reflectArrayShape(ArrayShapeNode $node): Type
@@ -291,7 +291,7 @@ final class ContextualPhpDocTypeReflector
             return types::arrayShape($elements);
         }
 
-        return types::arrayShapeUnsealed($elements);
+        return types::unsealedArrayShape($elements);
     }
 
     private function reflectObjectShape(ObjectShapeNode $node): Type
