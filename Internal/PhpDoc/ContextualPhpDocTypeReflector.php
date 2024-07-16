@@ -252,10 +252,17 @@ final class ContextualPhpDocTypeReflector
         }
 
         if ($node->sealed) {
-            return types::listShapeSealed($elements);
+            if (!array_is_list($elements)) {
+                throw new InvalidPhpDocType(sprintf(
+                    'Keys in a sealed shape must be a list, got %s',
+                    implode(', ', array_keys($elements)),
+                ));
+            }
+
+            return types::listShape($elements);
         }
 
-        return types::listShape($elements);
+        return types::listShapeUnsealed($elements);
     }
 
     private function reflectArrayShape(ArrayShapeNode $node): Type
