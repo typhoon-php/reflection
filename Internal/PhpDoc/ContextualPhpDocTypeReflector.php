@@ -142,8 +142,6 @@ final class ContextualPhpDocTypeReflector
             'string' => types::string,
             'non-falsy-string', 'truthy-string' => types::truthyString,
             'numeric-string' => types::numericString,
-            'lowercase-string' => types::lowercaseString,
-            'non-empty-lowercase-string' => types::intersection(types::nonEmptyString, types::lowercaseString),
             'class-string' => match (\count($genericTypes)) {
                 0 => types::classString,
                 1 => types::classString($this->reflectType($genericTypes[0])),
