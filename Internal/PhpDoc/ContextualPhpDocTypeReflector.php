@@ -27,6 +27,7 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use Typhoon\Reflection\Internal\TypeContext\NameParser;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
+use Typhoon\Type\Argument;
 use Typhoon\Type\Parameter;
 use Typhoon\Type\ShapeElement;
 use Typhoon\Type\Type;
@@ -386,12 +387,11 @@ final class ContextualPhpDocTypeReflector
     private function reflectCallableParameters(array $nodes): array
     {
         return array_map(
-            fn(CallableTypeParameterNode $parameter): Parameter => types::param(
+            fn(CallableTypeParameterNode $parameter): Parameter => new Parameter(
                 type: $this->reflectType($parameter->type),
                 hasDefault: $parameter->isOptional,
                 variadic: $parameter->isVariadic,
                 byReference: $parameter->isReference,
-                name: $parameter->parameterName ?: null,
             ),
             $nodes,
         );
@@ -404,7 +404,7 @@ final class ContextualPhpDocTypeReflector
         } else {
             $name = ltrim($node->parameterName, '$');
             \assert($name !== '');
-            $subject = types::arg($name);
+            $subject = new Argument($name);
         }
 
         if ($node->negated) {
