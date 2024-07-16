@@ -32,6 +32,8 @@ final class AttributeReflection
     public readonly TypedMap $data;
 
     /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
      * @param non-negative-int $index
      */
     public function __construct(

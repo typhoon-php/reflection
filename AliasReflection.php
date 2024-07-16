@@ -14,6 +14,8 @@ use Typhoon\Type\Type;
  */
 final class AliasReflection
 {
+    public readonly AliasId $id;
+
     /**
      * @var non-empty-string
      */
@@ -28,10 +30,13 @@ final class AliasReflection
      */
     public readonly TypedMap $data;
 
-    public function __construct(
-        public readonly AliasId $id,
-        TypedMap $data,
-    ) {
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
+    public function __construct(AliasId $id, TypedMap $data)
+    {
+        $this->id = $id;
         $this->name = $id->name;
         $this->data = $data;
     }

@@ -15,6 +15,8 @@ use Typhoon\Type\Variance;
  */
 final class TemplateReflection
 {
+    public readonly TemplateId $id;
+
     /**
      * @var non-empty-string
      */
@@ -34,10 +36,13 @@ final class TemplateReflection
      */
     public readonly TypedMap $data;
 
-    public function __construct(
-        public readonly TemplateId $id,
-        TypedMap $data,
-    ) {
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
+    public function __construct(TemplateId $id, TypedMap $data)
+    {
+        $this->id = $id;
         $this->name = $id->name;
         $this->index = $data[Data::Index];
         $this->data = $data;

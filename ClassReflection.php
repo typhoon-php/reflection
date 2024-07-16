@@ -21,6 +21,11 @@ use Typhoon\Type\Type;
 final class ClassReflection
 {
     /**
+     * @var TId
+     */
+    public readonly AnonymousClassId|NamedClassId $id;
+
+    /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
      *
@@ -60,13 +65,16 @@ final class ClassReflection
     private ?NameMap $methods = null;
 
     /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
      * @param TId $id
      */
     public function __construct(
-        public readonly NamedClassId|AnonymousClassId $id,
+        NamedClassId|AnonymousClassId $id,
         TypedMap $data,
         private readonly TyphoonReflector $reflector,
     ) {
+        $this->id = $id;
         $this->data = $data;
     }
 

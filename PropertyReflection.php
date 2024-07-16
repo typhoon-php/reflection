@@ -16,6 +16,8 @@ use Typhoon\Type\Type;
  */
 final class PropertyReflection
 {
+    public readonly PropertyId $id;
+
     /**
      * @var non-empty-string
      */
@@ -35,11 +37,16 @@ final class PropertyReflection
      */
     private ?ListOf $attributes = null;
 
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
     public function __construct(
-        public readonly PropertyId $id,
+        PropertyId $id,
         TypedMap $data,
         private readonly TyphoonReflector $reflector,
     ) {
+        $this->id = $id;
         $this->name = $id->name;
         $this->data = $data;
     }

@@ -19,6 +19,8 @@ use Typhoon\Type\Type;
  */
 final class FunctionReflection
 {
+    public readonly AnonymousFunctionId|NamedFunctionId $id;
+
     /**
      * @var TName
      */
@@ -48,11 +50,16 @@ final class FunctionReflection
      */
     private ?NameMap $parameters;
 
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
     public function __construct(
-        public readonly NamedFunctionId|AnonymousFunctionId $id,
+        NamedFunctionId|AnonymousFunctionId $id,
         TypedMap $data,
         private readonly TyphoonReflector $reflector,
     ) {
+        $this->id = $id;
         /** @var TName */
         $this->name = $id instanceof NamedFunctionId ? $id->name : null;
         $this->data = $data;

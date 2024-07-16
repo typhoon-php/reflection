@@ -16,6 +16,8 @@ use Typhoon\Type\Type;
  */
 final class ParameterReflection
 {
+    public readonly ParameterId $id;
+
     /**
      * @var non-empty-string
      */
@@ -35,11 +37,16 @@ final class ParameterReflection
      */
     private ?ListOf $attributes = null;
 
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
     public function __construct(
-        public readonly ParameterId $id,
+        ParameterId $id,
         TypedMap $data,
         private readonly TyphoonReflector $reflector,
     ) {
+        $this->id = $id;
         $this->name = $id->name;
         $this->data = $data;
     }

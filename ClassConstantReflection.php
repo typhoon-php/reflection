@@ -16,6 +16,8 @@ use Typhoon\Type\Type;
  */
 final class ClassConstantReflection
 {
+    public readonly ClassConstantId $id;
+
     /**
      * @var non-empty-string
      */
@@ -35,11 +37,16 @@ final class ClassConstantReflection
      */
     private ?ListOf $attributes = null;
 
+    /**
+     * @internal
+     * @psalm-internal Typhoon\Reflection
+     */
     public function __construct(
-        public readonly ClassConstantId $id,
+        ClassConstantId $id,
         TypedMap $data,
         private readonly TyphoonReflector $reflector,
     ) {
+        $this->id = $id;
         $this->name = $id->name;
         $this->data = $data;
     }
