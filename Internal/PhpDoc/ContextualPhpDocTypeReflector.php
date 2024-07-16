@@ -150,11 +150,11 @@ final class ContextualPhpDocTypeReflector
             },
             'array-key' => types::arrayKey,
             'key-of' => match ($number = \count($genericTypes)) {
-                1 => types::key($this->reflectType($genericTypes[0])),
+                1 => types::keyOf($this->reflectType($genericTypes[0])),
                 default => throw new InvalidPhpDocType(sprintf('key-of type should have 1 argument, got %d', $number)),
             },
             'value-of' => match ($number = \count($genericTypes)) {
-                1 => types::value($this->reflectType($genericTypes[0])),
+                1 => types::valueOf($this->reflectType($genericTypes[0])),
                 default => throw new InvalidPhpDocType(sprintf('value-of type should have 1 argument, got %d', $number)),
             },
             'literal-int' => types::literalInt,
