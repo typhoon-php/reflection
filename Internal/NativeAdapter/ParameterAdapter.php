@@ -114,12 +114,12 @@ final class ParameterAdapter extends \ReflectionParameter
                     return $this->reflector->reflect($class);
                 }
 
-                public function self(Type $type, null|NamedClassId|AnonymousClassId $resolvedClass, array $typeArguments): mixed
+                public function self(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClass): mixed
                 {
                     return $this->reflection->class();
                 }
 
-                public function parent(Type $type, ?NamedClassId $resolvedClass, array $typeArguments): mixed
+                public function parent(Type $type, array $typeArguments, ?NamedClassId $resolvedClass): mixed
                 {
                     return $this->reflection->class()?->parent();
                 }
