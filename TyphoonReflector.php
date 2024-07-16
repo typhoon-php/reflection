@@ -39,13 +39,13 @@ use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
 use Typhoon\Reflection\Locator\DeterministicLocator;
+use Typhoon\Reflection\Locator\DontAutoloadClassLocator;
 use Typhoon\Reflection\Locator\FileAnonymousLocator;
 use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
-use Typhoon\Reflection\Locator\DontAutoloadClassLocator;
 
 /**
  * @api
