@@ -126,6 +126,7 @@ final class ContextualPhpDocTypeReflector
             'negative-int' => types::negativeInt,
             'non-negative-int' => types::nonNegativeInt,
             'non-positive-int' => types::nonPositiveInt,
+            'non-zero-int' => types::nonZeroInt,
             'int' => match (\count($genericTypes)) {
                 0 => types::int,
                 2 => types::intRange(
