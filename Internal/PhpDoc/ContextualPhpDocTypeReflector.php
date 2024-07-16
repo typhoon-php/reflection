@@ -349,7 +349,7 @@ final class ContextualPhpDocTypeReflector
             $class = $this->typeContext->resolveType(NameParser::parse($exprNode->className));
 
             if ($exprNode->name === 'class') {
-                return types::classString($class);
+                return types::class($class);
             }
 
             return types::classConstant($class, $exprNode->name);
