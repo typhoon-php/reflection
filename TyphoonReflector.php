@@ -45,6 +45,7 @@ use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
+use Typhoon\Reflection\Locator\DontAutoloadClassLocator;
 
 /**
  * @api
@@ -99,7 +100,7 @@ final class TyphoonReflector
             $locators[] = new ComposerLocator();
         }
 
-        $locators[] = new NativeReflectionClassLocator();
+        $locators[] = new DontAutoloadClassLocator(new NativeReflectionClassLocator());
         $locators[] = new NativeReflectionFunctionLocator();
         $locators[] = new FileAnonymousLocator();
 

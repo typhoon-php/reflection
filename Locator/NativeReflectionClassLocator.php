@@ -14,20 +14,8 @@ use Typhoon\Reflection\Resource;
  */
 final class NativeReflectionClassLocator implements NamedClassLocator
 {
-    public function __construct(
-        private readonly bool $autoload = false,
-    ) {}
-
     public function locate(NamedClassId $id): ?Resource
     {
-        if (!$this->autoload
-            && !class_exists($id->name, autoload: false)
-            && !interface_exists($id->name, autoload: false)
-            && !trait_exists($id->name, autoload: false)
-        ) {
-            return null;
-        }
-
         try {
             $reflection = new \ReflectionClass($id->name);
         } catch (\ReflectionException) {
