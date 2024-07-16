@@ -121,13 +121,13 @@ final class ContextualPhpDocTypeReflector
             'true' => types::true,
             'false' => types::false,
             'bool' => types::bool,
-            'float' => types::float,
+            'float', 'double' => types::float,
             'positive-int' => types::positiveInt,
             'negative-int' => types::negativeInt,
             'non-negative-int' => types::nonNegativeInt,
             'non-positive-int' => types::nonPositiveInt,
             'non-zero-int' => types::nonZeroInt,
-            'int' => match (\count($genericTypes)) {
+            'int', 'integer' => match (\count($genericTypes)) {
                 0 => types::int,
                 2 => types::intRange(
                     min: $this->reflectIntLimit($genericTypes[0], 'min'),
@@ -160,7 +160,7 @@ final class ContextualPhpDocTypeReflector
             'literal-int' => types::literalInt,
             'literal-string' => types::literalString,
             'literal-float' => types::literalFloat,
-            'callable-string' => types::intersection(types::callable, types::string),
+            'callable-string' => types::callableString,
             'interface-string', 'enum-string', 'trait-string' => types::classString,
             'callable-array' => types::intersection(types::callable, types::array),
             'resource', 'closed-resource', 'open-resource' => types::resource,
