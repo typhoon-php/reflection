@@ -120,7 +120,7 @@ final class ContextualPhpDocTypeReflector
             'null' => types::null,
             'true' => types::true,
             'false' => types::false,
-            'bool' => types::bool,
+            'bool', 'boolean' => types::bool,
             'float', 'double' => types::float,
             'positive-int' => types::positiveInt,
             'negative-int' => types::negativeInt,
