@@ -91,11 +91,7 @@ final class ClassReflection
     public function aliases(): NameMap
     {
         return $this->aliases ??= (new NameMap($this->data[Data::Aliases]))->map(
-            function (TypedMap $data, string $name): AliasReflection {
-                \assert($this->id instanceof NamedClassId);
-
-                return new AliasReflection(Id::alias($this->id, $name), $data);
-            },
+            fn(TypedMap $data, string $name): AliasReflection => new AliasReflection(Id::alias($this->id, $name), $data),
         );
     }
 
