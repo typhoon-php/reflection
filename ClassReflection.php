@@ -246,13 +246,6 @@ final class ClassReflection
         };
     }
 
-    public function isInstantiable(): bool
-    {
-        return $this->data[Data::ClassKind] === ClassKind::Class_
-            && !$this->isAbstract()
-            && (!isset($this->methods()['__construct']) || $this->methods()['__construct']->isPublic());
-    }
-
     public function isInterface(): bool
     {
         return $this->data[Data::ClassKind] === ClassKind::Interface;
@@ -353,41 +346,6 @@ final class ClassReflection
     public function isInternallyDefined(): bool
     {
         return $this->data[Data::InternallyDefined];
-    }
-
-    /**
-     * @psalm-suppress MixedMethodCall
-     * @return TObject
-     */
-    public function newInstance(mixed ...$arguments): object
-    {
-        if (!$this->isInstantiable()) {
-            throw new \LogicException(sprintf('Class "%s" is not instantiable', $this->id->toString()));
-        }
-
-        $name = $this->id->name ?? throw new \LogicException(sprintf(
-            "Cannot instantiate anonymous class %s, because it's runtime name is not available",
-            $this->id->toString(),
-        ));
-
-        return new $name(...$arguments);
-    }
-
-    /**
-     * @return TObject
-     */
-    public function newInstanceWithoutConstructor(): object
-    {
-        if ($this->kind() !== ClassKind::Class_) {
-            throw new \LogicException(sprintf('Class "%s" is not instantiable', $this->id->toString()));
-        }
-
-        $name = $this->id->name ?? throw new \LogicException(sprintf(
-            "Cannot instantiate anonymous class %s, because it's runtime name is not available",
-            $this->id->toString(),
-        ));
-
-        return (new \ReflectionClass($name))->newInstanceWithoutConstructor();
     }
 
     /**

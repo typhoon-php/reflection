@@ -401,7 +401,9 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isInstantiable(): bool
     {
-        return $this->reflection->isInstantiable();
+        return $this->reflection->kind() === ClassKind::Class_
+            && !$this->reflection->isAbstract()
+            && (($this->reflection->methods()['__construct'] ?? null)?->isPublic() ?? true);
     }
 
     public function isInterface(): bool
@@ -468,7 +470,9 @@ final class ClassAdapter extends \ReflectionClass
 
     public function newInstance(mixed ...$args): object
     {
-        return $this->reflection->newInstance(...$args);
+        $this->loadNative();
+
+        return parent::newInstanceArgs($args);
     }
 
     /**
@@ -476,7 +480,9 @@ final class ClassAdapter extends \ReflectionClass
      */
     public function newInstanceArgs(array $args = []): object
     {
-        return $this->reflection->newInstance(...$args);
+        $this->loadNative();
+
+        return parent::newInstanceArgs($args);
     }
 
     public function newInstanceWithoutConstructor(): object
