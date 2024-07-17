@@ -25,7 +25,7 @@ final class CleanUp implements ConstantReflectionHook, FunctionReflectionHook, C
     public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         return $data
-            ->unset(
+            ->without(
                 Data::TypeContext,
                 Data::UnresolvedChangeDetectors,
                 Data::UnresolvedInterfaces,
@@ -35,8 +35,8 @@ final class CleanUp implements ConstantReflectionHook, FunctionReflectionHook, C
                 Data::TraitMethodAliases,
                 Data::TraitMethodPrecedence,
             )
-            ->modifyIfSet(Data::Methods, static fn(array $methods): array => array_map(
-                static fn(TypedMap $data): TypedMap => $data->unset(Data::TypeContext),
+            ->withModifiedIfSet(Data::Methods, static fn(array $methods): array => array_map(
+                static fn(TypedMap $data): TypedMap => $data->without(Data::TypeContext),
                 $methods,
             ));
     }

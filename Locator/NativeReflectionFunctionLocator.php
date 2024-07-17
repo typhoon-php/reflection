@@ -33,7 +33,7 @@ final class NativeReflectionFunctionLocator implements NamedFunctionLocator
         $baseData = new TypedMap();
 
         if ($extension !== false) {
-            $baseData = $baseData->set(Data::PhpExtension, $extension);
+            $baseData = $baseData->with(Data::PhpExtension, $extension);
         }
 
         return Resource::fromFile($file, $baseData);

@@ -23,7 +23,7 @@ final class AddStringableInterface implements ClassReflectionHook
             return $data;
         }
 
-        return $data->modify(Data::UnresolvedInterfaces, static fn(array $interfaces): array => [
+        return $data->withModified(Data::UnresolvedInterfaces, static fn(array $interfaces): array => [
             ...$interfaces,
             \Stringable::class => [],
         ]);

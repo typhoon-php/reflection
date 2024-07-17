@@ -33,7 +33,7 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      * @param Key<T> $key
      * @param T $value
      */
-    public function set(Key $key, mixed $value): self
+    public function with(Key $key, mixed $value): self
     {
         $copy = clone $this;
         $copy->values->attach($key, $value);
@@ -46,9 +46,9 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      * @param Key<T> $key
      * @param callable(T): T $modify
      */
-    public function modify(Key $key, callable $modify): self
+    public function withModified(Key $key, callable $modify): self
     {
-        return $this->set($key, $modify($this[$key]));
+        return $this->with($key, $modify($this[$key]));
     }
 
     /**
@@ -56,16 +56,16 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      * @param Key<T> $key
      * @param callable(T): T $modify
      */
-    public function modifyIfSet(Key $key, callable $modify): self
+    public function withModifiedIfSet(Key $key, callable $modify): self
     {
         if (!$this->values->contains($key)) {
             return $this;
         }
 
-        return $this->set($key, $modify($this[$key]));
+        return $this->with($key, $modify($this[$key]));
     }
 
-    public function merge(self $map): self
+    public function withMap(self $map): self
     {
         $copy = clone $this;
         $copy->values->addAll($map->values);
@@ -73,7 +73,7 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
         return $copy;
     }
 
-    public function unset(Key ...$keys): self
+    public function without(Key ...$keys): self
     {
         $copy = clone $this;
 

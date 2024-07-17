@@ -25,15 +25,15 @@ final class EnsureReadonlyClassPropertiesAreReadonly implements ClassReflectionH
         }
 
         if ($data[Data::NativeReadonly]) {
-            $data = $data->modifyIfSet(Data::Properties, static fn(array $properties): array => array_map(
-                static fn(TypedMap $property): TypedMap => $property->set(Data::NativeReadonly, true),
+            $data = $data->withModifiedIfSet(Data::Properties, static fn(array $properties): array => array_map(
+                static fn(TypedMap $property): TypedMap => $property->with(Data::NativeReadonly, true),
                 $properties,
             ));
         }
 
         if ($data[Data::AnnotatedReadonly]) {
-            $data = $data->modifyIfSet(Data::Properties, static fn(array $properties): array => array_map(
-                static fn(TypedMap $property): TypedMap => $property->set(Data::AnnotatedReadonly, true),
+            $data = $data->withModifiedIfSet(Data::Properties, static fn(array $properties): array => array_map(
+                static fn(TypedMap $property): TypedMap => $property->with(Data::AnnotatedReadonly, true),
                 $properties,
             ));
         }

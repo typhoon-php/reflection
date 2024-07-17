@@ -179,8 +179,8 @@ final class ReflectorSession implements Reflector
             $changeDetector ??= ChangeDetectors::from($resource->baseData[Data::UnresolvedChangeDetectors] ?: throw new \LogicException('Change detector is required for anonymous class resolution'));
 
             $this->buffer = $this->buffer->with($noColumnId, (new TypedMap())
-                ->set(Data::ChangeDetector, $changeDetector)
-                ->set(Data::AnonymousClassColumns, array_map(
+                ->with(Data::ChangeDetector, $changeDetector)
+                ->with(Data::AnonymousClassColumns, array_map(
                     static fn(AnonymousClassId $id): int => $id->column ?? throw new \LogicException(),
                     $ids,
                 )));

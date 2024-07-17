@@ -78,15 +78,15 @@ final class ClassInheritance
     private function applyOwn(): void
     {
         foreach ($this->data[Data::ClassConstants] as $name => $constant) {
-            $this->constant($name)->applyOwn($constant->set(Data::DeclaringClassId, $this->id));
+            $this->constant($name)->applyOwn($constant->with(Data::DeclaringClassId, $this->id));
         }
 
         foreach ($this->data[Data::Properties] as $name => $property) {
-            $this->property($name)->applyOwn($property->set(Data::DeclaringClassId, $this->id));
+            $this->property($name)->applyOwn($property->with(Data::DeclaringClassId, $this->id));
         }
 
         foreach ($this->data[Data::Methods] as $name => $method) {
-            $this->method($name)->applyOwn($method->set(Data::DeclaringClassId, $this->id));
+            $this->method($name)->applyOwn($method->with(Data::DeclaringClassId, $this->id));
         }
     }
 
@@ -133,7 +133,7 @@ final class ClassInheritance
                 $methodToUse = $method;
 
                 if ($alias->newVisibility !== null) {
-                    $methodToUse = $methodToUse->set(Data::Visibility, $alias->newVisibility);
+                    $methodToUse = $methodToUse->with(Data::Visibility, $alias->newVisibility);
                 }
 
                 $this->method($alias->newName ?? $methodName)->applyUsed($methodToUse, $typeResolvers);
@@ -198,18 +198,18 @@ final class ClassInheritance
     {
         return $this
             ->data
-            ->set(Data::UnresolvedChangeDetectors, $this->changeDetectors)
-            ->set(Data::Parents, $this->parents)
-            ->set(Data::Interfaces, [...$this->ownInterfaces, ...$this->inheritedInterfaces])
-            ->set(Data::ClassConstants, array_filter(array_map(
+            ->with(Data::UnresolvedChangeDetectors, $this->changeDetectors)
+            ->with(Data::Parents, $this->parents)
+            ->with(Data::Interfaces, [...$this->ownInterfaces, ...$this->inheritedInterfaces])
+            ->with(Data::ClassConstants, array_filter(array_map(
                 static fn(PropertyInheritance $resolver): ?TypedMap => $resolver->build(),
                 $this->constants,
             )))
-            ->set(Data::Properties, array_filter(array_map(
+            ->with(Data::Properties, array_filter(array_map(
                 static fn(PropertyInheritance $resolver): ?TypedMap => $resolver->build(),
                 $this->properties,
             )))
-            ->set(Data::Methods, array_filter(array_map(
+            ->with(Data::Methods, array_filter(array_map(
                 static fn(MethodInheritance $resolver): ?TypedMap => $resolver->build(),
                 $this->methods,
             )));

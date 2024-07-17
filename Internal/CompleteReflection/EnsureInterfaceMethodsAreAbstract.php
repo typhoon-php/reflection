@@ -24,8 +24,8 @@ final class EnsureInterfaceMethodsAreAbstract implements ClassReflectionHook
             return $data;
         }
 
-        return $data->modifyIfSet(Data::Methods, static fn(array $methods): array => array_map(
-            static fn(TypedMap $method): TypedMap => $method->set(Data::Abstract, true),
+        return $data->withModifiedIfSet(Data::Methods, static fn(array $methods): array => array_map(
+            static fn(TypedMap $method): TypedMap => $method->with(Data::Abstract, true),
             $methods,
         ));
     }

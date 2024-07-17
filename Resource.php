@@ -41,8 +41,8 @@ final class Resource
         return new self(
             code: $code,
             baseData: $baseData
-                ->set(Data::File, $file)
-                ->set(Data::UnresolvedChangeDetectors, [FileChangeDetector::fromFileAndContents($file, $code)]),
+                ->with(Data::File, $file)
+                ->with(Data::UnresolvedChangeDetectors, [FileChangeDetector::fromFileAndContents($file, $code)]),
             hooks: $hooks,
         );
     }

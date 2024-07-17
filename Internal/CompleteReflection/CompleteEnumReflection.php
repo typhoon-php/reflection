@@ -36,37 +36,37 @@ final class CompleteEnumReflection implements ClassReflectionHook
         $interfaces[\UnitEnum::class] = [];
 
         $properties['name'] = (new TypedMap())
-            ->set(Data::NativeReadonly, true)
-            ->set(Data::Type, new TypeData(types::string))
-            ->set(Data::Visibility, Visibility::Public);
+            ->with(Data::NativeReadonly, true)
+            ->with(Data::Type, new TypeData(types::string))
+            ->with(Data::Visibility, Visibility::Public);
 
         $methods['cases'] = (new TypedMap())
-            ->set(Data::Static, true)
-            ->set(Data::Type, new TypeData(types::array, types::list($staticType)))
-            ->set(Data::Visibility, Visibility::Public)
-            ->set(Data::InternallyDefined, true);
+            ->with(Data::Static, true)
+            ->with(Data::Type, new TypeData(types::array, types::list($staticType)))
+            ->with(Data::Visibility, Visibility::Public)
+            ->with(Data::InternallyDefined, true);
 
         if ($backingType !== null) {
             $interfaces[\BackedEnum::class] = [];
 
             $properties['value'] = (new TypedMap())
-                ->set(Data::NativeReadonly, true)
-                ->set(Data::Type, new TypeData($backingType))
-                ->set(Data::Visibility, Visibility::Public);
+                ->with(Data::NativeReadonly, true)
+                ->with(Data::Type, new TypeData($backingType))
+                ->with(Data::Visibility, Visibility::Public);
 
             $methods['from'] = $methods['cases']
-                ->set(Data::Type, new TypeData($staticType))
-                ->set(Data::Parameters, [
-                    'value' => (new TypedMap())->set(Data::Type, new TypeData(types::arrayKey, $backingType)),
+                ->with(Data::Type, new TypeData($staticType))
+                ->with(Data::Parameters, [
+                    'value' => (new TypedMap())->with(Data::Type, new TypeData(types::arrayKey, $backingType)),
                 ]);
 
             $methods['tryFrom'] = $methods['from']
-                ->set(Data::Type, new TypeData(types::nullable($staticType)));
+                ->with(Data::Type, new TypeData(types::nullable($staticType)));
         }
 
         return $data
-            ->set(Data::UnresolvedInterfaces, $interfaces)
-            ->set(Data::Properties, $properties)
-            ->set(Data::Methods, $methods);
+            ->with(Data::UnresolvedInterfaces, $interfaces)
+            ->with(Data::Properties, $properties)
+            ->with(Data::Methods, $methods);
     }
 }

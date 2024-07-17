@@ -26,7 +26,7 @@ final class ResolveParametersIndex implements FunctionReflectionHook, ClassRefle
             return $this->resolveParametersIndex($data);
         }
 
-        return $data->modifyIfSet(Data::Methods, fn(array $methods): array => array_map(
+        return $data->withModifiedIfSet(Data::Methods, fn(array $methods): array => array_map(
             $this->resolveParametersIndex(...),
             $methods,
         ));
@@ -34,12 +34,12 @@ final class ResolveParametersIndex implements FunctionReflectionHook, ClassRefle
 
     private function resolveParametersIndex(TypedMap $data): TypedMap
     {
-        return $data->modifyIfSet(Data::Parameters, static fn(array $parameters): array => array_map(
+        return $data->withModifiedIfSet(Data::Parameters, static fn(array $parameters): array => array_map(
             static function (TypedMap $parameter): TypedMap {
                 /** @var non-negative-int */
                 static $index = 0;
 
-                return $parameter->set(Data::Index, $index++);
+                return $parameter->with(Data::Index, $index++);
             },
             $parameters,
         ));

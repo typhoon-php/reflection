@@ -36,10 +36,10 @@ final class CopyPromotedParametersToProperties implements ClassReflectionHook
 
         foreach ($methods['__construct'][Data::Parameters] as $name => $parameter) {
             if ($parameter[Data::Promoted]) {
-                $properties[$name] = $parameter->unset(Data::DefaultValueExpression);
+                $properties[$name] = $parameter->without(Data::DefaultValueExpression);
             }
         }
 
-        return $data->set(Data::Properties, $properties);
+        return $data->with(Data::Properties, $properties);
     }
 }

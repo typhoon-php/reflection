@@ -29,18 +29,18 @@ final class ResolveAttributesRepeated implements FunctionReflectionHook, ClassRe
         }
 
         return $data
-            ->modifyIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
+            ->withModifiedIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
                 $this->resolveAttributesRepeated(...),
                 $constants,
             ))
-            ->modifyIfSet(Data::Properties, fn(array $properties): array => array_map(
+            ->withModifiedIfSet(Data::Properties, fn(array $properties): array => array_map(
                 $this->resolveAttributesRepeated(...),
                 $properties,
             ))
-            ->modifyIfSet(Data::Methods, fn(array $methods): array => array_map(
+            ->withModifiedIfSet(Data::Methods, fn(array $methods): array => array_map(
                 fn(TypedMap $data): TypedMap => $this
                     ->resolveAttributesRepeated($data)
-                    ->modifyIfSet(Data::Parameters, fn(array $parameters): array => array_map(
+                    ->withModifiedIfSet(Data::Parameters, fn(array $parameters): array => array_map(
                         $this->resolveAttributesRepeated(...),
                         $parameters,
                     )),
@@ -63,8 +63,8 @@ final class ResolveAttributesRepeated implements FunctionReflectionHook, ClassRe
             $repeated[$class] = isset($repeated[$class]);
         }
 
-        return $data->set(Data::Attributes, array_map(
-            static fn(TypedMap $attribute): TypedMap => $attribute->set(
+        return $data->with(Data::Attributes, array_map(
+            static fn(TypedMap $attribute): TypedMap => $attribute->with(
                 Data::AttributeRepeated,
                 $repeated[$attribute[Data::AttributeClassName]],
             ),

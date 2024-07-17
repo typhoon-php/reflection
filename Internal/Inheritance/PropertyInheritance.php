@@ -49,6 +49,6 @@ final class PropertyInheritance
 
     public function build(): ?TypedMap
     {
-        return $this->data?->set(Data::Type, $this->type->build());
+        return $this->data?->with(Data::Type, $this->type->build());
     }
 }

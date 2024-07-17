@@ -105,11 +105,11 @@ final class MethodInheritance
     {
         return $this
             ->data
-            ?->set(Data::Parameters, array_filter(array_map(
+            ?->with(Data::Parameters, array_filter(array_map(
                 static fn(PropertyInheritance $parameter): ?TypedMap => $parameter->build(),
                 $this->parameters,
             )))
-            ->set(Data::Type, $this->returnType->build())
-            ->set(Data::ThrowsType, $this->throwsType->build()->annotated);
+            ->with(Data::Type, $this->returnType->build())
+            ->with(Data::ThrowsType, $this->throwsType->build()->annotated);
     }
 }
