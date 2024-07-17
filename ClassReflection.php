@@ -289,29 +289,6 @@ final class ClassReflection
     }
 
     /**
-     * @return non-empty-string
-     */
-    public function shortName(): string
-    {
-        $name = $this->id->name;
-
-        if ($name === null) {
-            return $this->id->toString();
-        }
-
-        $lastSlashPosition = strrpos($name, '\\');
-
-        if ($lastSlashPosition === false) {
-            return $name;
-        }
-
-        $shortName = substr($name, $lastSlashPosition + 1);
-        \assert($shortName !== '', 'A valid class name cannot end with a backslash');
-
-        return $shortName;
-    }
-
-    /**
      * @return ?non-empty-string
      */
     public function extension(): ?string

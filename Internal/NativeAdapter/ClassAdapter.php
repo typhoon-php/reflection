@@ -262,7 +262,22 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getShortName(): string
     {
-        return $this->reflection->shortName();
+        $name = $this->reflection->id->name;
+
+        if ($name === null) {
+            return '{anonymous-class}';
+        }
+
+        $lastSlashPosition = strrpos($name, '\\');
+
+        if ($lastSlashPosition === false) {
+            return $name;
+        }
+
+        $shortName = substr($name, $lastSlashPosition + 1);
+        \assert($shortName !== '', 'A valid class name must not end with a backslash');
+
+        return $shortName;
     }
 
     public function getStartLine(): int|false
