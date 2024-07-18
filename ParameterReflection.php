@@ -138,7 +138,7 @@ final class ParameterReflection
      */
     public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        return $this->data[Data::Type]->byKind($kind);
+        return $this->data[Data::Type]->get($kind);
     }
 
     private ?ParameterAdapter $native = null;

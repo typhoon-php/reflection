@@ -188,7 +188,7 @@ final class FunctionReflection
 
     public function returnType(Kind $kind = Kind::Resolved): ?Type
     {
-        return $this->data[Data::Type]->byKind($kind);
+        return $this->data[Data::Type]->get($kind);
     }
 
     public function throwsType(): ?Type
