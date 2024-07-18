@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\ClassConstantId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassConstantAdapter;
@@ -93,9 +94,8 @@ final class ClassConstantReflection
 
     public function value(): mixed
     {
-        // TODO is it correct?
         if ($this->isEnumCase()) {
-            \assert($this->id->class->name !== null);
+            \assert($this->id->class instanceof NamedClassId, 'Enum cannot be an anonymous class');
 
             return \constant($this->id->class->name . '::' . $this->id->name);
         }
