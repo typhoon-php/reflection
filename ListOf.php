@@ -121,11 +121,11 @@ final class ListOf implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetSet(mixed $offset, mixed $value): never
     {
-        throw new \BadMethodCallException();
+        throw new \BadMethodCallException(sprintf('%s is immutable', self::class));
     }
 
     public function offsetUnset(mixed $offset): never
     {
-        throw new \BadMethodCallException();
+        throw new \BadMethodCallException(sprintf('%s is immutable', self::class));
     }
 }
