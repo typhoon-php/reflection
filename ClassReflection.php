@@ -336,7 +336,7 @@ final class ClassReflection
     /**
      * @return \ReflectionClass<TObject>
      */
-    public function toNative(): \ReflectionClass
+    public function native(): \ReflectionClass
     {
         return $this->native ??= ClassAdapter::create($this, $this->reflector);
     }

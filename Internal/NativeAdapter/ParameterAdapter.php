@@ -129,7 +129,7 @@ final class ParameterAdapter extends \ReflectionParameter
                     return null;
                 }
             },
-        )?->toNative();
+        )?->native();
     }
 
     public function getDeclaringClass(): ?\ReflectionClass
@@ -145,7 +145,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getDeclaringFunction(): \ReflectionFunctionAbstract
     {
-        return $this->reflection->function()->toNative();
+        return $this->reflection->function()->native();
     }
 
     public function getDefaultValue(): mixed

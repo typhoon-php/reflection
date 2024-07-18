@@ -198,7 +198,7 @@ final class FunctionReflection
 
     private ?FunctionAdapter $native = null;
 
-    public function toNative(): \ReflectionFunction
+    public function native(): \ReflectionFunction
     {
         return $this->native ??= new FunctionAdapter($this);
     }

@@ -163,7 +163,7 @@ final class ClassConstantReflection
 
     private ?\ReflectionClassConstant $native = null;
 
-    public function toNative(): \ReflectionClassConstant
+    public function native(): \ReflectionClassConstant
     {
         return $this->native ??= ClassConstantAdapter::create($this, $this->reflector);
     }

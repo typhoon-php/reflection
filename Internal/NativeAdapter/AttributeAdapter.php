@@ -43,7 +43,7 @@ final class AttributeAdapter extends \ReflectionAttribute
         }
 
         return $attributes
-            ->map(static fn(AttributeReflection $attribute): \ReflectionAttribute => $attribute->toNative())
+            ->map(static fn(AttributeReflection $attribute): \ReflectionAttribute => $attribute->native())
             ->toList();
     }
 

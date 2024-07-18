@@ -60,16 +60,16 @@ final class PropertyAdapter extends \ReflectionProperty
         $declaringClassId = $this->reflection->data[Data::DeclaringClassId];
 
         if ($declaringClassId instanceof AnonymousClassId) {
-            return $this->reflector->reflect($this->reflection->id->class)->toNative();
+            return $this->reflector->reflect($this->reflection->id->class)->native();
         }
 
         $declaringClass = $this->reflector->reflect($declaringClassId);
 
         if ($declaringClass->isTrait()) {
-            return $this->reflection->class()->toNative();
+            return $this->reflection->class()->native();
         }
 
-        return $declaringClass->toNative();
+        return $declaringClass->native();
     }
 
     public function getDefaultValue(): mixed

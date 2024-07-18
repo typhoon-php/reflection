@@ -142,7 +142,7 @@ final class PropertyReflection
 
     private ?PropertyAdapter $native = null;
 
-    public function toNative(): \ReflectionProperty
+    public function native(): \ReflectionProperty
     {
         return $this->native ??= new PropertyAdapter($this, $this->reflector);
     }
