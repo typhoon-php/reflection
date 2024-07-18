@@ -10,7 +10,7 @@ use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
-use Typhoon\Reflection\Exception\LocatorFailed;
+use Typhoon\Reflection\Exception\LocatorErrored;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
 use Typhoon\Reflection\Locator\NamedClassLocator;
@@ -68,7 +68,7 @@ final class Locator
                 /** @psalm-suppress PossiblyInvalidArgument */
                 $resource = $locator->locate($id);
             } catch (\Throwable $exception) {
-                throw new LocatorFailed($locator::class, $id, $exception);
+                throw new LocatorErrored($id, $exception);
             }
 
             if ($resource !== null) {
