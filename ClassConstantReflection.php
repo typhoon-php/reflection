@@ -139,16 +139,18 @@ final class ClassConstantReflection
         return isset($this->data[Data::EnumBackingValueExpression]);
     }
 
-    public function backingValue(): int|string
+    public function backingValue(): null|int|string
     {
         $expression = $this->data[Data::EnumBackingValueExpression];
 
         if ($expression === null) {
-            throw new \LogicException('Not a backed enum');
+            return null;
         }
 
-        /** @var int|string */
-        return $expression->evaluate($this->reflector);
+        $value = $expression->evaluate($this->reflector);
+        \assert(\is_int($value) || \is_string($value), 'Enum backing value must be int|string');
+
+        return $value;
     }
 
     /**

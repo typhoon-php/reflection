@@ -47,7 +47,7 @@ final class EnumBackedCaseAdapter extends \ReflectionEnumBackedCase
 
     public function getBackingValue(): int|string
     {
-        return $this->reflection->backingValue();
+        return $this->reflection->backingValue() ?? throw new \ReflectionException('Not a backed enum');
     }
 
     public function getDeclaringClass(): \ReflectionClass
