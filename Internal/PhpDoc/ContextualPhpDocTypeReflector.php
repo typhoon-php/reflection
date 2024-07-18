@@ -27,7 +27,6 @@ use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use Typhoon\Reflection\Internal\TypeContext\NameParser;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
-use Typhoon\Type\Argument;
 use Typhoon\Type\Parameter;
 use Typhoon\Type\ShapeElement;
 use Typhoon\Type\Type;
@@ -402,7 +401,7 @@ final class ContextualPhpDocTypeReflector
         } else {
             $name = ltrim($node->parameterName, '$');
             \assert($name !== '');
-            $subject = new Argument($name);
+            $subject = types::arg($name);
         }
 
         if ($node->negated) {
