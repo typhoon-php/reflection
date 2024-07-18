@@ -8,9 +8,9 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\Data\Data;
-use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
-use Typhoon\Reflection\Internal\ReflectionHook\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
@@ -18,8 +18,10 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class SetAttributesRepeated implements FunctionReflectionHook, ClassReflectionHook
+enum SetAttributesRepeated implements FunctionReflectionHook, ClassReflectionHook
 {
+    case Instance;
+
     public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         $data = self::processAttributes($data);

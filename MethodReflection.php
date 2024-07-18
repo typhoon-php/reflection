@@ -6,7 +6,7 @@ namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;

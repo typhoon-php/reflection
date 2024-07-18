@@ -11,7 +11,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerVisitor;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\PhpParser\FixNodeStartLineVisitor;
 use Typhoon\Reflection\Internal\PhpParser\PhpParserChecker;

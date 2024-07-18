@@ -12,7 +12,7 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Internal\ConstantExpression\ClassConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\TyphoonReflector;

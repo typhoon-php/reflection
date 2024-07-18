@@ -6,9 +6,9 @@ namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
-use Typhoon\Reflection\Internal\Data\Data;
-use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
@@ -16,8 +16,10 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class CopyPromotedParametersToProperties implements ClassReflectionHook
+enum CopyPromotedParametersToProperties implements ClassReflectionHook
 {
+    case Instance;
+
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         $classKind = $data[Data::ClassKind];

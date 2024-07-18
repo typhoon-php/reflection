@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\Reflection\ClassConstantReflection;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\TyphoonReflector;
 

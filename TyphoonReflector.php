@@ -20,7 +20,7 @@ use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
-use Typhoon\Reflection\Internal\Cache\Cache;
+use Typhoon\Reflection\Internal\Cache;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
@@ -28,14 +28,14 @@ use Typhoon\Reflection\Internal\CompleteReflection\RemoveTypeContext;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodsAbstract;
-use Typhoon\Reflection\Internal\CompleteReflection\SetParametersIndex;
+use Typhoon\Reflection\Internal\CompleteReflection\SetParametersIndexes;
 use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertiesReadonly;
 use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
-use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndex;
+use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndexes;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
-use Typhoon\Reflection\Internal\Locator;
+use Typhoon\Reflection\Internal\Locators;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
-use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
+use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectorSession;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
@@ -68,21 +68,21 @@ final class TyphoonReflector
                 phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
                 annotatedTypesDriver: $phpDocReflector,
             ),
-            locator: new Locator($locators ?? self::defaultLocators()),
+            locators: new Locators($locators ?? self::defaultLocators()),
             cache: new Cache($cache),
             hooks: new ReflectionHooks([
                 $phpDocReflector,
-                new CopyPromotedParametersToProperties(),
-                new CompleteEnumReflection(),
-                new SetStringableInterface(),
-                new ResolveClassInheritance(),
-                new SetInterfaceMethodsAbstract(),
-                new SetReadonlyClassPropertiesReadonly(),
-                new SetAttributesRepeated(),
-                new SetParametersIndex(),
-                new SetTemplatesIndex(),
-                new ResolveChangeDetector(),
-                new RemoveTypeContext(),
+                CopyPromotedParametersToProperties::Instance,
+                CompleteEnumReflection::Instance,
+                SetStringableInterface::Instance,
+                ResolveClassInheritance::Instance,
+                SetInterfaceMethodsAbstract::Instance,
+                SetReadonlyClassPropertiesReadonly::Instance,
+                SetAttributesRepeated::Instance,
+                SetParametersIndexes::Instance,
+                SetTemplatesIndexes::Instance,
+                ResolveChangeDetector::Instance,
+                RemoveTypeContext::Instance,
             ]),
         );
     }
@@ -111,7 +111,7 @@ final class TyphoonReflector
 
     private function __construct(
         private readonly CodeReflector $codeReflector,
-        private readonly Locator $locator,
+        private readonly Locators $locators,
         private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {}
@@ -204,7 +204,7 @@ final class TyphoonReflector
         if ($id instanceof NamedFunctionId) {
             $data = ReflectorSession::reflectId(
                 codeReflector: $this->codeReflector,
-                locator: $this->locator,
+                locators: $this->locators,
                 cache: $this->cache,
                 hooks: $this->hooks,
                 id: $id,
@@ -216,7 +216,7 @@ final class TyphoonReflector
         if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
             $data = ReflectorSession::reflectId(
                 codeReflector: $this->codeReflector,
-                locator: $this->locator,
+                locators: $this->locators,
                 cache: $this->cache,
                 hooks: $this->hooks,
                 id: $id,
@@ -241,11 +241,11 @@ final class TyphoonReflector
     {
         return new self(
             codeReflector: $this->codeReflector,
-            locator: $this->locator->with(
+            locators: $this->locators->with(
                 new DeterministicLocator(
                     ReflectorSession::reflectResource(
                         codeReflector: $this->codeReflector,
-                        locator: $this->locator,
+                        locators: $this->locators,
                         cache: $this->cache,
                         hooks: $this->hooks,
                         resource: $resource,

@@ -6,11 +6,11 @@ namespace Typhoon\Reflection;
 
 use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\Reflection\Exception\FileIsNotReadable;
-use Typhoon\Reflection\Internal\Data\Data;
-use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
-use Typhoon\Reflection\Internal\ReflectionHook\ConstantReflectionHook;
-use Typhoon\Reflection\Internal\ReflectionHook\FunctionReflectionHook;
-use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\ConstantReflectionHook;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**

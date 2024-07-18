@@ -8,7 +8,7 @@ use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\FunctionAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;

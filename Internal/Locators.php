@@ -21,7 +21,7 @@ use Typhoon\Reflection\Resource;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class Locator
+final class Locators
 {
     /**
      * @var list<ConstantLocator>

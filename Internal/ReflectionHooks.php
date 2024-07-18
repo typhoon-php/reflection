@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\ReflectionHook;
+namespace Typhoon\Reflection\Internal;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ReflectionHooks implements ConstantReflectionHook, FunctionReflectionHook, ClassReflectionHook
+final class ReflectionHooks
 {
     /**
      * @var list<ConstantReflectionHook>

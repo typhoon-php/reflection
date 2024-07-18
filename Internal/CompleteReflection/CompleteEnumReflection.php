@@ -6,11 +6,11 @@ namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
-use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\types;
@@ -19,8 +19,10 @@ use Typhoon\Type\types;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class CompleteEnumReflection implements ClassReflectionHook
+enum CompleteEnumReflection implements ClassReflectionHook
 {
+    case Instance;
+
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         if ($data[Data::ClassKind] !== ClassKind::Enum) {

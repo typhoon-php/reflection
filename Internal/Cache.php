@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\Cache;
+namespace Typhoon\Reflection\Internal;
 
 use Psr\SimpleCache\CacheInterface;
 use Typhoon\DeclarationId\Id;

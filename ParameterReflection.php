@@ -6,7 +6,7 @@ namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;

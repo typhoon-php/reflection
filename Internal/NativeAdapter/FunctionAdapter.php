@@ -7,7 +7,7 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\FunctionReflection;
-use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\ParameterReflection;
 
