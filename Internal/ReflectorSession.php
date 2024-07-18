@@ -10,6 +10,7 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\ClassDoesNotExist;
+use Typhoon\Reflection\Exception\FailedToLocate;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\Data\Data;
@@ -121,10 +122,14 @@ final class ReflectorSession implements Reflector
             return $data;
         }
 
-        $resource = $this->locators->locate($id);
+        try {
+            $resource = $this->locators->locate($id);
+        } catch (\Throwable $exception) {
+            throw new FailedToLocate($id, $exception);
+        }
 
         if ($resource === null) {
-            throw new ClassDoesNotExist($id->name ?? $id->describe());
+            throw new FailedToLocate($id);
         }
 
         $this->reflectResourceIntoBuffer($resource);
