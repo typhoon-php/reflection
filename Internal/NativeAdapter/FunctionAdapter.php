@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousFunctionId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\FunctionReflection;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
@@ -18,7 +19,7 @@ use Typhoon\Reflection\ParameterReflection;
  */
 final class FunctionAdapter extends \ReflectionFunction
 {
-    public const ANONYMOUS_FUNCTION_NAME = '{closure}';
+    public const ANONYMOUS_FUNCTION_SHORT_NAME = '{closure}';
 
     public function __construct(
         private readonly FunctionReflection $reflection,
@@ -112,22 +113,19 @@ final class FunctionAdapter extends \ReflectionFunction
         return $this->reflection->file() ?? false;
     }
 
-    /**
-     * @psalm-suppress MoreSpecificReturnType
-     */
     public function getName(): string
     {
-        if ($this->reflection->name !== null) {
-            return $this->reflection->name;
+        if ($this->reflection->id instanceof NamedFunctionId) {
+            return $this->reflection->id->name;
         }
 
         $namespace = $this->reflection->namespace();
 
         if ($namespace === '') {
-            return self::ANONYMOUS_FUNCTION_NAME;
+            return self::ANONYMOUS_FUNCTION_SHORT_NAME;
         }
 
-        return $namespace . '\\' . self::ANONYMOUS_FUNCTION_NAME;
+        return $namespace . '\\' . self::ANONYMOUS_FUNCTION_SHORT_NAME;
     }
 
     public function getNamespaceName(): string
@@ -171,7 +169,7 @@ final class FunctionAdapter extends \ReflectionFunction
         $id = $this->reflection->id;
 
         if ($id instanceof AnonymousFunctionId) {
-            return self::ANONYMOUS_FUNCTION_NAME;
+            return self::ANONYMOUS_FUNCTION_SHORT_NAME;
         }
 
         $name = $id->name;
@@ -296,12 +294,12 @@ final class FunctionAdapter extends \ReflectionFunction
             return;
         }
 
-        $name = $this->reflection->name ?? throw new \LogicException(sprintf(
-            'Cannot natively reflect %s',
-            $this->reflection->id->describe(),
-        ));
+        if ($this->reflection->id instanceof AnonymousFunctionId) {
+            throw new \LogicException(sprintf('Cannot natively reflect %s', $this->reflection->id->describe()));
+        }
 
-        parent::__construct($name);
+        /** @psalm-suppress ArgumentTypeCoercion */
+        parent::__construct($this->reflection->id->name);
         $this->nativeLoaded = true;
     }
 }

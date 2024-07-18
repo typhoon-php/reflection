@@ -41,7 +41,7 @@ final class MethodAdapter extends \ReflectionMethod
     public function __get(string $name)
     {
         return match ($name) {
-            'name' => $this->reflection->name,
+            'name' => $this->getName(),
             'class' => $this->getDeclaringClass()->name,
             default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
         };
@@ -145,7 +145,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getName(): string
     {
-        return $this->reflection->name;
+        return $this->reflection->id->name;
     }
 
     public function getNamespaceName(): string
@@ -196,7 +196,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getShortName(): string
     {
-        return $this->reflection->name;
+        return $this->reflection->id->name;
     }
 
     public function getStartLine(): int|false
@@ -271,7 +271,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function isConstructor(): bool
     {
-        return $this->reflection->name === '__construct';
+        return $this->reflection->id->name === '__construct';
     }
 
     public function isDeprecated(): bool
@@ -281,7 +281,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function isDestructor(): bool
     {
-        return $this->reflection->name === '__destruct';
+        return $this->reflection->id->name === '__destruct';
     }
 
     public function isFinal(): bool

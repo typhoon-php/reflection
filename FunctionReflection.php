@@ -15,16 +15,10 @@ use Typhoon\Type\Type;
 
 /**
  * @api
- * @template-covariant TName of ?callable-string
  */
 final class FunctionReflection
 {
     public readonly AnonymousFunctionId|NamedFunctionId $id;
-
-    /**
-     * @var TName
-     */
-    public readonly ?string $name;
 
     /**
      * This internal property is public for testing purposes.
@@ -60,8 +54,6 @@ final class FunctionReflection
         private readonly TyphoonReflector $reflector,
     ) {
         $this->id = $id;
-        /** @var TName */
-        $this->name = $id instanceof NamedFunctionId ? $id->name : null;
         $this->data = $data;
     }
 
@@ -161,9 +153,6 @@ final class FunctionReflection
         return $this->data[Data::Generator];
     }
 
-    /**
-     * @psalm-assert-if-false !null $this->name
-     */
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousFunctionId;

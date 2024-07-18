@@ -20,11 +20,6 @@ final class MethodReflection
     public readonly MethodId $id;
 
     /**
-     * @var non-empty-string
-     */
-    public readonly string $name;
-
-    /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.
      *
@@ -58,7 +53,6 @@ final class MethodReflection
         private readonly TyphoonReflector $reflector,
     ) {
         $this->id = $id;
-        $this->name = $id->name;
         $this->data = $data;
     }
 
