@@ -139,7 +139,7 @@ final class ClassConstantReflection
         return isset($this->data[Data::EnumBackingValueExpression]);
     }
 
-    public function backingValue(): null|int|string
+    public function enumBackingValue(): null|int|string
     {
         $expression = $this->data[Data::EnumBackingValueExpression];
 
