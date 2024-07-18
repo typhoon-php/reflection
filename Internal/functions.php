@@ -29,3 +29,31 @@ function map(iterable $iterable, callable $mapper): array
 
     return $mapped;
 }
+
+/**
+ * @internal
+ * @psalm-internal Typhoon\Reflection
+ * @template TValue
+ * @param array<TValue> $array
+ * @return ($array is non-empty-array ? TValue : ?TValue)
+ */
+function array_value_first(array $array): mixed
+{
+    $key = array_key_first($array);
+
+    return $key === null ? null : $array[$key];
+}
+
+/**
+ * @internal
+ * @psalm-internal Typhoon\Reflection
+ * @template TValue
+ * @param array<TValue> $array
+ * @return ($array is non-empty-array ? TValue : ?TValue)
+ */
+function array_value_last(array $array): mixed
+{
+    $key = array_key_last($array);
+
+    return $key === null ? null : $array[$key];
+}

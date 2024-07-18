@@ -9,6 +9,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeVisitorAbstract;
+use function Typhoon\Reflection\Internal\array_value_last;
 
 /**
  * @internal
@@ -32,29 +33,35 @@ final class FixNodeStartLineVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node): ?int
     {
-        if ($node instanceof Function_ && $node->attrGroups !== []) {
-            $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
-                end($node->attrGroups)->getEndFilePos(),
-                [T_FUNCTION],
-            ));
+        if ($node instanceof Function_) {
+            if ($node->attrGroups !== []) {
+                $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
+                    array_value_last($node->attrGroups)->getEndFilePos(),
+                    [T_FUNCTION],
+                ));
+            }
 
             return null;
         }
 
-        if ($node instanceof ClassLike && $node->attrGroups !== []) {
-            $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
-                end($node->attrGroups)->getEndFilePos(),
-                [T_FINAL, T_READONLY, T_ABSTRACT, T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM],
-            ));
+        if ($node instanceof ClassLike) {
+            if ($node->attrGroups !== []) {
+                $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
+                    array_value_last($node->attrGroups)->getEndFilePos(),
+                    [T_FINAL, T_READONLY, T_ABSTRACT, T_CLASS, T_INTERFACE, T_TRAIT, T_ENUM],
+                ));
+            }
 
             return null;
         }
 
-        if ($node instanceof ClassMethod && $node->attrGroups !== []) {
-            $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
-                end($node->attrGroups)->getEndFilePos(),
-                [T_FINAL, T_ABSTRACT, T_STATIC, T_FUNCTION],
-            ));
+        if ($node instanceof ClassMethod) {
+            if ($node->attrGroups !== []) {
+                $node->setAttribute(self::START_LINE_ATTRIBUTE, $this->findFirstTokenLine(
+                    array_value_last($node->attrGroups)->getEndFilePos(),
+                    [T_FINAL, T_ABSTRACT, T_STATIC, T_FUNCTION],
+                ));
+            }
 
             return null;
         }

@@ -20,6 +20,7 @@ use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\TemplateId;
+use function Typhoon\Reflection\Internal\array_value_last;
 
 /**
  * @internal
@@ -49,7 +50,7 @@ final class TypeContextVisitor extends NodeVisitorAbstract implements TypeContex
 
     public function get(): TypeContext
     {
-        return end($this->contextStack) ?: new TypeContext($this->nameContext);
+        return array_value_last($this->contextStack) ?? new TypeContext($this->nameContext);
     }
 
     public function beforeTraverse(array $nodes): ?array
