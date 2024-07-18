@@ -107,10 +107,6 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
      */
     public function getType(): ?\ReflectionType
     {
-        if ($this->isEnumCase()) {
-            return null;
-        }
-
         return $this->reflection->type(Kind::Native)?->accept(new ToNativeTypeConverter());
     }
 
@@ -124,8 +120,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
      */
     public function hasType(): bool
     {
-        return !$this->isEnumCase()
-            && $this->reflection->type(Kind::Native) !== null;
+        return $this->reflection->type(Kind::Native) !== null;
     }
 
     public function isEnumCase(): bool

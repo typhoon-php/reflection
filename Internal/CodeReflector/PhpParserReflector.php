@@ -344,6 +344,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectEnumCases(TypeContext $typeContext, array $nodes): array
     {
+        $enumId = $typeContext->id;
+        \assert($enumId instanceof NamedClassId, 'Enum cannot be an anonymous class');
+
         $compiler = $this->constantExpressionCompilerProvider->get();
         $cases = [];
 
@@ -354,7 +357,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                 ->with(Data::NativeFinal, false)
                 ->with(Data::EnumCase, true)
-                ->with(Data::Type, new TypeData(types::classConst($typeContext->resolveType(new Name('self')), $name)))
+                ->with(Data::Type, new TypeData(annotated: types::classConst($enumId, $name)))
                 ->with(Data::Visibility, Visibility::Public);
 
             if ($node->expr !== null) {
