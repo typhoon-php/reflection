@@ -8,6 +8,7 @@ use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -76,11 +77,6 @@ final class ClassReflection
     ) {
         $this->id = $id;
         $this->data = $data;
-    }
-
-    public function kind(): ClassKind
-    {
-        return $this->data[Data::ClassKind];
     }
 
     /**
@@ -199,10 +195,15 @@ final class ClassReflection
             || \array_key_exists($class->name, $this->data[Data::Interfaces]);
     }
 
+    public function isClass(): bool
+    {
+        return $this->data[Data::ClassKind] === ClassKind::Class_;
+    }
+
     /**
-     * This method is different from {@see \ReflectionClass::isAbstract()}.
-     * It returns true only for explicitly abstract classes:
-     *     abstract class AC {} -> true
+     * This method is different from {@see \ReflectionClass::isAbstract()}. It returns true only for explicitly
+     * abstract classes:
+     *     abstract class A {} -> true
      *     class C {} -> false
      *     interface I { public function m() {} } -> false
      *     trait T { abstract public function m() {} } -> false.
@@ -215,6 +216,11 @@ final class ClassReflection
     public function isAnonymous(): bool
     {
         return $this->id instanceof AnonymousClassId;
+    }
+
+    public function isInterface(): bool
+    {
+        return $this->data[Data::ClassKind] === ClassKind::Interface;
     }
 
     public function isTrait(): bool
@@ -247,11 +253,6 @@ final class ClassReflection
             Kind::Annotated => $this->data[Data::AnnotatedFinal],
             Kind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
-    }
-
-    public function isInterface(): bool
-    {
-        return $this->data[Data::ClassKind] === ClassKind::Interface;
     }
 
     public function isReadonly(Kind $kind = Kind::Resolved): bool

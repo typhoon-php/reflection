@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\Internal\TypedMap\Key;
 
 /**

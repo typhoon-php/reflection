@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection;
+namespace Typhoon\Reflection\Internal\Data;
 
 /**
- * @api
+ * @internal
+ * @psalm-internal Typhoon\Reflection
  */
 enum ClassKind
 {

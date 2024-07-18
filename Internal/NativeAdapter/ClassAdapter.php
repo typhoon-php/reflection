@@ -8,7 +8,6 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassConstantReflection;
-use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Data\Data;
@@ -390,7 +389,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isCloneable(): bool
     {
-        return $this->reflection->kind() === ClassKind::Class_
+        return $this->reflection->isClass()
             && !$this->reflection->isAbstract()
             && (!isset($this->reflection->methods()['__clone']) || $this->reflection->methods()['__clone']->isPublic());
     }
@@ -416,7 +415,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isInstantiable(): bool
     {
-        return $this->reflection->kind() === ClassKind::Class_
+        return $this->reflection->isClass()
             && !$this->reflection->isAbstract()
             && (($this->reflection->methods()['__construct'] ?? null)?->isPublic() ?? true);
     }
@@ -433,7 +432,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isIterable(): bool
     {
-        return ($this->reflection->kind() === ClassKind::Class_ || $this->reflection->kind() === ClassKind::Enum)
+        return ($this->reflection->isClass() || $this->reflection->isEnum())
             && !$this->reflection->isAbstract()
             && $this->reflection->isInstanceOf(\Traversable::class);
     }
