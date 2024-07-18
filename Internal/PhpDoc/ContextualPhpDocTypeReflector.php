@@ -159,9 +159,9 @@ final class ContextualPhpDocTypeReflector
             'literal-int' => types::literalInt,
             'literal-string' => types::literalString,
             'literal-float' => types::literalFloat,
-            'callable-string' => types::callableString,
+            'callable-string' => types::callableString(),
             'interface-string', 'enum-string', 'trait-string' => types::classString,
-            'callable-array' => types::intersection(types::callable, types::array),
+            'callable-array' => types::callableArray(),
             'resource', 'closed-resource', 'open-resource' => types::resource,
             'list' => match ($number = \count($genericTypes)) {
                 0 => types::list(),
