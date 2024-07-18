@@ -21,7 +21,7 @@ use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache;
-use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
+use Typhoon\Reflection\Internal\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveTypeContext;

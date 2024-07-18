@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\CodeReflector;
+namespace Typhoon\Reflection\Internal\PhpParser;
 
 use PhpParser\Node;
 use PhpParser\Node\AttributeGroup;
@@ -410,7 +410,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             ->with(Data::TypeContext, $typeContext)
             ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->getReturnType())))
             ->with(Data::ByReference, $node->returnsByRef())
-            ->with(Data::Generator, IsGeneratorChecker::check($node))
+            ->with(Data::Generator, GeneratorVisitor::isGenerator($node))
             ->with(Data::Attributes, $this->reflectAttributes($node->getAttrGroups()))
             ->with(Data::Parameters, $this->reflectParameters($typeContext, $node->getParams()));
     }

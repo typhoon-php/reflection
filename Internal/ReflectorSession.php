@@ -10,7 +10,6 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\DeclarationNotFoundInResource;
-use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Resource;
