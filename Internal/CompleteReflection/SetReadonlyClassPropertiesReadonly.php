@@ -16,7 +16,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class EnsureReadonlyClassPropertiesAreReadonly implements ClassReflectionHook
+final class SetReadonlyClassPropertiesReadonly implements ClassReflectionHook
 {
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
@@ -25,16 +25,16 @@ final class EnsureReadonlyClassPropertiesAreReadonly implements ClassReflectionH
         }
 
         if ($data[Data::NativeReadonly]) {
-            $data = $data->withModifiedIfSet(Data::Properties, static fn(array $properties): array => array_map(
+            $data = $data->with(Data::Properties, array_map(
                 static fn(TypedMap $property): TypedMap => $property->with(Data::NativeReadonly, true),
-                $properties,
+                $data[Data::Properties],
             ));
         }
 
         if ($data[Data::AnnotatedReadonly]) {
-            $data = $data->withModifiedIfSet(Data::Properties, static fn(array $properties): array => array_map(
+            $data = $data->with(Data::Properties, array_map(
                 static fn(TypedMap $property): TypedMap => $property->with(Data::AnnotatedReadonly, true),
-                $properties,
+                $data[Data::Properties],
             ));
         }
 

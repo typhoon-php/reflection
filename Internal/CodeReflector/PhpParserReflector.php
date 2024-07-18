@@ -116,7 +116,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::Abstract, $node->isAbstract())
                 ->with(Data::NativeReadonly, $node->isReadonly())
                 ->with(Data::NativeFinal, $node->isFinal())
-                ->with(Data::ClassConstants, $this->reflectConstants($typeContext, $node->getConstants()))
+                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties, $this->reflectProperties($typeContext, $node->getProperties()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
@@ -125,7 +125,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             return $data
                 ->with(Data::ClassKind, ClassKind::Interface)
                 ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->extends))
-                ->with(Data::ClassConstants, $this->reflectConstants($typeContext, $node->getConstants()))
+                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
@@ -138,8 +138,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->implements))
                 ->withMap($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal, true)
-                ->with(Data::EnumBackingType, $backingType)
-                ->with(Data::ClassConstants, [
+                ->with(Data::BackingType, $backingType)
+                ->with(Data::Constants, [
                     ...$this->reflectConstants($typeContext, $node->getConstants()),
                     ...$this->reflectEnumCases($typeContext, array_filter(
                         $node->stmts,
@@ -153,7 +153,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             return $data
                 ->with(Data::ClassKind, ClassKind::Trait)
                 ->withMap($this->reflectTraitUses($node->getTraitUses()))
-                ->with(Data::ClassConstants, $this->reflectConstants($typeContext, $node->getConstants()))
+                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
                 ->with(Data::Properties, $this->reflectProperties($typeContext, $node->getProperties()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
@@ -361,7 +361,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::Visibility, Visibility::Public);
 
             if ($node->expr !== null) {
-                $data = $data->with(Data::EnumBackingValueExpression, $compiler->compile($node->expr));
+                $data = $data->with(Data::BackingValueExpression, $compiler->compile($node->expr));
             }
 
             $cases[$name] = $data;

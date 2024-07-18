@@ -16,7 +16,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class EnsureInterfaceMethodsAreAbstract implements ClassReflectionHook
+final class SetInterfaceMethodsAbstract implements ClassReflectionHook
 {
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
@@ -24,9 +24,9 @@ final class EnsureInterfaceMethodsAreAbstract implements ClassReflectionHook
             return $data;
         }
 
-        return $data->withModifiedIfSet(Data::Methods, static fn(array $methods): array => array_map(
+        return $data->with(Data::Methods, array_map(
             static fn(TypedMap $method): TypedMap => $method->with(Data::Abstract, true),
-            $methods,
+            $data[Data::Methods],
         ));
     }
 }

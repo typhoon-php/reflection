@@ -77,7 +77,7 @@ final class ClassInheritance
 
     private function applyOwn(): void
     {
-        foreach ($this->data[Data::ClassConstants] as $name => $constant) {
+        foreach ($this->data[Data::Constants] as $name => $constant) {
             $this->constant($name)->applyOwn($constant->with(Data::DeclaringClassId, $this->id));
         }
 
@@ -110,7 +110,7 @@ final class ClassInheritance
 
         $typeResolvers = $this->buildTypeResolvers($traitId, $traitData, $arguments);
 
-        foreach ($traitData[Data::ClassConstants] as $constantName => $constant) {
+        foreach ($traitData[Data::Constants] as $constantName => $constant) {
             $this->constant($constantName)->applyUsed($constant, $typeResolvers);
         }
 
@@ -181,7 +181,7 @@ final class ClassInheritance
 
         $typeResolvers = $this->buildTypeResolvers($classId, $classData, $arguments);
 
-        foreach ($classData[Data::ClassConstants] as $constantName => $constant) {
+        foreach ($classData[Data::Constants] as $constantName => $constant) {
             $this->constant($constantName)->applyInherited($constant, $typeResolvers);
         }
 
@@ -201,7 +201,7 @@ final class ClassInheritance
             ->with(Data::UnresolvedChangeDetectors, $this->changeDetectors)
             ->with(Data::Parents, $this->parents)
             ->with(Data::Interfaces, [...$this->ownInterfaces, ...$this->inheritedInterfaces])
-            ->with(Data::ClassConstants, array_filter(array_map(
+            ->with(Data::Constants, array_filter(array_map(
                 static fn(PropertyInheritance $resolver): ?TypedMap => $resolver->build(),
                 $this->constants,
             )))
@@ -212,7 +212,14 @@ final class ClassInheritance
             ->with(Data::Methods, array_filter(array_map(
                 static fn(MethodInheritance $resolver): ?TypedMap => $resolver->build(),
                 $this->methods,
-            )));
+            )))
+            ->without(
+                Data::UnresolvedInterfaces,
+                Data::UnresolvedParent,
+                Data::UnresolvedTraits,
+                Data::TraitMethodAliases,
+                Data::TraitMethodPrecedence,
+            );
     }
 
     /**
@@ -225,10 +232,11 @@ final class ClassInheritance
 
         if ($templates !== []) {
             $resolvers[] = new TemplateTypeResolver(array_map(
-                static fn(string $name, TypedMap $template): array => [
+                static fn(int $index, string $name, TypedMap $template): array => [
                     Id::template($id, $name),
-                    $typeArguments[$template[Data::Index]] ?? $template[Data::Constraint],
+                    $typeArguments[$index] ?? $template[Data::Constraint],
                 ],
+                range(0, \count($templates) - 1),
                 array_keys($templates),
                 $templates,
             ));

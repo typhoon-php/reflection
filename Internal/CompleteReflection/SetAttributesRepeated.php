@@ -18,37 +18,27 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ResolveAttributesRepeated implements FunctionReflectionHook, ClassReflectionHook
+final class SetAttributesRepeated implements FunctionReflectionHook, ClassReflectionHook
 {
     public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
-        $data = $this->resolveAttributesRepeated($data);
+        $data = self::processAttributes($data);
 
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
             return $data;
         }
 
         return $data
-            ->withModifiedIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
-                $this->resolveAttributesRepeated(...),
-                $constants,
-            ))
-            ->withModifiedIfSet(Data::Properties, fn(array $properties): array => array_map(
-                $this->resolveAttributesRepeated(...),
-                $properties,
-            ))
-            ->withModifiedIfSet(Data::Methods, fn(array $methods): array => array_map(
-                fn(TypedMap $data): TypedMap => $this
-                    ->resolveAttributesRepeated($data)
-                    ->withModifiedIfSet(Data::Parameters, fn(array $parameters): array => array_map(
-                        $this->resolveAttributesRepeated(...),
-                        $parameters,
-                    )),
-                $methods,
+            ->with(Data::Constants, array_map(self::processAttributes(...), $data[Data::Constants]))
+            ->with(Data::Properties, array_map(self::processAttributes(...), $data[Data::Properties]))
+            ->with(Data::Methods, array_map(
+                static fn(TypedMap $method): TypedMap => self::processAttributes($method)
+                    ->with(Data::Parameters, array_map(self::processAttributes(...), $method[Data::Parameters])),
+                $data[Data::Methods],
             ));
     }
 
-    private function resolveAttributesRepeated(TypedMap $data): TypedMap
+    private static function processAttributes(TypedMap $data): TypedMap
     {
         $attributes = $data[Data::Attributes];
 

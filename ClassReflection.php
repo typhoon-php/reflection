@@ -132,7 +132,7 @@ final class ClassReflection
      */
     public function constants(): NameMap
     {
-        return $this->constants ??= (new NameMap($this->data[Data::ClassConstants]))->map(
+        return $this->constants ??= (new NameMap($this->data[Data::Constants]))->map(
             fn(TypedMap $data, string $name): ClassConstantReflection => new ClassConstantReflection(Id::classConstant($this->id, $name), $data, $this->reflector),
         );
     }
@@ -235,7 +235,7 @@ final class ClassReflection
 
     public function isBackedEnum(): bool
     {
-        return $this->data[Data::EnumBackingType] !== null;
+        return $this->data[Data::BackingType] !== null;
     }
 
     /**
@@ -243,7 +243,7 @@ final class ClassReflection
      */
     public function enumBackingType(): ?Type
     {
-        return $this->data[Data::EnumBackingType];
+        return $this->data[Data::BackingType];
     }
 
     public function isFinal(Kind $kind = Kind::Resolved): bool

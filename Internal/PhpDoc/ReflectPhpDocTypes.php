@@ -11,7 +11,6 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
-use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data\ClassKind;
@@ -64,6 +63,45 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         return $this->reflectClass($data);
     }
 
+    private function reflectFunction(TypedMap $data): TypedMap
+    {
+        $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
+
+        if ($phpDoc === null) {
+            return $data;
+        }
+
+        $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
+
+        $data = $data
+            ->with(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc, $data[Data::PhpDocStartLine]))
+            ->withModifiedIfSet(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
+                $types = $phpDoc->paramTypes();
+
+                foreach ($types as $name => $type) {
+                    if (isset($parameters[$name])) {
+                        $parameters[$name] = $this->setAnnotatedType($typeReflector, $type, $parameters[$name]);
+                    }
+                }
+
+                return $parameters;
+            });
+
+        $returnType = $phpDoc->returnType();
+
+        if ($returnType !== null) {
+            $data = $this->setAnnotatedType($typeReflector, $returnType, $data);
+        }
+
+        $throwsTypes = $phpDoc->throwsTypes();
+
+        if ($throwsTypes !== []) {
+            $data = $data->with(Data::ThrowsType, types::union(...array_map($typeReflector->reflectType(...), $throwsTypes)));
+        }
+
+        return $data;
+    }
+
     private function reflectClass(TypedMap $data): TypedMap
     {
         $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
@@ -86,7 +124,7 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         }
 
         return $data
-            ->withModifiedIfSet(Data::ClassConstants, fn(array $constants): array => array_map(
+            ->withModifiedIfSet(Data::Constants, fn(array $constants): array => array_map(
                 fn(TypedMap $constant): TypedMap => $this->reflectConstant($typeReflector, $constant),
                 $constants,
             ))
@@ -175,16 +213,15 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
         $aliases = [];
 
         foreach ($phpDoc->typeAliases() as $alias) {
-            $data = (new TypedMap())->with(Data::AliasType, $typeReflector->reflectType($alias->type));
-            $aliases[$alias->alias] = $this->setLines($data, $alias, $phpDocStartLine);
+            $aliases[$alias->alias] = (new TypedMap())
+                ->with(Data::AliasType, $typeReflector->reflectType($alias->type))
+                ->withMap($this->reflectLines($alias, $phpDocStartLine));
         }
 
         foreach ($phpDoc->typeAliasImports() as $aliasImport) {
-            $data = (new TypedMap())->with(
-                Data::AliasType,
-                types::alias(Id::alias($typeReflector->resolveClass($aliasImport->importedFrom), $aliasImport->importedAlias)),
-            );
-            $aliases[$aliasImport->importedAs ?? $aliasImport->importedAlias] = $this->setLines($data, $aliasImport, $phpDocStartLine);
+            $aliases[$aliasImport->importedAs ?? $aliasImport->importedAlias] = (new TypedMap())
+                ->with(Data::AliasType, types::classAlias($typeReflector->resolveClass($aliasImport->importedFrom), $aliasImport->importedAlias))
+                ->withMap($this->reflectLines($aliasImport, $phpDocStartLine));
         }
 
         return $aliases;
@@ -198,54 +235,14 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
     {
         $templates = [];
 
-        foreach ($phpDoc->templates() as $index => $template) {
-            $data = (new TypedMap())
-                ->with(Data::Index, $index)
+        foreach ($phpDoc->templates() as $template) {
+            $templates[$template->name] = (new TypedMap())
                 ->with(Data::Constraint, $typeReflector->reflectType($template->bound) ?? types::mixed)
-                ->with(Data::Variance, PhpDoc::templateTagVariance($template));
-            $templates[$template->name] = $this->setLines($data, $template, $phpDocStartLine);
+                ->with(Data::Variance, PhpDoc::templateTagVariance($template))
+                ->withMap($this->reflectLines($template, $phpDocStartLine));
         }
 
         return $templates;
-    }
-
-    private function reflectFunction(TypedMap $data): TypedMap
-    {
-        $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
-
-        if ($phpDoc === null) {
-            return $data;
-        }
-
-        $typeReflector = new ContextualPhpDocTypeReflector($data[Data::TypeContext]);
-
-        $data = $data
-            ->with(Data::Templates, $this->reflectTemplates($typeReflector, $phpDoc, $data[Data::PhpDocStartLine]))
-            ->withModifiedIfSet(Data::Parameters, function (array $parameters) use ($typeReflector, $phpDoc): array {
-                $types = $phpDoc->paramTypes();
-
-                foreach ($types as $name => $type) {
-                    if (isset($parameters[$name])) {
-                        $parameters[$name] = $this->setAnnotatedType($typeReflector, $type, $parameters[$name]);
-                    }
-                }
-
-                return $parameters;
-            });
-
-        $returnType = $phpDoc->returnType();
-
-        if ($returnType !== null) {
-            $data = $this->setAnnotatedType($typeReflector, $returnType, $data);
-        }
-
-        $throwsTypes = $phpDoc->throwsTypes();
-
-        if ($throwsTypes !== []) {
-            $data = $data->with(Data::ThrowsType, types::union(...array_map($typeReflector->reflectType(...), $throwsTypes)));
-        }
-
-        return $data;
     }
 
     private function reflectConstant(ContextualPhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
@@ -309,22 +306,22 @@ final class ReflectPhpDocTypes implements AnnotatedTypesDriver, ClassReflectionH
     /**
      * @param ?positive-int $phpDocStartLine
      */
-    private function setLines(TypedMap $data, Node $node, ?int $phpDocStartLine): TypedMap
+    private function reflectLines(Node $node, ?int $phpDocStartLine): TypedMap
     {
         if ($phpDocStartLine === null) {
-            return $data;
+            return new TypedMap();
         }
 
         $startLine = $node->getAttribute('startLine');
         $endLine = $node->getAttribute('endLine');
 
         if (\is_int($startLine) && $startLine > 0 && \is_int($endLine) && $endLine > 0) {
-            $data = $data
+            return (new TypedMap())
                 ->with(Data::StartLine, $phpDocStartLine - 1 + $startLine)
                 ->with(Data::EndLine, $phpDocStartLine - 1 + $endLine);
         }
 
-        return $data;
+        return new TypedMap();
     }
 
     /**

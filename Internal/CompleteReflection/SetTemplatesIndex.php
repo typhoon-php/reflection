@@ -18,30 +18,23 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ResolveParametersIndex implements FunctionReflectionHook, ClassReflectionHook
+final class SetTemplatesIndex implements FunctionReflectionHook, ClassReflectionHook
 {
     public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
-        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
-            return $this->resolveParametersIndex($data);
-        }
-
-        return $data->withModifiedIfSet(Data::Methods, fn(array $methods): array => array_map(
-            $this->resolveParametersIndex(...),
-            $methods,
-        ));
+        return self::processTemplates($data)->with(Data::Methods, array_map(self::processTemplates(...), $data[Data::Methods]));
     }
 
-    private function resolveParametersIndex(TypedMap $data): TypedMap
+    private static function processTemplates(TypedMap $data): TypedMap
     {
-        return $data->withModifiedIfSet(Data::Parameters, static fn(array $parameters): array => array_map(
+        return $data->with(Data::Templates, array_map(
             static function (TypedMap $parameter): TypedMap {
                 /** @var non-negative-int */
                 static $index = 0;
 
                 return $parameter->with(Data::Index, $index++);
             },
-            $parameters,
+            $data[Data::Templates],
         ));
     }
 }

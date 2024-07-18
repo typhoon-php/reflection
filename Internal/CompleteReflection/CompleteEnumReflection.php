@@ -27,7 +27,7 @@ final class CompleteEnumReflection implements ClassReflectionHook
             return $data;
         }
 
-        $backingType = $data[Data::EnumBackingType];
+        $backingType = $data[Data::BackingType];
         $interfaces = $data[Data::UnresolvedInterfaces];
         $properties = $data[Data::Properties];
         $methods = $data[Data::Methods];

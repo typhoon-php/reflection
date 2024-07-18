@@ -15,7 +15,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class AddStringableInterface implements ClassReflectionHook
+final class SetStringableInterface implements ClassReflectionHook
 {
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
@@ -23,8 +23,8 @@ final class AddStringableInterface implements ClassReflectionHook
             return $data;
         }
 
-        return $data->withModified(Data::UnresolvedInterfaces, static fn(array $interfaces): array => [
-            ...$interfaces,
+        return $data->with(Data::UnresolvedInterfaces, [
+            ...$data[Data::UnresolvedInterfaces],
             \Stringable::class => [],
         ]);
     }

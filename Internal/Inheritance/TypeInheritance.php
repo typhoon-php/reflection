@@ -54,11 +54,11 @@ final class TypeInheritance
                 }
 
                 // If inherited type resolves to same native type, we should continue to look for something more interesting.
-                if (self::typesEqual($inherited->get(), $this->own->native)) {
+                if (self::typesEqual($inherited->resolved(), $this->own->native)) {
                     continue;
                 }
 
-                return $inherited->withResolved($typeResolvers->resolve($inherited->get()));
+                return $inherited->withResolved($typeResolvers->resolve($inherited->resolved()));
             }
 
             return $this->own;
@@ -69,16 +69,16 @@ final class TypeInheritance
         if (\count($this->inherited) !== 1) {
             foreach ($this->inherited as [$inherited, $typeResolvers]) {
                 // If inherited type resolves to its native type, we should continue to look for something more interesting.
-                if (self::typesEqual($inherited->get(), $inherited->native)) {
+                if (self::typesEqual($inherited->resolved(), $inherited->native)) {
                     continue;
                 }
 
-                return $inherited->withResolved($typeResolvers->resolve($inherited->get()));
+                return $inherited->withResolved($typeResolvers->resolve($inherited->resolved()));
             }
         }
 
         [$inherited, $typeResolvers] = $this->inherited[0];
 
-        return $inherited->withResolved($typeResolvers->resolve($inherited->get()));
+        return $inherited->withResolved($typeResolvers->resolve($inherited->resolved()));
     }
 }

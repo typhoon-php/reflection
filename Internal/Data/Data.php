@@ -14,7 +14,7 @@ enum Data
     public const AttributeClassName = AttributeClassNameKey::Key;
     public const AttributeRepeated = BoolKeys::AttributeRepeated;
     public const Attributes = AttributesKey::Key;
-    public const ClassConstants = NamedDataKeys::ClassConstants;
+    public const Constants = NamedDataKeys::Constants;
     public const ClassKind = ClassKindKey::Key;
     public const Namespace = NamespaceKey::Key;
     public const DeclaringClassId = DeclaringClassIdKey::Key;
@@ -23,8 +23,8 @@ enum Data
     public const StartLine = LineKeys::Start;
     public const EndLine = LineKeys::End;
     public const EnumCase = BoolKeys::EnumCase;
-    public const EnumBackingValueExpression = EnumBackingValueExpressionKey::Key;
-    public const EnumBackingType = EnumBackingTypeKey::Key;
+    public const BackingValueExpression = BackingValueExpressionKey::Key;
+    public const BackingType = BackingTypeKey::Key;
     public const File = FileKey::Key;
     public const Index = ParameterIndexKey::Key;
     public const Abstract = BoolKeys::IsAbstract;

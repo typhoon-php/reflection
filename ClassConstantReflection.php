@@ -136,12 +136,12 @@ final class ClassConstantReflection
 
     public function isBackedEnumCase(): bool
     {
-        return isset($this->data[Data::EnumBackingValueExpression]);
+        return isset($this->data[Data::BackingValueExpression]);
     }
 
     public function enumBackingValue(): null|int|string
     {
-        $expression = $this->data[Data::EnumBackingValueExpression];
+        $expression = $this->data[Data::BackingValueExpression];
 
         if ($expression === null) {
             return null;
@@ -158,7 +158,7 @@ final class ClassConstantReflection
      */
     public function type(Kind $kind = Kind::Resolved): ?Type
     {
-        return $this->data[Data::Type]->get($kind);
+        return $this->data[Data::Type]->ofKind($kind);
     }
 
     private ?\ReflectionClassConstant $native = null;

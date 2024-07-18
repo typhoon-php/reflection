@@ -22,15 +22,16 @@ use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
-use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
-use Typhoon\Reflection\Internal\CompleteReflection\CleanUp;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
-use Typhoon\Reflection\Internal\CompleteReflection\EnsureInterfaceMethodsAreAbstract;
-use Typhoon\Reflection\Internal\CompleteReflection\EnsureReadonlyClassPropertiesAreReadonly;
-use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
+use Typhoon\Reflection\Internal\CompleteReflection\RemoveTypeContext;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
-use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
+use Typhoon\Reflection\Internal\CompleteReflection\SetAttributesRepeated;
+use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodsAbstract;
+use Typhoon\Reflection\Internal\CompleteReflection\SetParametersIndex;
+use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertiesReadonly;
+use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
+use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndex;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locator;
 use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
@@ -73,14 +74,15 @@ final class TyphoonReflector
                 $reflectPhpDocTypes,
                 new CopyPromotedParametersToProperties(),
                 new CompleteEnumReflection(),
-                new AddStringableInterface(),
+                new SetStringableInterface(),
                 new ResolveClassInheritance(),
-                new EnsureInterfaceMethodsAreAbstract(),
-                new EnsureReadonlyClassPropertiesAreReadonly(),
-                new ResolveAttributesRepeated(),
-                new ResolveParametersIndex(),
+                new SetInterfaceMethodsAbstract(),
+                new SetReadonlyClassPropertiesReadonly(),
+                new SetAttributesRepeated(),
+                new SetParametersIndex(),
+                new SetTemplatesIndex(),
                 new ResolveChangeDetector(),
-                new CleanUp(),
+                new RemoveTypeContext(),
             ]),
         );
     }

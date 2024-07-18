@@ -13,7 +13,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @psalm-internal Typhoon\Reflection\Internal
  * @implements OptionalKey<?Expression>
  */
-enum EnumBackingValueExpressionKey implements OptionalKey
+enum BackingValueExpressionKey implements OptionalKey
 {
     case Key;
 

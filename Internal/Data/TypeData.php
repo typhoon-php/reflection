@@ -23,6 +23,11 @@ final class TypeData
         public ?Type $tentative = null,
     ) {}
 
+    public function resolved(): Type
+    {
+        return $this->resolved ?? $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed;
+    }
+
     public function withNative(?Type $native): self
     {
         $data = clone $this;
@@ -58,12 +63,12 @@ final class TypeData
     /**
      * @return ($kind is Kind::Resolved ? Type : ?Type)
      */
-    public function get(Kind $kind = Kind::Resolved): ?Type
+    public function ofKind(Kind $kind = Kind::Resolved): ?Type
     {
         return match ($kind) {
             Kind::Native => $this->native,
             Kind::Annotated => $this->annotated,
-            Kind::Resolved => $this->resolved ?? $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed,
+            Kind::Resolved => $this->resolved(),
         };
     }
 }

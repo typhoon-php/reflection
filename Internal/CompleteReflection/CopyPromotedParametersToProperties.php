@@ -26,15 +26,16 @@ final class CopyPromotedParametersToProperties implements ClassReflectionHook
             return $data;
         }
 
-        $methods = $data[Data::Methods];
+        /** @psalm-suppress PossiblyUndefinedStringArrayOffset */
+        $constructor = $data[Data::Methods]['__construct'] ?? null;
 
-        if (!isset($methods['__construct'])) {
+        if ($constructor === null) {
             return $data;
         }
 
         $properties = $data[Data::Properties];
 
-        foreach ($methods['__construct'][Data::Parameters] as $name => $parameter) {
+        foreach ($constructor[Data::Parameters] as $name => $parameter) {
             if ($parameter[Data::Promoted]) {
                 $properties[$name] = $parameter->without(Data::DefaultValueExpression);
             }
