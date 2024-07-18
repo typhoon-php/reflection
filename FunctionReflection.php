@@ -123,27 +123,6 @@ final class FunctionReflection
     }
 
     /**
-     * @return non-empty-string
-     */
-    public function shortName(): string
-    {
-        if ($this->name === null) {
-            return $this->id->describe();
-        }
-
-        $lastSlashPosition = strrpos($this->name, '\\');
-
-        if ($lastSlashPosition === false) {
-            return $this->name;
-        }
-
-        $shortName = substr($this->name, $lastSlashPosition + 1);
-        \assert($shortName !== '', 'A valid function name cannot end with a backslash');
-
-        return $shortName;
-    }
-
-    /**
      * @return ?non-empty-string
      */
     public function file(): ?string

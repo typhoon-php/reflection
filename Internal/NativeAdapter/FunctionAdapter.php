@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
+use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\Reflection\FunctionReflection;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
@@ -167,11 +168,23 @@ final class FunctionAdapter extends \ReflectionFunction
 
     public function getShortName(): string
     {
-        if ($this->reflection->name === null) {
+        $id = $this->reflection->id;
+
+        if ($id instanceof AnonymousFunctionId) {
             return self::ANONYMOUS_FUNCTION_NAME;
         }
 
-        return $this->reflection->shortName();
+        $name = $id->name;
+        $lastSlashPosition = strrpos($name, '\\');
+
+        if ($lastSlashPosition === false) {
+            return $name;
+        }
+
+        $shortName = substr($name, $lastSlashPosition + 1);
+        \assert($shortName !== '', 'A valid function name must not end with a backslash');
+
+        return $shortName;
     }
 
     public function getStartLine(): int|false
