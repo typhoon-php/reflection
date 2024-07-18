@@ -21,7 +21,7 @@ use PhpParser\NodeVisitorAbstract;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ConstantConstantExpressionCompilerVisitor extends NodeVisitorAbstract implements ConstantExpressionCompilerProvider
+final class ConstantExpressionCompilerVisitor extends NodeVisitorAbstract implements ConstantExpressionCompilerProvider
 {
     /**
      * @var list<ConstantExpressionCompiler>
