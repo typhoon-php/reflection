@@ -232,6 +232,9 @@ final class ClassReflection
         return $this->data[Data::EnumBackingType] !== null;
     }
 
+    /**
+     * @return (TObject is \BackedEnum ? Type<int|string> : ?Type<int|string>)
+     */
     public function enumBackingType(): ?Type
     {
         return $this->data[Data::EnumBackingType];

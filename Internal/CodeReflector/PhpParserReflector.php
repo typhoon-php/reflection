@@ -130,6 +130,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
         }
 
         if ($node instanceof Enum_) {
+            /** @var ?Type<int|string> */
             $backingType = $this->reflectType($typeContext, $node->scalarType);
 
             return $data

@@ -11,7 +11,7 @@ use Typhoon\Type\Type;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<?Type>
+ * @implements OptionalKey<?Type<int|string>>
  */
 enum EnumBackingTypeKey implements OptionalKey
 {
