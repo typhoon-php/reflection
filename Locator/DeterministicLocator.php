@@ -7,9 +7,9 @@ namespace Typhoon\Reflection\Locator;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
+use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Resource;
 
 /**
