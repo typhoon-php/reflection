@@ -73,7 +73,7 @@ final class ReflectorSession implements Reflector
     }
 
     /**
-     * @return list<NamedFunctionId|NamedClassId|AnonymousClassId>
+     * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, \Typhoon\Reflection\Resource>
      */
     public static function reflectResource(
         CodeReflector $codeReflector,
@@ -81,7 +81,7 @@ final class ReflectorSession implements Reflector
         Cache $cache,
         ReflectionHooks $hooks,
         Resource $resource,
-    ): array {
+    ): IdMap {
         $session = new self(
             codeReflector: $codeReflector,
             locator: $locator,
@@ -93,7 +93,7 @@ final class ReflectorSession implements Reflector
             $session->reflectResourceIntoBuffer($resource);
             $session->persist();
 
-            return $session->buffer->ids();
+            return $session->buffer->map(static fn(): Resource => $resource);
         } finally {
             $session->clear();
         }

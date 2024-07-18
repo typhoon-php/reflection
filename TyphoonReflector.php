@@ -31,7 +31,6 @@ use Typhoon\Reflection\Internal\CompleteReflection\EnsureReadonlyClassProperties
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
-use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locator;
 use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
@@ -238,22 +237,18 @@ final class TyphoonReflector
 
     public function withResource(Resource $resource): self
     {
-        $ids = ReflectorSession::reflectResource(
-            codeReflector: $this->codeReflector,
-            locator: $this->locator,
-            cache: $this->cache,
-            hooks: $this->hooks,
-            resource: $resource,
-        );
-
         return new self(
             codeReflector: $this->codeReflector,
             locator: $this->locator->with(
-                new DeterministicLocator(new IdMap((static function () use ($ids, $resource): \Generator {
-                    foreach ($ids as $id) {
-                        yield $id => $resource;
-                    }
-                })())),
+                new DeterministicLocator(
+                    ReflectorSession::reflectResource(
+                        codeReflector: $this->codeReflector,
+                        locator: $this->locator,
+                        cache: $this->cache,
+                        hooks: $this->hooks,
+                        resource: $resource,
+                    ),
+                ),
             ),
             cache: $this->cache,
             hooks: $this->hooks,
