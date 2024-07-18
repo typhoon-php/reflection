@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection;
 
 use Typhoon\ChangeDetector\FileChangeDetector;
-use Typhoon\Reflection\Exception\FileNotReadable;
+use Typhoon\Reflection\Exception\FileIsNotReadable;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\ReflectionHook\ClassReflectionHook;
 use Typhoon\Reflection\Internal\ReflectionHook\ConstantReflectionHook;
@@ -50,14 +50,14 @@ final class Resource
     /**
      * @psalm-assert non-empty-string $file
      * @phpstan-assert non-empty-string $file
-     * @throws FileNotReadable
+     * @throws FileIsNotReadable
      */
     public static function readFile(string $file): string
     {
         $contents = @file_get_contents($file);
 
         if ($contents === false) {
-            throw new FileNotReadable($file);
+            throw new FileIsNotReadable($file);
         }
 
         return $contents;
