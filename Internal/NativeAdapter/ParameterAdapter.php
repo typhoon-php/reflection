@@ -10,10 +10,10 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\ClassReflection;
+use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\ConstantExpression\ClassConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Type;
@@ -59,7 +59,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function allowsNull(): bool
     {
-        return $this->reflection->type(Kind::Native)?->accept(
+        return $this->reflection->type(DeclarationKind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
                 public function null(Type $type): mixed
                 {
@@ -102,7 +102,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getClass(): ?\ReflectionClass
     {
-        return $this->reflection->type(Kind::Native)?->accept(
+        return $this->reflection->type(DeclarationKind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<?ClassReflection> */ class ($this->reflection, $this->reflector) extends DefaultTypeVisitor {
                 public function __construct(
                     private readonly ParameterReflection $reflection,
@@ -187,17 +187,17 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getType(): ?\ReflectionType
     {
-        return $this->reflection->type(Kind::Native)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->type(DeclarationKind::Native)?->accept(new ToNativeTypeConverter());
     }
 
     public function hasType(): bool
     {
-        return $this->reflection->type(Kind::Native) !== null;
+        return $this->reflection->type(DeclarationKind::Native) !== null;
     }
 
     public function isArray(): bool
     {
-        return $this->reflection->type(Kind::Native)?->accept(
+        return $this->reflection->type(DeclarationKind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
                 public function array(Type $type, Type $keyType, Type $valueType, array $elements): mixed
                 {
@@ -214,7 +214,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function isCallable(): bool
     {
-        return $this->reflection->type(Kind::Native)?->accept(
+        return $this->reflection->type(DeclarationKind::Native)?->accept(
             new /** @extends DefaultTypeVisitor<bool> */ class () extends DefaultTypeVisitor {
                 public function callable(Type $type, array $parameters, Type $returnType): mixed
                 {

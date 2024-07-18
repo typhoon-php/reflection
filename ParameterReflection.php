@@ -134,9 +134,9 @@ final class ParameterReflection
     }
 
     /**
-     * @return ($kind is Kind::Resolved ? Type : ?Type)
+     * @return ($kind is null ? Type : ?Type)
      */
-    public function type(Kind $kind = Kind::Resolved): ?Type
+    public function type(?DeclarationKind $kind = null): ?Type
     {
         return $this->data[Data::Type]->ofKind($kind);
     }

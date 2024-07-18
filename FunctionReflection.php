@@ -175,7 +175,7 @@ final class FunctionReflection
         return $this->data[Data::ByReference];
     }
 
-    public function returnType(Kind $kind = Kind::Resolved): ?Type
+    public function returnType(?DeclarationKind $kind = null): ?Type
     {
         return $this->data[Data::Type]->ofKind($kind);
     }

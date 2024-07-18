@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\TyphoonReflector;
@@ -191,7 +191,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getReturnType(): ?\ReflectionType
     {
-        return $this->reflection->returnType(Kind::Native)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->returnType(DeclarationKind::Native)?->accept(new ToNativeTypeConverter());
     }
 
     public function getShortName(): string
@@ -232,7 +232,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function hasReturnType(): bool
     {
-        return $this->reflection->returnType(Kind::Native) !== null;
+        return $this->reflection->returnType(DeclarationKind::Native) !== null;
     }
 
     public function hasTentativeReturnType(): bool
@@ -286,7 +286,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function isFinal(): bool
     {
-        return $this->reflection->isFinal(Kind::Native);
+        return $this->reflection->isFinal(DeclarationKind::Native);
     }
 
     public function isGenerator(): bool

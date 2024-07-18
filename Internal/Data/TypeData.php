@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\Kind;
+use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
@@ -61,14 +61,14 @@ final class TypeData
     }
 
     /**
-     * @return ($kind is Kind::Resolved ? Type : ?Type)
+     * @return ($kind is null ? Type : ?Type)
      */
-    public function ofKind(Kind $kind = Kind::Resolved): ?Type
+    public function ofKind(?DeclarationKind $kind = null): ?Type
     {
         return match ($kind) {
-            Kind::Native => $this->native,
-            Kind::Annotated => $this->annotated,
-            Kind::Resolved => $this->resolved(),
+            DeclarationKind::Native => $this->native,
+            DeclarationKind::Annotated => $this->annotated,
+            null => $this->resolved(),
         };
     }
 }

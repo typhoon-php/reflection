@@ -6,9 +6,9 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\FunctionReflection;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\ParameterReflection;
 
 /**
@@ -161,7 +161,7 @@ final class FunctionAdapter extends \ReflectionFunction
 
     public function getReturnType(): ?\ReflectionType
     {
-        return $this->reflection->returnType(Kind::Native)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->returnType(DeclarationKind::Native)?->accept(new ToNativeTypeConverter());
     }
 
     public function getShortName(): string
@@ -204,7 +204,7 @@ final class FunctionAdapter extends \ReflectionFunction
 
     public function hasReturnType(): bool
     {
-        return $this->reflection->returnType(Kind::Native) !== null;
+        return $this->reflection->returnType(DeclarationKind::Native) !== null;
     }
 
     public function hasTentativeReturnType(): bool

@@ -7,9 +7,8 @@ namespace Typhoon\Reflection;
 /**
  * @api
  */
-enum Kind
+enum DeclarationKind
 {
     case Native;
     case Annotated;
-    case Resolved;
 }

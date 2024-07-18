@@ -123,19 +123,19 @@ final class PropertyReflection
         return $visibility === null || $visibility === Visibility::Public;
     }
 
-    public function isReadonly(Kind $kind = Kind::Resolved): bool
+    public function isReadonly(?DeclarationKind $kind = null): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeReadonly],
-            Kind::Annotated => $this->data[Data::AnnotatedReadonly],
-            Kind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
+            DeclarationKind::Native => $this->data[Data::NativeReadonly],
+            DeclarationKind::Annotated => $this->data[Data::AnnotatedReadonly],
+            null => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
         };
     }
 
     /**
-     * @return ($kind is Kind::Resolved ? Type : ?Type)
+     * @return ($kind is null ? Type : ?Type)
      */
-    public function type(Kind $kind = Kind::Resolved): ?Type
+    public function type(?DeclarationKind $kind = null): ?Type
     {
         return $this->data[Data::Type]->ofKind($kind);
     }

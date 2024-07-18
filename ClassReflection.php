@@ -246,21 +246,21 @@ final class ClassReflection
         return $this->data[Data::BackingType];
     }
 
-    public function isFinal(Kind $kind = Kind::Resolved): bool
+    public function isFinal(?DeclarationKind $kind = null): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeFinal],
-            Kind::Annotated => $this->data[Data::AnnotatedFinal],
-            Kind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
+            DeclarationKind::Native => $this->data[Data::NativeFinal],
+            DeclarationKind::Annotated => $this->data[Data::AnnotatedFinal],
+            null => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
     }
 
-    public function isReadonly(Kind $kind = Kind::Resolved): bool
+    public function isReadonly(?DeclarationKind $kind = null): bool
     {
         return match ($kind) {
-            Kind::Native => $this->data[Data::NativeReadonly],
-            Kind::Annotated => $this->data[Data::AnnotatedReadonly],
-            Kind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
+            DeclarationKind::Native => $this->data[Data::NativeReadonly],
+            DeclarationKind::Annotated => $this->data[Data::AnnotatedReadonly],
+            null => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
         };
     }
 
