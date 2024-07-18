@@ -266,7 +266,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
         }
 
         return $data
-            ->with(Data::AnnotatedReadonly, $data[Data::AnnotatedFinal] || $phpDoc->hasFinal())
+            ->with(Data::AnnotatedReadonly, $data[Data::AnnotatedReadonly] || $phpDoc->hasReadonly())
             ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
     }
 
