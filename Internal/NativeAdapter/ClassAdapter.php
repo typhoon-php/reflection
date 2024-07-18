@@ -204,7 +204,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         return $this->reflection->id->name ?? throw new \ReflectionException(sprintf(
             'Runtime name of anonymous class %s is not available',
-            $this->reflection->id->toString(),
+            $this->reflection->id->describe(),
         ));
     }
 
@@ -524,7 +524,7 @@ final class ClassAdapter extends \ReflectionClass
 
         $class = $this->reflection->id->name ?? throw new \LogicException(sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
-            $this->reflection->id->toString(),
+            $this->reflection->id->describe(),
         ));
 
         parent::__construct($class);

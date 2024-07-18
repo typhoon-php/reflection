@@ -279,12 +279,12 @@ final class ParameterAdapter extends \ReflectionParameter
         }
 
         if ($functionId instanceof AnonymousFunctionId) {
-            throw new \LogicException(sprintf('Cannot natively reflect %s', $functionId->toString()));
+            throw new \LogicException(sprintf('Cannot natively reflect %s', $functionId->describe()));
         }
 
         $class = $functionId->class->name ?? throw new \LogicException(sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
-            $functionId->class->toString(),
+            $functionId->class->describe(),
         ));
 
         parent::__construct([$class, $functionId->name], $this->name);

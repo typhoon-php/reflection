@@ -285,7 +285,7 @@ final class FunctionAdapter extends \ReflectionFunction
 
         $name = $this->reflection->name ?? throw new \LogicException(sprintf(
             'Cannot natively reflect %s',
-            $this->reflection->id->toString(),
+            $this->reflection->id->describe(),
         ));
 
         parent::__construct($name);

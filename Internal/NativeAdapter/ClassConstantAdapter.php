@@ -163,7 +163,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
 
         $class = $this->reflection->id->class->name ?? throw new \LogicException(sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
-            $this->reflection->id->class->toString(),
+            $this->reflection->id->class->describe(),
         ));
 
         /** @psalm-suppress ArgumentTypeCoercion */

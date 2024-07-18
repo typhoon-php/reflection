@@ -64,7 +64,7 @@ final class ReflectorSession implements Reflector
         if ($id instanceof AnonymousClassId && isset($data[Data::AnonymousClassColumns])) {
             throw new \RuntimeException(sprintf(
                 'Cannot reflect %s, because %d anonymous classes are declared at columns %s. Use TyphoonReflector::reflectAnonymousClass() with a $column argument to reflect the exact class you need',
-                $id->toString(),
+                $id->describe(),
                 \count($data[Data::AnonymousClassColumns]),
                 implode(', ', $data[Data::AnonymousClassColumns]),
             ));
@@ -124,12 +124,12 @@ final class ReflectorSession implements Reflector
         $resource = $this->locators->locate($id);
 
         if ($resource === null) {
-            throw new ClassDoesNotExist($id->name ?? $id->toString());
+            throw new ClassDoesNotExist($id->name ?? $id->describe());
         }
 
         $this->reflectResourceIntoBuffer($resource);
 
-        $data = $this->buffer[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->toString());
+        $data = $this->buffer[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->describe());
 
         if ($data instanceof \Closure) {
             $data = $data();

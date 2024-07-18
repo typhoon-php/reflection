@@ -128,7 +128,7 @@ final class FunctionReflection
     public function shortName(): string
     {
         if ($this->name === null) {
-            return $this->id->toString();
+            return $this->id->describe();
         }
 
         $lastSlashPosition = strrpos($this->name, '\\');
