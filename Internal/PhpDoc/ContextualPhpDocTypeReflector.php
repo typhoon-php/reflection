@@ -37,6 +37,8 @@ use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
 /**
+ * This class must not be used as "service", because it injects TypeContext.
+ *
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */

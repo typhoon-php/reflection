@@ -34,7 +34,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndex;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locator;
-use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
+use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
 use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectorSession;
 use Typhoon\Reflection\Locator\AnonymousLocator;
@@ -61,17 +61,17 @@ final class TyphoonReflector
         CacheInterface $cache = new InMemoryCache(),
         ?Parser $phpParser = null,
     ): self {
-        $reflectPhpDocTypes = new ReflectPhpDocTypes();
+        $phpDocReflector = new PhpDocReflector();
 
         return new self(
             codeReflector: new CodeReflector(
                 phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
-                annotatedTypesDriver: $reflectPhpDocTypes,
+                annotatedTypesDriver: $phpDocReflector,
             ),
             locator: new Locator($locators ?? self::defaultLocators()),
             cache: new Cache($cache),
             hooks: new ReflectionHooks([
-                $reflectPhpDocTypes,
+                $phpDocReflector,
                 new CopyPromotedParametersToProperties(),
                 new CompleteEnumReflection(),
                 new SetStringableInterface(),

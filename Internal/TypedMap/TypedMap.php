@@ -49,30 +49,6 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
         return $copy;
     }
 
-    /**
-     * @template T
-     * @param Key<T> $key
-     * @param callable(T): T $modify
-     */
-    public function withModified(Key $key, callable $modify): self
-    {
-        return $this->with($key, $modify($this[$key]));
-    }
-
-    /**
-     * @template T
-     * @param Key<T> $key
-     * @param callable(T): T $modify
-     */
-    public function withModifiedIfSet(Key $key, callable $modify): self
-    {
-        if (!$this->values->contains($key)) {
-            return $this;
-        }
-
-        return $this->with($key, $modify($this[$key]));
-    }
-
     public function withMap(self $map): self
     {
         $copy = clone $this;
