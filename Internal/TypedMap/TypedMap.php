@@ -35,6 +35,14 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public function with(Key $key, mixed $value): self
     {
+        if ($key instanceof OptionalKey && $value === $key->default($this)) {
+            if ($this->values->contains($key)) {
+                return $this->without($key);
+            }
+
+            return $this;
+        }
+
         $copy = clone $this;
         $copy->values->attach($key, $value);
 
