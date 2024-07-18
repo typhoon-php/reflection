@@ -19,6 +19,7 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Cache\InMemoryCache;
+use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\AddStringableInterface;
@@ -32,6 +33,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveParametersIndex;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
+use Typhoon\Reflection\Internal\Locator;
 use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocTypes;
 use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectorSession;
@@ -41,7 +43,6 @@ use Typhoon\Reflection\Locator\ConstantLocator;
 use Typhoon\Reflection\Locator\DeterministicLocator;
 use Typhoon\Reflection\Locator\DontAutoloadClassLocator;
 use Typhoon\Reflection\Locator\FileAnonymousLocator;
-use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
@@ -67,7 +68,7 @@ final class TyphoonReflector
                 phpParser: $phpParser ?? (new ParserFactory())->createForHostVersion(),
                 annotatedTypesDriver: $reflectPhpDocTypes,
             ),
-            locators: new Locators($locators ?? self::defaultLocators()),
+            locator: new Locator($locators ?? self::defaultLocators()),
             cache: new Cache($cache),
             hooks: new ReflectionHooks([
                 $reflectPhpDocTypes,
@@ -109,14 +110,30 @@ final class TyphoonReflector
 
     private function __construct(
         private readonly CodeReflector $codeReflector,
-        private readonly Locators $locators,
+        private readonly Locator $locator,
         private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {}
 
     /**
+     * @param non-empty-string $name
+     * @psalm-assert-if-true callable-string $name
+     */
+    public function functionExists(string $name): bool
+    {
+        try {
+            $this->reflectFunction($name);
+
+            return true;
+        } catch (DeclarationNotFound) {
+            return false;
+        }
+    }
+
+    /**
      * @template T of object
      * @param non-empty-string $name
+     * @throws DeclarationNotFound
      */
     public function reflectFunction(string $name): FunctionReflection
     {
@@ -133,7 +150,7 @@ final class TyphoonReflector
             $this->reflectClass($class);
 
             return true;
-        } catch (\Throwable) {
+        } catch (DeclarationNotFound) {
             return false;
         }
     }
@@ -144,6 +161,7 @@ final class TyphoonReflector
      * @return ($name is class-string<TObject>
      *     ? ClassReflection<TObject, NamedClassId<class-string<TObject>>|AnonymousClassId<class-string<TObject>>>
      *     : ClassReflection<object, NamedClassId<class-string>|AnonymousClassId<?class-string>>)
+     * @throws DeclarationNotFound
      */
     public function reflectClass(string $name): ClassReflection
     {
@@ -155,6 +173,7 @@ final class TyphoonReflector
      * @param positive-int $line
      * @param ?positive-int $column
      * @return ClassReflection<object, AnonymousClassId<null>>
+     * @throws DeclarationNotFound
      */
     public function reflectAnonymousClass(string $file, int $line, ?int $column = null): ClassReflection
     {
@@ -163,6 +182,7 @@ final class TyphoonReflector
     }
 
     /**
+     * @psalm-suppress InvalidReturnType, InvalidReturnStatement
      * @return (
      *     $id is NamedFunctionId ? FunctionReflection :
      *     $id is NamedClassId ? ClassReflection<object, NamedClassId<class-string>> :
@@ -176,14 +196,14 @@ final class TyphoonReflector
      *     $id is TemplateId ? TemplateReflection :
      *     never
      * )
-     * @psalm-suppress InvalidReturnType, InvalidReturnStatement
+     * @throws DeclarationNotFound
      */
     public function reflect(Id $id): FunctionReflection|ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
         if ($id instanceof NamedFunctionId) {
             $data = ReflectorSession::reflectId(
                 codeReflector: $this->codeReflector,
-                locators: $this->locators,
+                locator: $this->locator,
                 cache: $this->cache,
                 hooks: $this->hooks,
                 id: $id,
@@ -195,7 +215,7 @@ final class TyphoonReflector
         if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
             $data = ReflectorSession::reflectId(
                 codeReflector: $this->codeReflector,
-                locators: $this->locators,
+                locator: $this->locator,
                 cache: $this->cache,
                 hooks: $this->hooks,
                 id: $id,
@@ -220,7 +240,7 @@ final class TyphoonReflector
     {
         $ids = ReflectorSession::reflectResource(
             codeReflector: $this->codeReflector,
-            locators: $this->locators,
+            locator: $this->locator,
             cache: $this->cache,
             hooks: $this->hooks,
             resource: $resource,
@@ -228,14 +248,13 @@ final class TyphoonReflector
 
         return new self(
             codeReflector: $this->codeReflector,
-            locators: new Locators([
+            locator: $this->locator->with(
                 new DeterministicLocator(new IdMap((static function () use ($ids, $resource): \Generator {
                     foreach ($ids as $id) {
                         yield $id => $resource;
                     }
                 })())),
-                $this->locators,
-            ]),
+            ),
             cache: $this->cache,
             hooks: $this->hooks,
         );

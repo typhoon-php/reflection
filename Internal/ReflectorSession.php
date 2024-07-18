@@ -9,15 +9,13 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Exception\FailedToLocate;
+use Typhoon\Reflection\Exception\DeclarationNotFoundInResource;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\CodeReflector\CodeReflector;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Internal\DeclarationId\IdMap;
 use Typhoon\Reflection\Internal\ReflectionHook\ReflectionHooks;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
-use Typhoon\Reflection\Locator\Locators;
 use Typhoon\Reflection\Resource;
 
 /**
@@ -33,7 +31,7 @@ final class ReflectorSession implements Reflector
 
     private function __construct(
         private readonly CodeReflector $codeReflector,
-        private readonly Locators $locators,
+        private readonly Locator $locator,
         private readonly Cache $cache,
         private readonly ReflectionHooks $hooks,
     ) {
@@ -43,14 +41,14 @@ final class ReflectorSession implements Reflector
 
     public static function reflectId(
         CodeReflector $codeReflector,
-        Locators $locators,
+        Locator $locator,
         Cache $cache,
         ReflectionHooks $hooks,
         NamedFunctionId|NamedClassId|AnonymousClassId $id,
     ): TypedMap {
         $session = new self(
             codeReflector: $codeReflector,
-            locators: $locators,
+            locator: $locator,
             cache: $cache,
             hooks: $hooks,
         );
@@ -79,14 +77,14 @@ final class ReflectorSession implements Reflector
      */
     public static function reflectResource(
         CodeReflector $codeReflector,
-        Locators $locators,
+        Locator $locator,
         Cache $cache,
         ReflectionHooks $hooks,
         Resource $resource,
     ): array {
         $session = new self(
             codeReflector: $codeReflector,
-            locators: $locators,
+            locator: $locator,
             cache: $cache,
             hooks: $hooks,
         );
@@ -122,19 +120,11 @@ final class ReflectorSession implements Reflector
             return $data;
         }
 
-        try {
-            $resource = $this->locators->locate($id);
-        } catch (\Throwable $exception) {
-            throw new FailedToLocate($id, $exception);
-        }
-
-        if ($resource === null) {
-            throw new FailedToLocate($id);
-        }
+        $resource = $this->locator->locate($id);
 
         $this->reflectResourceIntoBuffer($resource);
 
-        $data = $this->buffer[$id] ?? throw new ClassDoesNotExist($id->name ?? $id->describe());
+        $data = $this->buffer[$id] ?? throw new DeclarationNotFoundInResource($resource, $id);
 
         if ($data instanceof \Closure) {
             $data = $data();

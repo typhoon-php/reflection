@@ -10,8 +10,7 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\ClassKind;
 use Typhoon\Reflection\ClassReflection;
-use Typhoon\Reflection\Exception\ClassDoesNotExist;
-use Typhoon\Reflection\Exception\FailedToLocate;
+use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Data\Data;
 use Typhoon\Reflection\Kind;
 use Typhoon\Reflection\MethodReflection;
@@ -352,7 +351,7 @@ final class ClassAdapter extends \ReflectionClass
 
             try {
                 $interfaceReflection = $this->reflector->reflect($interfaceId)->native();
-            } catch (FailedToLocate|ClassDoesNotExist) {
+            } catch (DeclarationNotFound) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
             }
         } else {
@@ -464,7 +463,7 @@ final class ClassAdapter extends \ReflectionClass
 
             try {
                 $this->reflector->reflect($classId);
-            } catch (ClassDoesNotExist|FailedToLocate) {
+            } catch (DeclarationNotFound) {
                 throw new \ReflectionException(sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
             }
 

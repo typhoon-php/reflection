@@ -9,18 +9,24 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Internal\Data\Data;
+use Typhoon\Reflection\Resource;
 
 /**
- * This exception is thrown when configured locators do not return a resource or throw an exception.
- *
  * @api
  */
-final class FailedToLocate extends \RuntimeException implements ReflectionException
+final class DeclarationNotFoundInResource extends \LogicException implements ReflectionException
 {
     public function __construct(
+        public readonly Resource $resource,
         public readonly ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id,
-        ?\Throwable $previous = null,
     ) {
-        parent::__construct(sprintf('Failed to locate %s', $id->describe()), previous: $previous);
+        $file = $resource->baseData[Data::File];
+
+        parent::__construct(sprintf(
+            '%s not found in %s',
+            ucfirst($id->describe()),
+            $file ?? substr($resource->code, 0, 50),
+        ));
     }
 }
