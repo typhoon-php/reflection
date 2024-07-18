@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\PhpDoc;
 
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser as PHPStanPhpDocParser;
@@ -16,6 +17,8 @@ use PHPStan\PhpDocParser\Parser\TypeParser;
  */
 final class PhpDocParser
 {
+    private const PRIORITY_ATTRIBUTE = 'priority';
+
     private readonly Lexer $lexer;
 
     private readonly PHPStanPhpDocParser $parser;
@@ -33,11 +36,22 @@ final class PhpDocParser
         );
     }
 
+    public static function priority(PhpDocTagNode $tag): int
+    {
+        $priority = $tag->getAttribute(self::PRIORITY_ATTRIBUTE);
+
+        return \is_int($priority) ? $priority : 0;
+    }
+
     public function parse(string $comment): PhpDoc
     {
         $tokens = $this->lexer->tokenize($comment);
-        $phpDoc = $this->parser->parse(new TokenIterator($tokens));
+        $phpDocNode = $this->parser->parse(new TokenIterator($tokens));
 
-        return new PhpDoc($this->tagPrioritizer, $phpDoc->getTags());
+        foreach ($phpDocNode->getTags() as $tag) {
+            $tag->setAttribute(self::PRIORITY_ATTRIBUTE, $this->tagPrioritizer->priorityFor($tag->name));
+        }
+
+        return new PhpDoc($phpDocNode);
     }
 }

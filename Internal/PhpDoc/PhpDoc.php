@@ -8,8 +8,8 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\DeprecatedTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ExtendsTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ImplementsTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
-use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ThrowsTagValueNode;
@@ -19,7 +19,6 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\UsesTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\VarTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
-use Typhoon\Type\Variance;
 
 /**
  * @internal
@@ -27,26 +26,13 @@ use Typhoon\Type\Variance;
  */
 final class PhpDoc
 {
-    private const VARIANCE_ATTRIBUTE = 'variance';
-
-    /**
-     * @param array<PhpDocTagNode> $tags
-     */
     public function __construct(
-        private readonly PhpDocTagPrioritizer $tagPrioritizer,
-        private array $tags,
+        public readonly PhpDocNode $node,
     ) {}
-
-    public static function templateTagVariance(TemplateTagValueNode $tag): Variance
-    {
-        $attribute = $tag->getAttribute(self::VARIANCE_ATTRIBUTE);
-
-        return $attribute instanceof Variance ? $attribute : Variance::Invariant;
-    }
 
     public function hasDeprecated(): bool
     {
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if ($tag->value instanceof DeprecatedTagValueNode) {
                 return true;
             }
@@ -57,7 +43,7 @@ final class PhpDoc
 
     public function hasFinal(): bool
     {
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if ($tag->name === '@final') {
                 return true;
             }
@@ -68,7 +54,7 @@ final class PhpDoc
 
     public function hasReadonly(): bool
     {
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (\in_array($tag->name, ['@readonly', '@psalm-readonly', '@phpstan-readonly'], true)) {
                 return true;
             }
@@ -81,7 +67,7 @@ final class PhpDoc
     {
         $varTag = null;
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof VarTagValueNode) {
                 continue;
             }
@@ -102,7 +88,7 @@ final class PhpDoc
     {
         $paramTags = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof ParamTagValueNode) {
                 continue;
             }
@@ -128,7 +114,7 @@ final class PhpDoc
     {
         $returnTag = null;
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof ReturnTagValueNode) {
                 continue;
             }
@@ -149,7 +135,7 @@ final class PhpDoc
     {
         $throwsTypes = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof ThrowsTagValueNode) {
                 continue;
             }
@@ -161,13 +147,13 @@ final class PhpDoc
     }
 
     /**
-     * @return list<TemplateTagValueNode>
+     * @return list<PhpDocTagNode<TemplateTagValueNode>>
      */
-    public function templates(): array
+    public function templateTags(): array
     {
         $templateTags = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof TemplateTagValueNode) {
                 continue;
             }
@@ -178,18 +164,7 @@ final class PhpDoc
             }
         }
 
-        return array_map(
-            static function (PhpDocTagNode $tag): TemplateTagValueNode {
-                $tag->value->setAttribute(self::VARIANCE_ATTRIBUTE, match (true) {
-                    str_ends_with($tag->name, 'covariant') => Variance::Covariant,
-                    str_ends_with($tag->name, 'contravariant') => Variance::Contravariant,
-                    default => Variance::Invariant,
-                });
-
-                return $tag->value;
-            },
-            array_values($templateTags),
-        );
+        return array_values($templateTags);
     }
 
     /**
@@ -199,7 +174,7 @@ final class PhpDoc
     {
         $extendsTags = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof ExtendsTagValueNode) {
                 continue;
             }
@@ -225,7 +200,7 @@ final class PhpDoc
     {
         $implementsTags = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof ImplementsTagValueNode) {
                 continue;
             }
@@ -251,7 +226,7 @@ final class PhpDoc
     {
         $tagsByName = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof UsesTagValueNode) {
                 continue;
             }
@@ -277,7 +252,7 @@ final class PhpDoc
     {
         $typeAliasesByAlias = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof TypeAliasTagValueNode) {
                 continue;
             }
@@ -298,7 +273,7 @@ final class PhpDoc
     {
         $typeAliasImportsByAlias = [];
 
-        foreach ($this->tags as $tag) {
+        foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof TypeAliasImportTagValueNode) {
                 continue;
             }
@@ -315,29 +290,19 @@ final class PhpDoc
     }
 
     /**
-     * @template TCurrentValueNode of PhpDocTagValueNode
-     * @template TNewValueNode of PhpDocTagValueNode
-     * @param PhpDocTagNode<TCurrentValueNode> $currentTag
-     * @param PhpDocTagNode<TNewValueNode> $newTag
+     * @return \Generator<PhpDocTagNode>
      */
-    private function shouldReplaceTag(?PhpDocTagNode $currentTag, PhpDocTagNode $newTag): bool
+    private function tags(): \Generator
     {
-        return $currentTag === null || $this->priorityOf($newTag) >= $this->priorityOf($currentTag);
+        foreach ($this->node->children as $child) {
+            if ($child instanceof PhpDocTagNode) {
+                yield $child;
+            }
+        }
     }
 
-    /**
-     * @template TValueNode of PhpDocTagValueNode
-     * @param PhpDocTagNode<TValueNode> $tag
-     */
-    private function priorityOf(PhpDocTagNode $tag): int
+    private function shouldReplaceTag(?PhpDocTagNode $currentTag, PhpDocTagNode $newTag): bool
     {
-        $priority = $tag->getAttribute('priority');
-
-        if (!\is_int($priority)) {
-            $priority = $this->tagPrioritizer->priorityFor($tag->name);
-            $tag->setAttribute('priority', $priority);
-        }
-
-        return $priority;
+        return $currentTag === null || PhpDocParser::priority($newTag) >= PhpDocParser::priority($currentTag);
     }
 }

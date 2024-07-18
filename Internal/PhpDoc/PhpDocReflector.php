@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\PhpDoc;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\PhpDocParser\Ast\Node;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use Typhoon\DeclarationId\AnonymousClassId;
@@ -25,6 +26,7 @@ use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
+use Typhoon\Type\Variance;
 use function Typhoon\Reflection\Internal\map;
 
 /**
@@ -46,7 +48,10 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
         }
 
         return new TypeDeclarations(
-            templateNames: array_column($phpDoc->templates(), 'name'),
+            templateNames: array_map(
+                static fn(PhpDocTagNode $node): string => $node->value->name,
+                $phpDoc->templateTags(),
+            ),
             aliasNames: [
                 ...array_column($phpDoc->typeAliases(), 'alias'),
                 ...array_map(
@@ -155,11 +160,15 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
     {
         $templates = [];
 
-        foreach ($phpDoc->templates() as $template) {
-            $templates[$template->name] = $this
-                ->reflectNodeLines($template, $data[Data::PhpDocStartLine])
-                ->with(Data::Constraint, $typeReflector->reflectType($template->bound) ?? types::mixed)
-                ->with(Data::Variance, PhpDoc::templateTagVariance($template));
+        foreach ($phpDoc->templateTags() as $templateTag) {
+            $templates[$templateTag->value->name] = $this
+                ->reflectNodeLines($templateTag->value, $data[Data::PhpDocStartLine])
+                ->with(Data::Constraint, $typeReflector->reflectType($templateTag->value->bound) ?? types::mixed)
+                ->with(Data::Variance, match (true) {
+                    str_ends_with($templateTag->name, 'covariant') => Variance::Covariant,
+                    str_ends_with($templateTag->name, 'contravariant') => Variance::Contravariant,
+                    default => Variance::Invariant,
+                });
         }
 
         return $templates;
