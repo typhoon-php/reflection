@@ -25,6 +25,9 @@ use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\ObjectShapeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
+use Typhoon\DeclarationId\AnonymousFunctionId;
+use Typhoon\DeclarationId\MethodId;
+use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\TypeContext\NameParser;
 use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 use Typhoon\Type\Parameter;
@@ -396,17 +399,9 @@ final class ContextualPhpDocTypeReflector
 
     private function reflectConditional(ConditionalTypeNode|ConditionalTypeForParameterNode $node): Type
     {
-        if ($node instanceof ConditionalTypeNode) {
-            $subject = $this->reflectType($node->subjectType);
-        } else {
-            $name = ltrim($node->parameterName, '$');
-            \assert($name !== '');
-            $subject = types::arg($name);
-        }
-
         if ($node->negated) {
             return types::conditional(
-                subject: $subject,
+                subject: $this->reflectConditionalSubject($node),
                 if: $this->reflectType($node->targetType),
                 then: $this->reflectType($node->else),
                 else: $this->reflectType($node->if),
@@ -414,10 +409,32 @@ final class ContextualPhpDocTypeReflector
         }
 
         return types::conditional(
-            subject: $subject,
+            subject: $this->reflectConditionalSubject($node),
             if: $this->reflectType($node->targetType),
             then: $this->reflectType($node->if),
             else: $this->reflectType($node->else),
         );
+    }
+
+    public function reflectConditionalSubject(ConditionalTypeNode|ConditionalTypeForParameterNode $node): Type
+    {
+        if ($node instanceof ConditionalTypeNode) {
+            return $this->reflectType($node->subjectType);
+        }
+
+        $name = ltrim($node->parameterName, '$');
+        \assert($name !== '', 'Parameter name must not be empty');
+
+        $id = $this->typeContext->id;
+
+        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId || $id instanceof MethodId) {
+            return types::functionArg($id, $name);
+        }
+
+        if ($id === null) {
+            throw new InvalidPhpDocType('Conditional type in global scope is not supported');
+        }
+
+        throw new InvalidPhpDocType(sprintf('Conditional type on %s is not supported', $id->describe()));
     }
 }
