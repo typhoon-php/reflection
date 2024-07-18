@@ -26,6 +26,7 @@ use PHPStan\PhpDocParser\Ast\Type\ObjectShapeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use Typhoon\DeclarationId\AnonymousFunctionId;
+use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\TypeContext\NameParser;
@@ -428,7 +429,7 @@ final class ContextualPhpDocTypeReflector
         $id = $this->typeContext->id;
 
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId || $id instanceof MethodId) {
-            return types::functionArg($id, $name);
+            return types::arg(Id::parameter($id, $name));
         }
 
         if ($id === null) {
