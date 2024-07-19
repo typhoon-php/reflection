@@ -31,20 +31,20 @@ final class PropertyInheritance
         $this->type->applyOwn($data[Data::Type]);
     }
 
-    public function applyUsed(TypedMap $data, TypeResolvers $typeResolvers): void
+    public function applyUsed(TypedMap $data, TypeResolver $typeResolver): void
     {
         $this->data ??= $data;
-        $this->type->applyInherited($data[Data::Type], $typeResolvers);
+        $this->type->applyInherited($data[Data::Type], $typeResolver);
     }
 
-    public function applyInherited(TypedMap $data, TypeResolvers $typeResolvers): void
+    public function applyInherited(TypedMap $data, TypeResolver $typeResolver): void
     {
         if ($data[Data::Visibility] === Visibility::Private) {
             return;
         }
 
         $this->data ??= $data;
-        $this->type->applyInherited($data[Data::Type], $typeResolvers);
+        $this->type->applyInherited($data[Data::Type], $typeResolver);
     }
 
     public function build(): ?TypedMap

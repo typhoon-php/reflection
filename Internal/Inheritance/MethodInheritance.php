@@ -44,18 +44,18 @@ final class MethodInheritance
         $this->throwsType->applyOwn(new TypeData(annotated: $data[Data::ThrowsType]));
     }
 
-    public function applyUsed(TypedMap $data, TypeResolvers $typeResolvers): void
+    public function applyUsed(TypedMap $data, TypeResolver $typeResolver): void
     {
         if ($this->data !== null) {
             $usedParameters = array_values($data[Data::Parameters]);
 
             foreach (array_values($this->parameters) as $index => $parameter) {
                 if (isset($usedParameters[$index])) {
-                    $parameter->applyInherited($usedParameters[$index], $typeResolvers);
+                    $parameter->applyInherited($usedParameters[$index], $typeResolver);
                 }
             }
 
-            $this->returnType->applyInherited($data[Data::Type], $typeResolvers);
+            $this->returnType->applyInherited($data[Data::Type], $typeResolver);
 
             return;
         }
@@ -63,14 +63,14 @@ final class MethodInheritance
         $this->data = $data;
 
         foreach ($data[Data::Parameters] as $name => $parameter) {
-            ($this->parameters[$name] = new PropertyInheritance())->applyInherited($parameter, $typeResolvers);
+            ($this->parameters[$name] = new PropertyInheritance())->applyInherited($parameter, $typeResolver);
         }
 
-        $this->returnType->applyInherited($data[Data::Type], $typeResolvers);
-        $this->throwsType->applyInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeResolvers);
+        $this->returnType->applyInherited($data[Data::Type], $typeResolver);
+        $this->throwsType->applyInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeResolver);
     }
 
-    public function applyInherited(TypedMap $data, TypeResolvers $typeResolvers): void
+    public function applyInherited(TypedMap $data, TypeResolver $typeResolver): void
     {
         if ($data[Data::Visibility] === Visibility::Private) {
             return;
@@ -81,12 +81,12 @@ final class MethodInheritance
 
             foreach (array_values($this->parameters) as $index => $parameter) {
                 if (isset($usedParameters[$index])) {
-                    $parameter->applyInherited($usedParameters[$index], $typeResolvers);
+                    $parameter->applyInherited($usedParameters[$index], $typeResolver);
                 }
             }
 
-            $this->returnType->applyInherited($data[Data::Type], $typeResolvers);
-            $this->throwsType->applyInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeResolvers);
+            $this->returnType->applyInherited($data[Data::Type], $typeResolver);
+            $this->throwsType->applyInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeResolver);
 
             return;
         }
@@ -94,11 +94,11 @@ final class MethodInheritance
         $this->data = $data;
 
         foreach ($data[Data::Parameters] as $name => $parameter) {
-            ($this->parameters[$name] = new PropertyInheritance())->applyInherited($parameter, $typeResolvers);
+            ($this->parameters[$name] = new PropertyInheritance())->applyInherited($parameter, $typeResolver);
         }
 
-        $this->returnType->applyInherited($data[Data::Type], $typeResolvers);
-        $this->throwsType->applyInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeResolvers);
+        $this->returnType->applyInherited($data[Data::Type], $typeResolver);
+        $this->throwsType->applyInherited(new TypeData(annotated: $data[Data::ThrowsType]), $typeResolver);
     }
 
     public function build(): ?TypedMap

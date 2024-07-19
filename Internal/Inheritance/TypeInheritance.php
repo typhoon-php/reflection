@@ -16,7 +16,7 @@ final class TypeInheritance
     private ?TypeData $own = null;
 
     /**
-     * @var list<array{TypeData, TypeResolvers}>
+     * @var list<array{TypeData, TypeResolver}>
      */
     private array $inherited = [];
 
@@ -33,9 +33,9 @@ final class TypeInheritance
         $this->own = $data;
     }
 
-    public function applyInherited(TypeData $data, TypeResolvers $typeResolvers): void
+    public function applyInherited(TypeData $data, TypeResolver $typeResolver): void
     {
-        $this->inherited[] = [$data, $typeResolvers];
+        $this->inherited[] = [$data, $typeResolver];
     }
 
     public function build(): TypeData
@@ -45,7 +45,7 @@ final class TypeInheritance
                 return $this->own;
             }
 
-            foreach ($this->inherited as [$inherited, $typeResolvers]) {
+            foreach ($this->inherited as [$inherited, $typeResolver]) {
                 // If own type is different (weakened parameter type or strengthened return type), we want to keep it.
                 // This should be compared according to variance with a proper type comparator,
                 // but for now simple inequality check should do the job 90% of the time.
@@ -54,11 +54,11 @@ final class TypeInheritance
                 }
 
                 // If inherited type resolves to same native type, we should continue to look for something more interesting.
-                if (self::typesEqual($inherited->resolved(), $this->own->native)) {
+                if (self::typesEqual($inherited->get(), $this->own->native)) {
                     continue;
                 }
 
-                return $inherited->withResolved($typeResolvers->resolve($inherited->resolved()));
+                return $inherited->withTentative(null)->inherit($typeResolver);
             }
 
             return $this->own;
@@ -67,18 +67,18 @@ final class TypeInheritance
         \assert($this->inherited !== []);
 
         if (\count($this->inherited) !== 1) {
-            foreach ($this->inherited as [$inherited, $typeResolvers]) {
+            foreach ($this->inherited as [$inherited, $typeResolver]) {
                 // If inherited type resolves to its native type, we should continue to look for something more interesting.
-                if (self::typesEqual($inherited->resolved(), $inherited->native)) {
+                if (self::typesEqual($inherited->get(), $inherited->native)) {
                     continue;
                 }
 
-                return $inherited->withResolved($typeResolvers->resolve($inherited->resolved()));
+                return $inherited->inherit($typeResolver);
             }
         }
 
-        [$inherited, $typeResolvers] = $this->inherited[0];
+        [$inherited, $typeResolver] = $this->inherited[0];
 
-        return $inherited->withResolved($typeResolvers->resolve($inherited->resolved()));
+        return $inherited->inherit($typeResolver);
     }
 }

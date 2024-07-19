@@ -13,8 +13,6 @@ use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
-use Typhoon\Type\Visitor\RelativeClassTypeResolver;
-use Typhoon\Type\Visitor\TemplateTypeResolver;
 
 /**
  * @internal
@@ -92,30 +90,29 @@ final class ClassInheritance
 
     private function applyUsed(): void
     {
-        foreach ($this->data[Data::UnresolvedTraits] as $traitName => $arguments) {
-            $this->applyOneUsed($traitName, $arguments);
+        foreach ($this->data[Data::UnresolvedTraits] as $traitName => $typeArguments) {
+            $this->applyOneUsed($traitName, $typeArguments);
         }
     }
 
     /**
      * @param non-empty-string $traitName
-     * @param list<Type> $arguments
+     * @param list<Type> $typeArguments
      */
-    private function applyOneUsed(string $traitName, array $arguments): void
+    private function applyOneUsed(string $traitName, array $typeArguments): void
     {
         $traitId = Id::namedClass($traitName);
         $traitData = $this->reflector->reflect($traitId);
 
         $this->changeDetectors[] = $traitData[Data::ChangeDetector];
-
-        $typeResolvers = $this->buildTypeResolvers($traitId, $traitData, $arguments);
+        $typeResolver = TypeResolver::from($this->id, $this->data, $traitId, $traitData, $typeArguments);
 
         foreach ($traitData[Data::Constants] as $constantName => $constant) {
-            $this->constant($constantName)->applyUsed($constant, $typeResolvers);
+            $this->constant($constantName)->applyUsed($constant, $typeResolver);
         }
 
         foreach ($traitData[Data::Properties] as $propertyName => $property) {
-            $this->property($propertyName)->applyUsed($property, $typeResolvers);
+            $this->property($propertyName)->applyUsed($property, $typeResolver);
         }
 
         foreach ($traitData[Data::Methods] as $methodName => $method) {
@@ -136,10 +133,10 @@ final class ClassInheritance
                     $methodToUse = $methodToUse->with(Data::Visibility, $alias->newVisibility);
                 }
 
-                $this->method($alias->newName ?? $methodName)->applyUsed($methodToUse, $typeResolvers);
+                $this->method($alias->newName ?? $methodName)->applyUsed($methodToUse, $typeResolver);
             }
 
-            $this->method($methodName)->applyUsed($method, $typeResolvers);
+            $this->method($methodName)->applyUsed($method, $typeResolver);
         }
     }
 
@@ -151,16 +148,16 @@ final class ClassInheritance
             $this->addInherited(...$parent);
         }
 
-        foreach ($this->data[Data::UnresolvedInterfaces] as $interface => $arguments) {
-            $this->addInherited($interface, $arguments);
+        foreach ($this->data[Data::UnresolvedInterfaces] as $interface => $typeArguments) {
+            $this->addInherited($interface, $typeArguments);
         }
     }
 
     /**
      * @param non-empty-string $className
-     * @param list<Type> $arguments
+     * @param list<Type> $typeArguments
      */
-    private function addInherited(string $className, array $arguments): void
+    private function addInherited(string $className, array $typeArguments): void
     {
         $classId = Id::namedClass($className);
         $classData = $this->reflector->reflect($classId);
@@ -174,23 +171,23 @@ final class ClassInheritance
 
         /** @var class-string $className */
         if ($classData[Data::ClassKind] === ClassKind::Interface) {
-            $this->ownInterfaces[$className] ??= $arguments;
+            $this->ownInterfaces[$className] ??= $typeArguments;
         } else {
-            $this->parents = [$className => $arguments, ...$classData[Data::Parents]];
+            $this->parents = [$className => $typeArguments, ...$classData[Data::Parents]];
         }
 
-        $typeResolvers = $this->buildTypeResolvers($classId, $classData, $arguments);
+        $typeResolver = TypeResolver::from($this->id, $this->data, $classId, $classData, $typeArguments);
 
         foreach ($classData[Data::Constants] as $constantName => $constant) {
-            $this->constant($constantName)->applyInherited($constant, $typeResolvers);
+            $this->constant($constantName)->applyInherited($constant, $typeResolver);
         }
 
         foreach ($classData[Data::Properties] as $propertyName => $property) {
-            $this->property($propertyName)->applyInherited($property, $typeResolvers);
+            $this->property($propertyName)->applyInherited($property, $typeResolver);
         }
 
         foreach ($classData[Data::Methods] as $methodName => $method) {
-            $this->method($methodName)->applyInherited($method, $typeResolvers);
+            $this->method($methodName)->applyInherited($method, $typeResolver);
         }
     }
 
@@ -220,37 +217,6 @@ final class ClassInheritance
                 Data::TraitMethodAliases,
                 Data::TraitMethodPrecedence,
             );
-    }
-
-    /**
-     * @param list<Type> $typeArguments
-     */
-    private function buildTypeResolvers(NamedClassId $id, TypedMap $inheritedData, array $typeArguments): TypeResolvers
-    {
-        $resolvers = [];
-        $templates = $inheritedData[Data::Templates];
-
-        if ($templates !== []) {
-            $resolvers[] = new TemplateTypeResolver(array_map(
-                static fn(int $index, string $name, TypedMap $template): array => [
-                    Id::template($id, $name),
-                    $typeArguments[$index] ?? $template[Data::Constraint],
-                ],
-                range(0, \count($templates) - 1),
-                array_keys($templates),
-                $templates,
-            ));
-        }
-
-        if ($this->data[Data::ClassKind] !== ClassKind::Trait) {
-            $parent = $this->data[Data::UnresolvedParent];
-            $resolvers[] = new RelativeClassTypeResolver(
-                self: $this->id,
-                parent: $parent === null ? null : Id::namedClass($parent[0]),
-            );
-        }
-
-        return new TypeResolvers($resolvers);
     }
 
     /**

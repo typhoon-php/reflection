@@ -137,7 +137,7 @@ final class PropertyReflection
      */
     public function type(?DeclarationKind $kind = null): ?Type
     {
-        return $this->data[Data::Type]->ofKind($kind);
+        return $this->data[Data::Type]->get($kind);
     }
 
     private ?PropertyAdapter $native = null;

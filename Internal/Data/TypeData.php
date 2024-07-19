@@ -5,28 +5,21 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\Reflection\DeclarationKind;
+use Typhoon\Reflection\Internal\Inheritance\TypeResolver;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
 /**
  * @internal
  * @psalm-internal Typhoon
- * @psalm-immutable
  */
 final class TypeData
 {
-    private ?Type $resolved = null;
-
     public function __construct(
         public ?Type $native = null,
         public ?Type $annotated = null,
         public ?Type $tentative = null,
     ) {}
-
-    public function resolved(): Type
-    {
-        return $this->resolved ?? $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed;
-    }
 
     public function withNative(?Type $native): self
     {
@@ -52,23 +45,21 @@ final class TypeData
         return $data;
     }
 
-    public function withResolved(?Type $resolved): self
+    public function inherit(TypeResolver $typeResolver): self
     {
-        $data = clone $this;
-        $data->resolved = $resolved;
-
-        return $data;
+        return new self(
+            native: $typeResolver->resolveNativeType($this->native),
+            annotated: $typeResolver->resolveType($this->annotated),
+            tentative: $typeResolver->resolveNativeType($this->tentative),
+        );
     }
 
-    /**
-     * @return ($kind is null ? Type : ?Type)
-     */
-    public function ofKind(?DeclarationKind $kind = null): ?Type
+    public function get(?DeclarationKind $kind = null): ?Type
     {
         return match ($kind) {
+            null => $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed,
             DeclarationKind::Native => $this->native,
             DeclarationKind::Annotated => $this->annotated,
-            null => $this->resolved(),
         };
     }
 }
