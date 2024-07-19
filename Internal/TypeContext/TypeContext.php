@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\TypeContext;
 use PhpParser\ErrorHandler\Throwing;
 use PhpParser\NameContext;
 use PhpParser\Node\Name;
+use PhpParser\Node\Stmt\Use_;
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
@@ -64,6 +65,11 @@ final class TypeContext
     public function resolveClass(Name $name): Name
     {
         return $this->nameContext->getResolvedClassName($name);
+    }
+
+    public function resolveConstant(Name $name): ?Name
+    {
+        return $this->nameContext->getResolvedName($name, Use_::TYPE_CONSTANT);
     }
 
     /**

@@ -105,6 +105,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             ->withMap($this->reflectNode($node))
             ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '')
             ->with(Data::TypeContext, $typeContext)
+            ->with(Data::ConstantExpressionCompiler, $this->constantExpressionCompilerProvider->get())
             ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups));
 
         if ($node instanceof Class_) {

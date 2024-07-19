@@ -133,6 +133,16 @@ final class MethodReflection
         return $this->data[Data::EndLine];
     }
 
+    public function isNative(): bool
+    {
+        return !$this->isAnnotated();
+    }
+
+    public function isAnnotated(): bool
+    {
+        return $this->data[Data::Annotated];
+    }
+
     public function isInternallyDefined(): bool
     {
         return $this->data[Data::InternallyDefined] || $this->declaringClass()->isInternallyDefined();

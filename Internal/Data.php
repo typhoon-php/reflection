@@ -65,4 +65,5 @@ enum Data
     public const Constraint = Data\ConstraintKey::Key;
     public const UsePhpDocs = Data\UsePhpDocsKey::Key;
     public const AnonymousClassColumns = Data\AnonymousClassColumnsKey::Key;
+    public const ConstantExpressionCompiler = Data\ConstantExpressionCompilerKey::Key;
 }

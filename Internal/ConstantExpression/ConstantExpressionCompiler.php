@@ -13,6 +13,9 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VariadicPlaceholder;
+use PHPStan\PhpDocParser\Ast\ConstExpr;
+use Typhoon\Reflection\Internal\TypeContext\NameParser;
+use Typhoon\Reflection\Internal\TypeContext\TypeContext;
 
 /**
  * @internal
@@ -178,6 +181,26 @@ final class ConstantExpressionCompiler
         };
     }
 
+    /**
+     * @param ?positive-int $phpDocStartLine
+     * @return ($expr is null ? null : Expression)
+     */
+    public function compilePHPStan(TypeContext $typeContext, ?int $phpDocStartLine, ?ConstExpr\ConstExprNode $expr): ?Expression
+    {
+        return match (true) {
+            $expr === null => null,
+            $expr instanceof ConstExpr\ConstExprNullNode => Values::Null,
+            $expr instanceof ConstExpr\ConstExprTrueNode => Values::True,
+            $expr instanceof ConstExpr\ConstExprFalseNode => Values::False,
+            $expr instanceof ConstExpr\ConstExprIntegerNode => new Value((int) $expr->value),
+            $expr instanceof ConstExpr\ConstExprFloatNode => new Value((float) $expr->value),
+            $expr instanceof ConstExpr\ConstExprStringNode => new Value($expr->value),
+            $expr instanceof ConstExpr\ConstExprArrayNode => $this->compilePHPStanArray($typeContext, $phpDocStartLine, $expr),
+            $expr instanceof ConstExpr\ConstFetchNode => $this->compilePHPStanConstFetch($typeContext, $phpDocStartLine, $expr),
+            default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
+        };
+    }
+
     private function compileConstant(Name $name): Expression
     {
         $lowerStringName = $name->toLowerString();
@@ -221,6 +244,65 @@ final class ConstantExpressionCompiler
             ),
             $items,
         ));
+    }
+
+    /**
+     * @param ?positive-int $phpDocStartLine
+     */
+    private function compilePHPStanArray(TypeContext $typeContext, ?int $phpDocStartLine, ConstExpr\ConstExprArrayNode $expr): Expression
+    {
+        if ($expr->items === []) {
+            return new Value([]);
+        }
+
+        return new ArrayExpression(array_map(
+            fn(ConstExpr\ConstExprArrayItemNode $item): ArrayElement => new ArrayElement(
+                key: $this->compilePHPStan($typeContext, $phpDocStartLine, $item->key),
+                value: $this->compilePHPStan($typeContext, $phpDocStartLine, $item->value),
+            ),
+            array_values($expr->items),
+        ));
+    }
+
+    /**
+     * @param ?positive-int $phpDocStartLine
+     */
+    private function compilePHPStanConstFetch(TypeContext $typeContext, ?int $phpDocStartLine, ConstExpr\ConstFetchNode $expr): Expression
+    {
+        if ($expr->className !== '') {
+            return new ClassConstantFetch(
+                $this->compileClassName($typeContext->resolveClass(NameParser::parse($expr->className))),
+                new Value($expr->name),
+            );
+        }
+
+        $magic = match ($expr->name) {
+            '__LINE__' => new Value(($phpDocStartLine ?? 1) - 1 + (int) ($expr->getAttribute('startLine') ?? 1)),
+            '__FILE__' => $this->file,
+            '__DIR__' => new Value(\dirname($this->file->evaluate())),
+            '__NAMESPACE__' => $this->namespace,
+            '__FUNCTION__' => $this->function,
+            '__CLASS__' => $this->class,
+            '__TRAIT__' => $this->trait,
+            '__METHOD__' => $this->method,
+            default => null,
+        };
+
+        if ($magic !== null) {
+            return $magic;
+        }
+
+        $name = NameParser::parse($expr->name);
+        $resolvedName = $typeContext->resolveConstant(NameParser::parse($expr->name));
+
+        if ($resolvedName !== null) {
+            return new ConstantFetch($resolvedName->toString());
+        }
+
+        return new ConstantFetch(
+            FullyQualified::concat($typeContext->namespace(), $name)->toString(),
+            $expr->name,
+        );
     }
 
     private function compileClassName(Name|Expr|Class_ $name): Expression

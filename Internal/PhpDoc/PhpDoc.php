@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal\PhpDoc;
 use PHPStan\PhpDocParser\Ast\PhpDoc\DeprecatedTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ExtendsTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ImplementsTagValueNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\MethodTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
@@ -187,6 +188,27 @@ final class PhpDoc
         }
 
         return array_values($propertyTags);
+    }
+
+    /**
+     * @return list<MethodTagValueNode>
+     */
+    public function methods(): array
+    {
+        $methodTags = [];
+
+        foreach ($this->tags() as $tag) {
+            if (!$tag->value instanceof MethodTagValueNode) {
+                continue;
+            }
+
+            /** @var PhpDocTagNode<MethodTagValueNode> $tag */
+            if ($this->shouldReplaceTag($methodTags[$tag->value->methodName] ?? null, $tag)) {
+                $methodTags[$tag->value->methodName] = $tag;
+            }
+        }
+
+        return array_column($methodTags, 'value');
     }
 
     /**
