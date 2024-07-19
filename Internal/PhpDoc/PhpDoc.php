@@ -10,6 +10,7 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\ImplementsTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ThrowsTagValueNode;
@@ -165,6 +166,27 @@ final class PhpDoc
         }
 
         return array_values($templateTags);
+    }
+
+    /**
+     * @return list<PhpDocTagNode<PropertyTagValueNode>>
+     */
+    public function propertyTags(): array
+    {
+        $propertyTags = [];
+
+        foreach ($this->tags() as $tag) {
+            if (!$tag->value instanceof PropertyTagValueNode) {
+                continue;
+            }
+
+            /** @var PhpDocTagNode<PropertyTagValueNode> $tag */
+            if ($this->shouldReplaceTag($propertyTags[$tag->value->propertyName] ?? null, $tag)) {
+                $propertyTags[$tag->value->propertyName] = $tag;
+            }
+        }
+
+        return array_values($propertyTags);
     }
 
     /**

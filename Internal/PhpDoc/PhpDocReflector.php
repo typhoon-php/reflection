@@ -18,6 +18,7 @@ use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TypeData;
+use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\Reflection\Internal\PhpDoc\ContextualPhpDocTypeReflector as TypeReflector;
 use Typhoon\Reflection\Internal\Reflector;
@@ -121,10 +122,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
                 fn(TypedMap $constant): TypedMap => $this->reflectConstant($typeReflector, $constant),
                 $data[Data::Constants],
             ))
-            ->with(Data::Properties, array_map(
-                fn(TypedMap $property): TypedMap => $this->reflectProperty($typeReflector, $property),
-                $data[Data::Properties],
-            ))
+            ->with(Data::Properties, $this->reflectProperties($typeReflector, $data[Data::Properties], $phpDoc))
             ->with(Data::Methods, map(
                 $data[Data::Methods],
                 fn(TypedMap $method, string $name): TypedMap => $this->reflectFunctionLike($method, $name === '__construct'),
@@ -255,6 +253,45 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
         return $data
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedFinal] || $phpDoc->hasFinal())
             ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
+    }
+
+    /**
+     * @param array<non-empty-string, TypedMap> $properties
+     * @return array<non-empty-string, TypedMap>
+     */
+    private function reflectProperties(TypeReflector $typeReflector, array $properties, ?PhpDoc $classPhpDoc): array
+    {
+        $properties = array_map(
+            fn(TypedMap $property): TypedMap => $this->reflectProperty($typeReflector, $property),
+            $properties,
+        );
+
+        foreach ($classPhpDoc?->propertyTags() ?? [] as $propertyTag) {
+            $name = ltrim($propertyTag->value->propertyName, '$');
+
+            if ($name === '') {
+                continue;
+            }
+
+            $readonly = str_contains($propertyTag->name, 'read');
+            $type = $propertyTag->value->type;
+
+            if (isset($properties[$name])) {
+                $properties[$name] = $properties[$name]
+                    ->with(Data::AnnotatedReadonly, $properties[$name][Data::AnnotatedReadonly] || $readonly)
+                    ->with(Data::Type, $this->addAnnotatedType($typeReflector, $properties[$name][Data::Type], $type));
+
+                continue;
+            }
+
+            $properties[$name] = (new TypedMap())
+                ->with(Data::Visibility, Visibility::Public)
+                ->with(Data::Annotated, true)
+                ->with(Data::AnnotatedReadonly, $readonly)
+                ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($type)));
+        }
+
+        return $properties;
     }
 
     private function reflectProperty(TypeReflector $typeReflector, TypedMap $data): TypedMap

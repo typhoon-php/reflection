@@ -86,6 +86,16 @@ final class PropertyReflection
         return $this->reflector->reflect($this->id->class);
     }
 
+    public function isNative(): bool
+    {
+        return !$this->isAnnotated();
+    }
+
+    public function isAnnotated(): bool
+    {
+        return $this->data[Data::Annotated];
+    }
+
     public function isStatic(): bool
     {
         return $this->data[Data::Static];

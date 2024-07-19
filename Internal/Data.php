@@ -38,6 +38,7 @@ enum Data
     public const Static = Data\BoolKeys::IsStatic;
     public const Variadic = Data\BoolKeys::Variadic;
     public const InternallyDefined = Data\BoolKeys::InternallyDefined;
+    public const Annotated = Data\BoolKeys::Annotated;
     public const Methods = Data\NamedDataKeys::Methods;
     public const Parameters = Data\NamedDataKeys::Parameters;
     public const PhpDoc = Data\PhpDocKey::Key;
