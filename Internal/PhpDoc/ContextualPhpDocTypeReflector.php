@@ -352,7 +352,8 @@ final class ContextualPhpDocTypeReflector
 
         if ($exprNode instanceof ConstFetchNode) {
             if ($exprNode->className === '') {
-                return types::constant($exprNode->name);
+                // TODO
+                throw new InvalidPhpDocType(sprintf('PhpDoc node %s with empty class is not supported', $exprNode::class));
             }
 
             $class = $this->typeContext->resolveType(NameParser::parse($exprNode->className));
