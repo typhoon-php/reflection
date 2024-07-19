@@ -23,6 +23,7 @@ use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IntersectionTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\NullableTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\ObjectShapeNode;
+use PHPStan\PhpDocParser\Ast\Type\OffsetAccessTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use Typhoon\DeclarationId\AnonymousFunctionId;
@@ -112,6 +113,10 @@ final class ContextualPhpDocTypeReflector
 
         if ($node instanceof ConditionalTypeNode || $node instanceof ConditionalTypeForParameterNode) {
             return $this->reflectConditional($node);
+        }
+
+        if ($node instanceof OffsetAccessTypeNode) {
+            return types::offset($this->reflectType($node->type), $this->reflectType($node->offset));
         }
 
         throw new InvalidPhpDocType(sprintf('Type node %s is not supported', $node::class));
@@ -321,16 +326,8 @@ final class ContextualPhpDocTypeReflector
     {
         $exprNode = $node->constExpr;
 
-        if ($exprNode instanceof ConstExprIntegerNode) {
-            return types::int((int) $exprNode->value);
-        }
-
-        if ($exprNode instanceof ConstExprFloatNode) {
-            return types::float((float) $exprNode->value);
-        }
-
-        if ($exprNode instanceof ConstExprStringNode) {
-            return types::string($exprNode->value);
+        if ($exprNode instanceof ConstExprNullNode) {
+            return types::null;
         }
 
         if ($exprNode instanceof ConstExprTrueNode) {
@@ -341,8 +338,16 @@ final class ContextualPhpDocTypeReflector
             return types::false;
         }
 
-        if ($exprNode instanceof ConstExprNullNode) {
-            return types::null;
+        if ($exprNode instanceof ConstExprIntegerNode) {
+            return types::int((int) $exprNode->value);
+        }
+
+        if ($exprNode instanceof ConstExprFloatNode) {
+            return types::float((float) $exprNode->value);
+        }
+
+        if ($exprNode instanceof ConstExprStringNode) {
+            return types::string($exprNode->value);
         }
 
         if ($exprNode instanceof ConstFetchNode) {
