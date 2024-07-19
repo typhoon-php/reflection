@@ -77,22 +77,22 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::object();
     }
 
-    public function namedObject(Type $type, NamedClassId $class, array $typeArguments): mixed
+    public function namedObject(Type $type, NamedClassId $classId, array $typeArguments): mixed
     {
-        return NamedTypeAdapter::namedObject($class->name);
+        return NamedTypeAdapter::namedObject($classId->name);
     }
 
-    public function self(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClass): mixed
+    public function self(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClassId): mixed
     {
         return NamedTypeAdapter::namedObject('self');
     }
 
-    public function parent(Type $type, array $typeArguments, ?NamedClassId $resolvedClass): mixed
+    public function parent(Type $type, array $typeArguments, ?NamedClassId $resolvedClassId): mixed
     {
         return NamedTypeAdapter::namedObject('parent');
     }
 
-    public function static(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClass): mixed
+    public function static(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClassId): mixed
     {
         return NamedTypeAdapter::namedObject('static');
     }

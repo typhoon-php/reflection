@@ -109,17 +109,17 @@ final class ParameterAdapter extends \ReflectionParameter
                     private readonly TyphoonReflector $reflector,
                 ) {}
 
-                public function namedObject(Type $type, NamedClassId $class, array $typeArguments): mixed
+                public function namedObject(Type $type, NamedClassId $classId, array $typeArguments): mixed
                 {
-                    return $this->reflector->reflect($class);
+                    return $this->reflector->reflect($classId);
                 }
 
-                public function self(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClass): mixed
+                public function self(Type $type, array $typeArguments, null|NamedClassId|AnonymousClassId $resolvedClassId): mixed
                 {
                     return $this->reflection->class();
                 }
 
-                public function parent(Type $type, array $typeArguments, ?NamedClassId $resolvedClass): mixed
+                public function parent(Type $type, array $typeArguments, ?NamedClassId $resolvedClassId): mixed
                 {
                     return $this->reflection->class()?->parent();
                 }
