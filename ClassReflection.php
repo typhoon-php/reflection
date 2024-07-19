@@ -13,6 +13,7 @@ use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
+use Typhoon\Type\Visitor\TemplateTypeResolver;
 
 /**
  * @api
@@ -327,6 +328,21 @@ final class ClassReflection
     public function isInternallyDefined(): bool
     {
         return $this->data[Data::InternallyDefined];
+    }
+
+    /**
+     * @param list<Type> $typeArguments
+     */
+    public function createTemplateResolver(array $typeArguments): TemplateTypeResolver
+    {
+        return new TemplateTypeResolver(
+            $this
+                ->templates()
+                ->map(static fn(TemplateReflection $template): array => [
+                    $template->id,
+                    $typeArguments[$template->index()] ?? $template->constraint(),
+                ]),
+        );
     }
 
     /**
