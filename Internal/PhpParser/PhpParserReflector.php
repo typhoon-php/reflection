@@ -14,6 +14,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\IntersectionType;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
@@ -88,8 +89,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
             $id = $typeContext->id;
             \assert($id instanceof NamedFunctionId);
 
-            $data = $this
-                ->baseData->withMap($this->reflectFunctionLike($node, $typeContext))
+            $data = $this->baseData
+                ->withMap($this->reflectFunctionLike($node, $typeContext))
                 ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '');
             $this->reflected = $this->reflected->with($id, $data);
 
@@ -140,26 +141,18 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->withMap($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal, true)
                 ->with(Data::BackingType, $backingType)
-                ->with(Data::Constants, [
-                    ...$this->reflectConstants($typeContext, $node->getConstants()),
-                    ...$this->reflectEnumCases($typeContext, array_filter(
-                        $node->stmts,
-                        static fn(Node $node): bool => $node instanceof EnumCase,
-                    )),
-                ])
+                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->stmts))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
-        if ($node instanceof Trait_) {
-            return $data
-                ->with(Data::ClassKind, ClassKind::Trait)
-                ->withMap($this->reflectTraitUses($node->getTraitUses()))
-                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
-                ->with(Data::Properties, $this->reflectProperties($typeContext, $node->getProperties()))
-                ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
-        }
+        \assert($node instanceof Trait_, 'Unknown ClassLike node %s' . $node::class);
 
-        return $data;
+        return $data
+            ->with(Data::ClassKind, ClassKind::Trait)
+            ->withMap($this->reflectTraitUses($node->getTraitUses()))
+            ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
+            ->with(Data::Properties, $this->reflectProperties($typeContext, $node->getProperties()))
+            ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
     }
 
     private function reflectNode(Node $node): TypedMap
@@ -315,60 +308,51 @@ final class PhpParserReflector extends NodeVisitorAbstract
     }
 
     /**
-     * @param array<ClassConst> $nodes
+     * @param array<Stmt> $nodes
      * @return array<non-empty-string, TypedMap>
      */
     private function reflectConstants(TypeContext $typeContext, array $nodes): array
     {
         $compiler = $this->constantExpressionCompilerProvider->get();
         $constants = [];
+        $enumType = null;
 
         foreach ($nodes as $node) {
-            $data = $this
-                ->reflectNode($node)
-                ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
-                ->with(Data::NativeFinal, $node->isFinal())
-                ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->type)))
-                ->with(Data::Visibility, $this->reflectVisibility($node->flags));
+            if ($node instanceof ClassConst) {
+                $data = $this
+                    ->reflectNode($node)
+                    ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
+                    ->with(Data::NativeFinal, $node->isFinal())
+                    ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->type)))
+                    ->with(Data::Visibility, $this->reflectVisibility($node->flags));
 
-            foreach ($node->consts as $const) {
-                $constants[$const->name->name] = $data->with(Data::ValueExpression, $compiler->compile($const->value));
+                foreach ($node->consts as $const) {
+                    $constants[$const->name->name] = $data->with(Data::ValueExpression, $compiler->compile($const->value));
+                }
+
+                continue;
+            }
+
+            if ($node instanceof EnumCase) {
+                if ($enumType === null) {
+                    \assert($typeContext->id instanceof NamedClassId, 'Enum cannot be an anonymous class');
+                    $enumType = types::object($typeContext->id);
+                }
+
+                $constants[$node->name->name] = $this
+                    ->reflectNode($node)
+                    ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
+                    ->with(Data::NativeFinal, false)
+                    ->with(Data::EnumCase, true)
+                    ->with(Data::Type, new TypeData(annotated: types::classConstant($enumType, $node->name->name)))
+                    ->with(Data::Visibility, Visibility::Public)
+                    ->with(Data::BackingValueExpression, $compiler->compile($node->expr));
+
+                continue;
             }
         }
 
         return $constants;
-    }
-
-    /**
-     * @param array<EnumCase> $nodes
-     * @return array<non-empty-string, TypedMap>
-     */
-    private function reflectEnumCases(TypeContext $typeContext, array $nodes): array
-    {
-        \assert($typeContext->id instanceof NamedClassId, 'Enum cannot be an anonymous class');
-        $enumType = types::object($typeContext->id);
-
-        $compiler = $this->constantExpressionCompilerProvider->get();
-        $cases = [];
-
-        foreach ($nodes as $node) {
-            $name = $node->name->name;
-            $data = $this
-                ->reflectNode($node)
-                ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
-                ->with(Data::NativeFinal, false)
-                ->with(Data::EnumCase, true)
-                ->with(Data::Type, new TypeData(annotated: types::classConstant($enumType, $name)))
-                ->with(Data::Visibility, Visibility::Public);
-
-            if ($node->expr !== null) {
-                $data = $data->with(Data::BackingValueExpression, $compiler->compile($node->expr));
-            }
-
-            $cases[$name] = $data;
-        }
-
-        return $cases;
     }
 
     /**
