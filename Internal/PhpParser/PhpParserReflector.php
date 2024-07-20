@@ -73,25 +73,23 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     public function leaveNode(Node $node): ?int
     {
-        if ($node instanceof ClassLike) {
-            $typeContext = $this->typeContextProvider->get();
-            $id = $typeContext->id;
-            \assert($id instanceof NamedClassId || $id instanceof AnonymousClassId);
-
-            $data = $this->reflectClass($node, $typeContext);
-            $this->reflected = $this->reflected->with($id, $data);
-
-            return null;
-        }
-
         if ($node instanceof Function_) {
             $typeContext = $this->typeContextProvider->get();
             $id = $typeContext->id;
             \assert($id instanceof NamedFunctionId);
 
-            $data = $this->baseData
-                ->withMap($this->reflectFunctionLike($node, $typeContext))
-                ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '');
+            $data = $this->baseData->withMap($this->reflectFunction($node, $typeContext));
+            $this->reflected = $this->reflected->with($id, $data);
+
+            return null;
+        }
+
+        if ($node instanceof ClassLike) {
+            $typeContext = $this->typeContextProvider->get();
+            $id = $typeContext->id;
+            \assert($id instanceof NamedClassId || $id instanceof AnonymousClassId);
+
+            $data = $this->baseData->withMap($this->reflectClass($node, $typeContext));
             $this->reflected = $this->reflected->with($id, $data);
 
             return null;
@@ -100,12 +98,18 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return null;
     }
 
+    private function reflectFunction(FunctionLike $node, TypeContext $typeContext): TypedMap
+    {
+        return $this
+            ->reflectFunctionLike($node, $typeContext)
+            ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '');
+    }
+
     private function reflectClass(ClassLike $node, TypeContext $typeContext): TypedMap
     {
-        $data = $this->baseData
-            ->withMap($this->reflectNode($node))
-            ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '')
+        $data = $this->reflectNode($node)
             ->with(Data::TypeContext, $typeContext)
+            ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '')
             ->with(Data::ConstantExpressionCompiler, $this->constantExpressionCompilerProvider->get())
             ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups));
 
@@ -387,10 +391,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return $properties;
     }
 
-    private function reflectFunctionLike(FunctionLike $node, ?TypeContext $typeContext = null): TypedMap
+    private function reflectFunctionLike(FunctionLike $node, TypeContext $typeContext): TypedMap
     {
-        $typeContext ??= $this->typeContextProvider->get();
-
         return $this->reflectNode($node)
             ->with(Data::TypeContext, $typeContext)
             ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->getReturnType())))
@@ -409,7 +411,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
         $methods = [];
 
         foreach ($nodes as $node) {
-            $methods[$node->name->name] = $this->reflectFunctionLike($node)
+            $methods[$node->name->name] = $this->reflectFunctionLike($node, $this->typeContextProvider->get())
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeFinal, $node->isFinal())
