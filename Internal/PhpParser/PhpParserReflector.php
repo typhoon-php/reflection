@@ -47,8 +47,10 @@ use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\Location;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
+use function Typhoon\Reflection\Internal\column;
 
 /**
  * @internal
@@ -65,7 +67,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
     public function __construct(
         private readonly ContextProvider $contextProvider,
         private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
-        private readonly TypedMap $baseData = new TypedMap(),
+        private readonly TypedMap $baseData,
     ) {
         /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap> */
         $this->reflected = new IdMap();
@@ -105,7 +107,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     private function reflectClass(ClassLike $node, Context $context): TypedMap
     {
-        $data = $this->reflectNode($node)
+        $data = (new TypedMap())
+            ->with(Data::PhpDoc, $node->getDocComment())
+            ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
             ->with(Data::Namespace, $context->namespace())
             ->with(Data::ConstantExpressionCompiler, $this->constantExpressionCompilerProvider->get())
@@ -157,31 +161,6 @@ final class PhpParserReflector extends NodeVisitorAbstract
             ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
     }
 
-    private function reflectNode(Node $node): TypedMap
-    {
-        $data = new TypedMap();
-
-        if ($node->getStartLine() > 0) {
-            $data = $data->with(Data::StartLine, $node->getStartLine());
-
-            if ($node->getEndLine() > 0) {
-                $data = $data->with(Data::EndLine, $node->getEndLine());
-            }
-        }
-
-        $docComment = $node->getDocComment();
-
-        if ($docComment !== null && $docComment->getText() !== '') {
-            $data = $data->with(Data::PhpDoc, $docComment->getText());
-
-            if ($docComment->getStartLine() > 0) {
-                $data = $data->with(Data::PhpDocStartLine, $docComment->getStartLine());
-            }
-        }
-
-        return $data;
-    }
-
     /**
      * @param array<Name> $names
      * @return array<non-empty-string, list<Type>>
@@ -208,9 +187,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
         $phpDocs = [];
 
         foreach ($nodes as $node) {
-            $phpDoc = $node->getDocComment()?->getText() ?? '';
+            $phpDoc = $node->getDocComment();
 
-            if ($phpDoc !== '') {
+            if ($phpDoc !== null) {
                 $phpDocs[] = $phpDoc;
             }
 
@@ -271,45 +250,6 @@ final class PhpParserReflector extends NodeVisitorAbstract
     }
 
     /**
-     * @param array<AttributeGroup> $attributeGroups
-     * @return list<TypedMap>
-     */
-    private function reflectAttributes(array $attributeGroups): array
-    {
-        $attributes = [];
-
-        foreach ($attributeGroups as $attributeGroup) {
-            foreach ($attributeGroup->attrs as $attr) {
-                $attributes[] = $this->reflectNode($attr)
-                    ->with(Data::AttributeClassName, $attr->name->toString())
-                    ->with(Data::ArgumentExpressions, $this->reflectArguments($attr->args));
-            }
-        }
-
-        return $attributes;
-    }
-
-    /**
-     * @param array<Node\Arg> $nodes
-     * @return array<Expression>
-     */
-    private function reflectArguments(array $nodes): array
-    {
-        $compiler = $this->constantExpressionCompilerProvider->get();
-        $arguments = [];
-
-        foreach ($nodes as $node) {
-            if ($node->name === null) {
-                $arguments[] = $compiler->compile($node->value);
-            } else {
-                $arguments[$node->name->name] = $compiler->compile($node->value);
-            }
-        }
-
-        return $arguments;
-    }
-
-    /**
      * @param array<Stmt> $nodes
      * @return array<non-empty-string, TypedMap>
      */
@@ -321,8 +261,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
         foreach ($nodes as $node) {
             if ($node instanceof ClassConst) {
-                $data = $this
-                    ->reflectNode($node)
+                $data = (new TypedMap())
+                    ->with(Data::PhpDoc, $node->getDocComment())
+                    ->with(Data::Location, $this->reflectLocation($node))
                     ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                     ->with(Data::NativeFinal, $node->isFinal())
                     ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
@@ -341,8 +282,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
                     $enumType = types::object($context->site);
                 }
 
-                $constants[$node->name->name] = $this
-                    ->reflectNode($node)
+                $constants[$node->name->name] = (new TypedMap())
+                    ->with(Data::PhpDoc, $node->getDocComment())
+                    ->with(Data::Location, $this->reflectLocation($node))
                     ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                     ->with(Data::NativeFinal, false)
                     ->with(Data::EnumCase, true)
@@ -367,8 +309,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
         $properties = [];
 
         foreach ($nodes as $node) {
-            $data = $this
-                ->reflectNode($node)
+            $data = (new TypedMap())
+                ->with(Data::PhpDoc, $node->getDocComment())
+                ->with(Data::Location, $this->reflectLocation($node))
                 ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeReadonly, $node->isReadonly())
@@ -391,7 +334,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     private function reflectFunctionLike(FunctionLike $node, Context $context): TypedMap
     {
-        return $this->reflectNode($node)
+        return (new TypedMap())
+            ->with(Data::PhpDoc, $node->getDocComment())
+            ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
             ->with(Data::Type, new TypeData($this->reflectType($context, $node->getReturnType())))
             ->with(Data::ByReference, $node->returnsByRef())
@@ -430,7 +375,9 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
         foreach ($nodes as $node) {
             \assert($node->var instanceof Variable && \is_string($node->var->name));
-            $parameters[$node->var->name] = $this->reflectNode($node)
+            $parameters[$node->var->name] = (new TypedMap())
+                ->with(Data::PhpDoc, $node->getDocComment())
+                ->with(Data::Location, $this->reflectLocation($node))
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                 ->with(Data::Type, new TypeData($this->reflectType(
@@ -448,14 +395,44 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return $parameters;
     }
 
-    private function reflectVisibility(int $flags): ?Visibility
+    /**
+     * @param array<AttributeGroup> $attributeGroups
+     * @return list<TypedMap>
+     */
+    private function reflectAttributes(array $attributeGroups): array
     {
-        return match (true) {
-            (bool) ($flags & Class_::MODIFIER_PUBLIC) => Visibility::Public,
-            (bool) ($flags & Class_::MODIFIER_PROTECTED) => Visibility::Protected,
-            (bool) ($flags & Class_::MODIFIER_PRIVATE) => Visibility::Private,
-            default => null,
-        };
+        $attributes = [];
+
+        foreach ($attributeGroups as $attributeGroup) {
+            foreach ($attributeGroup->attrs as $attr) {
+                $attributes[] = (new TypedMap())
+                    ->with(Data::Location, $this->reflectLocation($attr))
+                    ->with(Data::AttributeClassName, $attr->name->toString())
+                    ->with(Data::ArgumentExpressions, $this->reflectArguments($attr->args));
+            }
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param array<Node\Arg> $nodes
+     * @return array<Expression>
+     */
+    private function reflectArguments(array $nodes): array
+    {
+        $compiler = $this->constantExpressionCompilerProvider->get();
+        $arguments = [];
+
+        foreach ($nodes as $node) {
+            if ($node->name === null) {
+                $arguments[] = $compiler->compile($node->value);
+            } else {
+                $arguments[$node->name->name] = $compiler->compile($node->value);
+            }
+        }
+
+        return $arguments;
     }
 
     /**
@@ -516,5 +493,43 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
         /** @psalm-suppress MixedArgument */
         throw new \LogicException(sprintf('Type node of class %s is not supported', $node::class));
+    }
+
+    private function reflectLocation(Node $node): Location
+    {
+        $startPosition = $node->getStartFilePos();
+        $endPosition = $node->getEndFilePos();
+
+        if ($startPosition < 0 || $endPosition < 0) {
+            throw new \LogicException();
+        }
+
+        $startLine = $node->getStartLine();
+        $endLine = $node->getEndLine();
+
+        if ($startLine < 1 || $endLine < 1) {
+            throw new \LogicException();
+        }
+
+        ++$endPosition;
+
+        return new Location(
+            startPosition: $startPosition,
+            endPosition: $endPosition,
+            startLine: $startLine,
+            endLine: $endLine,
+            startColumn: column($this->baseData[Data::Code], $startPosition),
+            endColumn: column($this->baseData[Data::Code], $endPosition),
+        );
+    }
+
+    private function reflectVisibility(int $flags): ?Visibility
+    {
+        return match (true) {
+            (bool) ($flags & Class_::MODIFIER_PUBLIC) => Visibility::Public,
+            (bool) ($flags & Class_::MODIFIER_PROTECTED) => Visibility::Protected,
+            (bool) ($flags & Class_::MODIFIER_PRIVATE) => Visibility::Private,
+            default => null,
+        };
     }
 }

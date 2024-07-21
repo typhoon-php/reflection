@@ -120,7 +120,7 @@ final class ReflectorSession implements Reflector
 
         $this->reflectResourceIntoBuffer($resource);
 
-        $data = $this->buffer[$id] ?? throw new DeclarationNotFoundInResource($resource, $id);
+        $data = $this->buffer[$id] ?? throw new DeclarationNotFoundInResource($resource->baseData, $id);
 
         if ($data instanceof \Closure) {
             $data = $data();
@@ -133,7 +133,7 @@ final class ReflectorSession implements Reflector
     private function reflectResourceIntoBuffer(Resource $resource): void
     {
         $reflected = $this->codeReflector
-            ->reflectCode($resource->code, $resource->baseData)
+            ->reflectCode($resource->baseData)
             ->map(fn(TypedMap $data, NamedFunctionId|NamedClassId|AnonymousClassId $id): \Closure => function () use ($resource, $id, $data): TypedMap {
                 $data = $resource->hooks->process($id, $data, $this);
 

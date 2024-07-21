@@ -191,9 +191,9 @@ final class PhpDoc
     }
 
     /**
-     * @return list<MethodTagValueNode>
+     * @return list<PhpDocTagNode<MethodTagValueNode>>
      */
-    public function methods(): array
+    public function methodTags(): array
     {
         $methodTags = [];
 
@@ -208,7 +208,7 @@ final class PhpDoc
             }
         }
 
-        return array_column($methodTags, 'value');
+        return array_values($methodTags);
     }
 
     /**
@@ -290,11 +290,11 @@ final class PhpDoc
     }
 
     /**
-     * @return list<TypeAliasTagValueNode>
+     * @return list<PhpDocTagNode<TypeAliasTagValueNode>>
      */
-    public function typeAliases(): array
+    public function typeAliasTags(): array
     {
-        $typeAliasesByAlias = [];
+        $tagsByAlias = [];
 
         foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof TypeAliasTagValueNode) {
@@ -302,20 +302,20 @@ final class PhpDoc
             }
 
             /** @var PhpDocTagNode<TypeAliasTagValueNode> $tag */
-            if ($this->shouldReplaceTag($typeAliasesByAlias[$tag->value->alias] ?? null, $tag)) {
-                $typeAliasesByAlias[$tag->value->alias] = $tag;
+            if ($this->shouldReplaceTag($tagsByAlias[$tag->value->alias] ?? null, $tag)) {
+                $tagsByAlias[$tag->value->alias] = $tag;
             }
         }
 
-        return array_column($typeAliasesByAlias, 'value');
+        return array_values($tagsByAlias);
     }
 
     /**
-     * @return list<TypeAliasImportTagValueNode>
+     * @return list<PhpDocTagNode<TypeAliasImportTagValueNode>>
      */
-    public function typeAliasImports(): array
+    public function typeAliasImportTags(): array
     {
-        $typeAliasImportsByAlias = [];
+        $tagsByAlias = [];
 
         foreach ($this->tags() as $tag) {
             if (!$tag->value instanceof TypeAliasImportTagValueNode) {
@@ -325,12 +325,12 @@ final class PhpDoc
             /** @var PhpDocTagNode<TypeAliasImportTagValueNode> $tag */
             $alias = $tag->value->importedAs ?? $tag->value->importedAlias;
 
-            if ($this->shouldReplaceTag($typeAliasImportsByAlias[$alias] ?? null, $tag)) {
-                $typeAliasImportsByAlias[$alias] = $tag;
+            if ($this->shouldReplaceTag($tagsByAlias[$alias] ?? null, $tag)) {
+                $tagsByAlias[$alias] = $tag;
             }
         }
 
-        return array_column($typeAliasImportsByAlias, 'value');
+        return array_values($tagsByAlias);
     }
 
     /**

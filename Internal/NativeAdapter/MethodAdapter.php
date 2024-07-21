@@ -115,7 +115,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getEndLine(): int|false
     {
-        return $this->reflection->endLine() ?? false;
+        return $this->reflection->location()?->endLine ?? false;
     }
 
     public function getExtension(): ?\ReflectionExtension
@@ -201,7 +201,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function getStartLine(): int|false
     {
-        return $this->reflection->startLine() ?? false;
+        return $this->reflection->location()?->startLine ?? false;
     }
 
     public function getStaticVariables(): array

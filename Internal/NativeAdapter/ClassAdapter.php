@@ -133,7 +133,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getEndLine(): int|false
     {
-        return $this->reflection->endLine() ?? false;
+        return $this->reflection->location()?->endLine ?? false;
     }
 
     public function getExtension(): ?\ReflectionExtension
@@ -281,7 +281,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getStartLine(): int|false
     {
-        return $this->reflection->startLine() ?? false;
+        return $this->reflection->location()?->startLine ?? false;
     }
 
     public function getStaticProperties(): array

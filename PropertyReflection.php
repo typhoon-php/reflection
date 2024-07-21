@@ -62,23 +62,12 @@ final class PropertyReflection
      */
     public function phpDoc(): ?string
     {
-        return $this->data[Data::PhpDoc];
+        return $this->data[Data::PhpDoc]?->getText();
     }
 
-    /**
-     * @return ?positive-int
-     */
-    public function startLine(): ?int
+    public function location(): ?Location
     {
-        return $this->data[Data::StartLine];
-    }
-
-    /**
-     * @return ?positive-int
-     */
-    public function endLine(): ?int
-    {
-        return $this->data[Data::EndLine];
+        return $this->data[Data::Location];
     }
 
     public function class(): ClassReflection

@@ -57,3 +57,27 @@ function array_value_last(array $array): mixed
 
     return $key === null ? null : $array[$key];
 }
+
+/**
+ * @internal
+ * @psalm-internal Typhoon\Reflection
+ * @param non-negative-int $offset
+ * @return positive-int
+ */
+function column(string $string, int $offset): int
+{
+    if ($offset === 0) {
+        return 1;
+    }
+
+    $lineStartPosition = strrpos($string, "\n", $offset - \strlen($string) - 1);
+
+    if ($lineStartPosition === false) {
+        return $offset + 1;
+    }
+
+    $column = $offset - $lineStartPosition;
+    \assert($column > 0);
+
+    return $column;
+}

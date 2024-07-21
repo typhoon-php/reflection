@@ -6,17 +6,16 @@ namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\Reflection\Internal\TypedMap\OptionalKey;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\Location;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements OptionalKey<?positive-int>
+ * @implements OptionalKey<?Location>
  */
-enum LineKeys implements OptionalKey
+enum LocationKey implements OptionalKey
 {
-    case Start;
-    case End;
-    case PhpDocStart;
+    case Key;
 
     public function default(TypedMap $map): mixed
     {

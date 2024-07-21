@@ -19,9 +19,6 @@ enum Data
     public const Namespace = Data\NamespaceKey::Key;
     public const DeclaringClassId = Data\DeclaringClassIdKey::Key;
     public const DefaultValueExpression = Data\DefaultValueExpressionKey::Key;
-    public const PhpDocStartLine = Data\LineKeys::PhpDocStart;
-    public const StartLine = Data\LineKeys::Start;
-    public const EndLine = Data\LineKeys::End;
     public const EnumCase = Data\BoolKeys::EnumCase;
     public const BackingValueExpression = Data\BackingValueExpressionKey::Key;
     public const BackingType = Data\BackingTypeKey::Key;
@@ -66,4 +63,6 @@ enum Data
     public const UsePhpDocs = Data\UsePhpDocsKey::Key;
     public const AnonymousClassColumns = Data\AnonymousClassColumnsKey::Key;
     public const ConstantExpressionCompiler = Data\ConstantExpressionCompilerKey::Key;
+    public const Location = Data\LocationKey::Key;
+    public const Code = Data\CodeKey::Key;
 }

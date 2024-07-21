@@ -18,16 +18,20 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 final class Resource
 {
+    public readonly TypedMap $baseData;
+
     public readonly ReflectionHooks $hooks;
 
     /**
      * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
      */
     public function __construct(
-        public readonly string $code,
-        public readonly TypedMap $baseData = new TypedMap(),
+        // TODO remove
+        string $code,
+        TypedMap $baseData = new TypedMap(),
         array $hooks = [],
     ) {
+        $this->baseData = $baseData->with(Data::Code, $code);
         $this->hooks = new ReflectionHooks($hooks);
     }
 

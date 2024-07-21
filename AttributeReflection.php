@@ -84,20 +84,9 @@ final class AttributeReflection
         return $this->reflector->reflect($this->targetId);
     }
 
-    /**
-     * @return ?positive-int
-     */
-    public function startLine(): ?int
+    public function location(): ?Location
     {
-        return $this->data[Data::StartLine];
-    }
-
-    /**
-     * @return ?positive-int
-     */
-    public function endLine(): ?int
-    {
-        return $this->data[Data::EndLine];
+        return $this->data[Data::Location];
     }
 
     public function isRepeated(): bool

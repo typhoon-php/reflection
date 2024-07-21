@@ -10,7 +10,7 @@ use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Resource;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
  * @api
@@ -18,15 +18,15 @@ use Typhoon\Reflection\Resource;
 final class DeclarationNotFoundInResource extends \LogicException implements ReflectionException
 {
     public function __construct(
-        public readonly Resource $resource,
+        TypedMap $data,
         public readonly ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id,
     ) {
-        $file = $resource->baseData[Data::File];
+        $file = $data[Data::File];
 
         parent::__construct(sprintf(
             '%s not found in %s',
             ucfirst($id->describe()),
-            $file ?? substr($resource->code, 0, 50),
+            $file ?? substr($data[Data::Code], 0, 50),
         ));
     }
 }

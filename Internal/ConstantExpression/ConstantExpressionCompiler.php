@@ -182,10 +182,9 @@ final class ConstantExpressionCompiler
     }
 
     /**
-     * @param ?positive-int $phpDocStartLine
      * @return ($expr is null ? null : Expression)
      */
-    public function compilePHPStan(Context $context, ?int $phpDocStartLine, ?ConstExpr\ConstExprNode $expr): ?Expression
+    public function compilePHPStan(Context $context, ?ConstExpr\ConstExprNode $expr): ?Expression
     {
         return match (true) {
             $expr === null => null,
@@ -195,8 +194,8 @@ final class ConstantExpressionCompiler
             $expr instanceof ConstExpr\ConstExprIntegerNode => new Value((int) $expr->value),
             $expr instanceof ConstExpr\ConstExprFloatNode => new Value((float) $expr->value),
             $expr instanceof ConstExpr\ConstExprStringNode => new Value($expr->value),
-            $expr instanceof ConstExpr\ConstExprArrayNode => $this->compilePHPStanArray($context, $phpDocStartLine, $expr),
-            $expr instanceof ConstExpr\ConstFetchNode => $this->compilePHPStanConstFetch($context, $phpDocStartLine, $expr),
+            $expr instanceof ConstExpr\ConstExprArrayNode => $this->compilePHPStanArray($context, $expr),
+            $expr instanceof ConstExpr\ConstFetchNode => $this->compilePHPStanConstFetch($context, $expr),
             default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
         };
     }
@@ -246,10 +245,7 @@ final class ConstantExpressionCompiler
         ));
     }
 
-    /**
-     * @param ?positive-int $phpDocStartLine
-     */
-    private function compilePHPStanArray(Context $context, ?int $phpDocStartLine, ConstExpr\ConstExprArrayNode $expr): Expression
+    private function compilePHPStanArray(Context $context, ConstExpr\ConstExprArrayNode $expr): Expression
     {
         if ($expr->items === []) {
             return new Value([]);
@@ -257,17 +253,14 @@ final class ConstantExpressionCompiler
 
         return new ArrayExpression(array_map(
             fn(ConstExpr\ConstExprArrayItemNode $item): ArrayElement => new ArrayElement(
-                key: $this->compilePHPStan($context, $phpDocStartLine, $item->key),
-                value: $this->compilePHPStan($context, $phpDocStartLine, $item->value),
+                key: $this->compilePHPStan($context, $item->key),
+                value: $this->compilePHPStan($context, $item->value),
             ),
             array_values($expr->items),
         ));
     }
 
-    /**
-     * @param ?positive-int $phpDocStartLine
-     */
-    private function compilePHPStanConstFetch(Context $context, ?int $phpDocStartLine, ConstExpr\ConstFetchNode $expr): Expression
+    private function compilePHPStanConstFetch(Context $context, ConstExpr\ConstFetchNode $expr): Expression
     {
         if ($expr->className !== '') {
             return new ClassConstantFetch(
@@ -277,7 +270,8 @@ final class ConstantExpressionCompiler
         }
 
         $magic = match ($expr->name) {
-            '__LINE__' => new Value(($phpDocStartLine ?? 1) - 1 + (int) ($expr->getAttribute('startLine') ?? 1)),
+            // todo check line
+            '__LINE__' => new Value((int) $expr->getAttribute('startLine')),
             '__FILE__' => $this->file,
             '__DIR__' => new Value(\dirname($this->file->evaluate())),
             '__NAMESPACE__' => $this->namespace,

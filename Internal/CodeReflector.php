@@ -34,9 +34,9 @@ final class CodeReflector
     /**
      * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap>
      */
-    public function reflectCode(string $code, TypedMap $baseData = new TypedMap()): IdMap
+    public function reflectCode(TypedMap $baseData): IdMap
     {
-        $file = $baseData[Data::File];
+        $code = $baseData[Data::Code] ?? throw new \LogicException('Code must be defined');
         $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
 
         /** @psalm-suppress MixedArgument, UnusedPsalmSuppress */
@@ -44,15 +44,19 @@ final class CodeReflector
             ? new FixNodeStartLineVisitor($this->phpParser->getTokens())
             : FixNodeStartLineVisitor::fromCode($code);
 
+        $file = $baseData[Data::File];
         $nameResolver = new NameResolver();
         $contextVisitor = new ContextVisitor(
             nameContext: $nameResolver->getNameContext(),
             annotatedTypesDriver: $this->annotatedTypesDriver,
-            code: $code,
-            file: $file,
+            baseData: $baseData,
         );
         $expressionCompilerVisitor = new ConstantExpressionCompilerVisitor($file);
-        $reflector = new PhpParserReflector($contextVisitor, $expressionCompilerVisitor, $baseData);
+        $reflector = new PhpParserReflector(
+            contextProvider: $contextVisitor,
+            constantExpressionCompilerProvider: $expressionCompilerVisitor,
+            baseData: $baseData,
+        );
 
         $traverser = new NodeTraverser();
 

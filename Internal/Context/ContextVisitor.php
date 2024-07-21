@@ -13,7 +13,10 @@ use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
+use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use function Typhoon\Reflection\Internal\array_value_last;
+use function Typhoon\Reflection\Internal\column;
 
 /**
  * @internal
@@ -23,26 +26,20 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
 {
     private readonly Context $fileContext;
 
+    private readonly string $code;
+
     /**
      * @var list<Context>
      */
     private array $declarationContextStack = [];
 
-    /**
-     * @var ?non-negative-int
-     */
-    private ?int $codeLength = null;
-
-    /**
-     * @param ?non-empty-string $file
-     */
     public function __construct(
         private readonly NameContext $nameContext,
         private readonly AnnotatedTypesDriver $annotatedTypesDriver,
-        private readonly string $code,
-        ?string $file = null,
+        TypedMap $baseData,
     ) {
-        $this->fileContext = Context::start($file);
+        $this->fileContext = Context::start($baseData[Data::File]);
+        $this->code = $baseData[Data::Code];
     }
 
     public function get(): Context
@@ -75,12 +72,14 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             $typeNames = $this->annotatedTypesDriver->reflectAnnotatedTypeNames($node);
 
             if ($node->name === null) {
+                $startPosition = $node->getStartFilePos();
+                \assert($startPosition >= 0);
                 $startLine = $node->getStartLine();
                 \assert($startLine > 0);
 
                 $this->declarationContextStack[] = $this->get()->enterAnonymousClass(
                     line: $startLine,
-                    column: $this->column($node),
+                    column: column($this->code, $startPosition),
                     parentName: $node->extends?->toString(),
                     aliasNames: $typeNames->aliasNames,
                     templateNames: $typeNames->templateNames,
@@ -169,26 +168,5 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         }
 
         return null;
-    }
-
-    /**
-     * @return positive-int
-     */
-    private function column(Node $node): int
-    {
-        $this->codeLength ??= \strlen($this->code);
-        $startFilePosition = $node->getStartFilePos();
-        \assert($startFilePosition >= 0);
-
-        $lineStartPosition = strrpos($this->code, "\n", $startFilePosition - $this->codeLength);
-
-        if ($lineStartPosition === false) {
-            $lineStartPosition = -1;
-        }
-
-        $column = $startFilePosition - $lineStartPosition;
-        \assert($column > 0);
-
-        return $column;
     }
 }
