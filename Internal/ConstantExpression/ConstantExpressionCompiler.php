@@ -14,8 +14,8 @@ use PhpParser\Node\Scalar;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VariadicPlaceholder;
 use PHPStan\PhpDocParser\Ast\ConstExpr;
-use Typhoon\Reflection\Internal\TypeContext\NameParser;
-use Typhoon\Reflection\Internal\TypeContext\TypeContext;
+use Typhoon\Reflection\Internal\Context\Context;
+use Typhoon\Reflection\Internal\PhpParser\NameParser;
 
 /**
  * @internal
@@ -185,7 +185,7 @@ final class ConstantExpressionCompiler
      * @param ?positive-int $phpDocStartLine
      * @return ($expr is null ? null : Expression)
      */
-    public function compilePHPStan(TypeContext $typeContext, ?int $phpDocStartLine, ?ConstExpr\ConstExprNode $expr): ?Expression
+    public function compilePHPStan(Context $context, ?int $phpDocStartLine, ?ConstExpr\ConstExprNode $expr): ?Expression
     {
         return match (true) {
             $expr === null => null,
@@ -195,8 +195,8 @@ final class ConstantExpressionCompiler
             $expr instanceof ConstExpr\ConstExprIntegerNode => new Value((int) $expr->value),
             $expr instanceof ConstExpr\ConstExprFloatNode => new Value((float) $expr->value),
             $expr instanceof ConstExpr\ConstExprStringNode => new Value($expr->value),
-            $expr instanceof ConstExpr\ConstExprArrayNode => $this->compilePHPStanArray($typeContext, $phpDocStartLine, $expr),
-            $expr instanceof ConstExpr\ConstFetchNode => $this->compilePHPStanConstFetch($typeContext, $phpDocStartLine, $expr),
+            $expr instanceof ConstExpr\ConstExprArrayNode => $this->compilePHPStanArray($context, $phpDocStartLine, $expr),
+            $expr instanceof ConstExpr\ConstFetchNode => $this->compilePHPStanConstFetch($context, $phpDocStartLine, $expr),
             default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
         };
     }
@@ -221,7 +221,7 @@ final class ConstantExpressionCompiler
 
         if ($namespacedName instanceof FullyQualified) {
             return new ConstantFetch(
-                name: $namespacedName->toString(),
+                namespacedName: $namespacedName->toString(),
                 globalName: $name->toString(),
             );
         }
@@ -249,7 +249,7 @@ final class ConstantExpressionCompiler
     /**
      * @param ?positive-int $phpDocStartLine
      */
-    private function compilePHPStanArray(TypeContext $typeContext, ?int $phpDocStartLine, ConstExpr\ConstExprArrayNode $expr): Expression
+    private function compilePHPStanArray(Context $context, ?int $phpDocStartLine, ConstExpr\ConstExprArrayNode $expr): Expression
     {
         if ($expr->items === []) {
             return new Value([]);
@@ -257,8 +257,8 @@ final class ConstantExpressionCompiler
 
         return new ArrayExpression(array_map(
             fn(ConstExpr\ConstExprArrayItemNode $item): ArrayElement => new ArrayElement(
-                key: $this->compilePHPStan($typeContext, $phpDocStartLine, $item->key),
-                value: $this->compilePHPStan($typeContext, $phpDocStartLine, $item->value),
+                key: $this->compilePHPStan($context, $phpDocStartLine, $item->key),
+                value: $this->compilePHPStan($context, $phpDocStartLine, $item->value),
             ),
             array_values($expr->items),
         ));
@@ -267,11 +267,11 @@ final class ConstantExpressionCompiler
     /**
      * @param ?positive-int $phpDocStartLine
      */
-    private function compilePHPStanConstFetch(TypeContext $typeContext, ?int $phpDocStartLine, ConstExpr\ConstFetchNode $expr): Expression
+    private function compilePHPStanConstFetch(Context $context, ?int $phpDocStartLine, ConstExpr\ConstFetchNode $expr): Expression
     {
         if ($expr->className !== '') {
             return new ClassConstantFetch(
-                $this->compileClassName($typeContext->resolveClass(NameParser::parse($expr->className))),
+                $this->compileClassName(NameParser::parse($context->resolveClassName($expr->className))),
                 new Value($expr->name),
             );
         }
@@ -292,17 +292,7 @@ final class ConstantExpressionCompiler
             return $magic;
         }
 
-        $name = NameParser::parse($expr->name);
-        $resolvedName = $typeContext->resolveConstant(NameParser::parse($expr->name));
-
-        if ($resolvedName !== null) {
-            return new ConstantFetch($resolvedName->toString());
-        }
-
-        return new ConstantFetch(
-            FullyQualified::concat($typeContext->namespace(), $name)->toString(),
-            $expr->name,
-        );
+        return new ConstantFetch(...$context->resolveConstantName($expr->name));
     }
 
     private function compileClassName(Name|Expr|Class_ $name): Expression

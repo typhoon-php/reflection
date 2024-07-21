@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\Internal\TypeContext\TypeContext;
+use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\TypedMap\Key;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal
- * @implements Key<TypeContext>
+ * @implements Key<Context>
  */
-enum TypeContextKey implements Key
+enum ContextKey implements Key
 {
     case Key;
 }

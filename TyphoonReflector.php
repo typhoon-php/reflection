@@ -25,7 +25,7 @@ use Typhoon\Reflection\Internal\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveConstantExpressionCompiler;
-use Typhoon\Reflection\Internal\CompleteReflection\RemoveTypeContext;
+use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
 use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodsAbstract;
@@ -35,7 +35,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndexes;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locators;
-use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
+use Typhoon\Reflection\Internal\PhpDoc\ReflectPhpDocs;
 use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectorSession;
 use Typhoon\Reflection\Locator\AnonymousLocator;
@@ -62,7 +62,7 @@ final class TyphoonReflector
         CacheInterface $cache = new InMemoryCache(),
         ?Parser $phpParser = null,
     ): self {
-        $phpDocReflector = new PhpDocReflector();
+        $phpDocReflector = new ReflectPhpDocs();
 
         return new self(
             codeReflector: new CodeReflector(
@@ -83,7 +83,7 @@ final class TyphoonReflector
                 SetParametersIndexes::Instance,
                 SetTemplatesIndexes::Instance,
                 ResolveChangeDetector::Instance,
-                RemoveTypeContext::Instance,
+                RemoveContext::Instance,
                 RemoveConstantExpressionCompiler::Instance,
             ]),
         );

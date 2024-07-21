@@ -7,8 +7,10 @@ namespace Typhoon\Reflection\Internal\PhpDoc;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassLike;
 use PHPStan\PhpDocParser\Ast\Node;
+use PHPStan\PhpDocParser\Ast\PhpDoc\MethodTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\MethodTagValueParameterNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTagNode;
+use PHPStan\PhpDocParser\Ast\PhpDoc\PropertyTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\TypeNode;
@@ -18,6 +20,9 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ClassReflectionHook;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompiler;
+use Typhoon\Reflection\Internal\Context\AnnotatedTypeNames;
+use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
+use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TypeData;
@@ -25,9 +30,6 @@ use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\FunctionReflectionHook;
 use Typhoon\Reflection\Internal\PhpDoc\ContextualPhpDocTypeReflector as TypeReflector;
 use Typhoon\Reflection\Internal\Reflector;
-use Typhoon\Reflection\Internal\TypeContext\AnnotatedTypesDriver;
-use Typhoon\Reflection\Internal\TypeContext\TypeContext;
-use Typhoon\Reflection\Internal\TypeContext\TypeDeclarations;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
@@ -38,21 +40,21 @@ use function Typhoon\Reflection\Internal\map;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook, FunctionReflectionHook
+final class ReflectPhpDocs implements AnnotatedTypesDriver, ClassReflectionHook, FunctionReflectionHook
 {
     public function __construct(
         private readonly PhpDocParser $parser = new PhpDocParser(),
     ) {}
 
-    public function reflectTypeDeclarations(FunctionLike|ClassLike $node): TypeDeclarations
+    public function reflectAnnotatedTypeNames(FunctionLike|ClassLike $node): AnnotatedTypeNames
     {
         $phpDoc = $this->parsePhpDoc($node->getDocComment()?->getText());
 
         if ($phpDoc === null) {
-            return new TypeDeclarations();
+            return new AnnotatedTypeNames();
         }
 
-        return new TypeDeclarations(
+        return new AnnotatedTypeNames(
             templateNames: array_map(
                 static fn(PhpDocTagNode $node): string => $node->value->name,
                 $phpDoc->templateTags(),
@@ -84,7 +86,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
             return $data;
         }
 
-        $typeReflector = new TypeReflector($data[Data::TypeContext]);
+        $typeReflector = new TypeReflector($data[Data::Context]);
         $paramTypes = $phpDoc->paramTypes();
 
         return $data
@@ -92,10 +94,11 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
             ->with(Data::Parameters, map(
                 $data[Data::Parameters],
                 function (TypedMap $parameter, string $name) use ($constructor, $typeReflector, $paramTypes): TypedMap {
-                    $parameter = $parameter->with(Data::Type, $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $paramTypes[$name] ?? null));
+                    $type = $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $paramTypes[$name] ?? null);
+                    $parameter = $parameter->with(Data::Type, $type);
 
                     if ($constructor && $parameter[Data::Promoted]) {
-                        return $this->reflectProperty($typeReflector, $parameter);
+                        return $this->reflectNativeProperty($typeReflector, $parameter);
                     }
 
                     return $parameter;
@@ -107,7 +110,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
 
     private function reflectClass(TypedMap $data): TypedMap
     {
-        $typeReflector = new TypeReflector($data[Data::TypeContext]);
+        $typeReflector = new TypeReflector($data[Data::Context]);
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
         if ($phpDoc !== null) {
@@ -128,8 +131,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
             ))
             ->with(Data::Properties, $this->reflectProperties($typeReflector, $data[Data::Properties], $phpDoc))
             ->with(Data::Methods, $this->reflectMethods(
-                typeReflector: $typeReflector,
-                typeContext: $data[Data::TypeContext],
+                classContext: $data[Data::Context],
                 compiler: $data[Data::ConstantExpressionCompiler],
                 methods: $data[Data::Methods],
                 phpDocStartLine: $data[Data::PhpDocStartLine],
@@ -279,29 +281,26 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
      */
     private function reflectProperties(TypeReflector $typeReflector, array $properties, ?PhpDoc $classPhpDoc): array
     {
-        $properties = array_map(
-            fn(TypedMap $property): TypedMap => $this->reflectProperty($typeReflector, $property),
-            $properties,
-        );
+        foreach ($properties as $name => $property) {
+            $properties[$name] = $this->reflectNativeProperty($typeReflector, $property);
+        }
 
-        foreach ($classPhpDoc?->propertyTags() ?? [] as $propertyTag) {
-            $name = ltrim($propertyTag->value->propertyName, '$');
+        if ($classPhpDoc === null) {
+            return $properties;
+        }
 
-            if ($name === '') {
-                continue;
+        foreach ($classPhpDoc->propertyTags() as $tag) {
+            $name = ltrim($tag->value->propertyName, '$');
+
+            if ($name !== '' && !isset($properties[$name])) {
+                $properties[$name] = $this->reflectPhpDocProperty($typeReflector, $tag);
             }
-
-            $properties[$name] ??= (new TypedMap())
-                ->with(Data::Annotated, true)
-                ->with(Data::Visibility, Visibility::Public)
-                ->with(Data::AnnotatedReadonly, str_contains($propertyTag->name, 'read'))
-                ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($propertyTag->value->type)));
         }
 
         return $properties;
     }
 
-    private function reflectProperty(TypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectNativeProperty(TypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -315,52 +314,80 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook
     }
 
     /**
+     * @param PhpDocTagNode<PropertyTagValueNode> $tag
+     */
+    private function reflectPhpDocProperty(TypeReflector $typeReflector, PhpDocTagNode $tag): TypedMap
+    {
+        return (new TypedMap())
+            ->with(Data::Annotated, true)
+            ->with(Data::Visibility, Visibility::Public)
+            ->with(Data::AnnotatedReadonly, str_contains($tag->name, 'read'))
+            ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->value->type)));
+    }
+
+    /**
      * @param array<non-empty-string, TypedMap> $methods
      * @param ?positive-int $phpDocStartLine
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectMethods(
-        TypeReflector $typeReflector,
-        TypeContext $typeContext,
-        ConstantExpressionCompiler $compiler,
-        array $methods,
-        ?int $phpDocStartLine,
-        ?PhpDoc $classPhpDoc,
-    ): array {
-        $methods = map(
-            $methods,
-            fn(TypedMap $method, string $name): TypedMap => $this->reflectFunctionLike($method, $name === '__construct'),
-        );
+    private function reflectMethods(Context $classContext, ConstantExpressionCompiler $compiler, array $methods, ?int $phpDocStartLine, ?PhpDoc $classPhpDoc): array
+    {
+        foreach ($methods as $name => $method) {
+            $methods[$name] = $this->reflectFunctionLike($method, $name === '__construct');
+        }
 
-        foreach ($classPhpDoc?->methods() ?? [] as $methodTag) {
-            $methods[$methodTag->methodName] ??= (new TypedMap())
-                ->with(Data::Annotated, true)
-                ->with(Data::Templates, $this->reflectTemplates($typeReflector, $phpDocStartLine, $methodTag->templateTypes))
-                ->with(Data::Visibility, Visibility::Public)
-                ->with(Data::Static, $methodTag->isStatic)
-                ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($methodTag->returnType)))
-                ->with(Data::Parameters, array_combine(
-                    array_map(
-                        static function (MethodTagValueParameterNode $paramNode): string {
-                            $name = trim($paramNode->parameterName, '$');
-                            \assert($name !== '');
+        if ($classPhpDoc === null) {
+            return $methods;
+        }
 
-                            return $name;
-                        },
-                        $methodTag->parameters,
-                    ),
-                    array_map(
-                        static fn(MethodTagValueParameterNode $paramNode): TypedMap => (new TypedMap())
-                            ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($paramNode->type)))
-                            ->with(Data::ByReference, $paramNode->isReference)
-                            ->with(Data::Variadic, $paramNode->isVariadic)
-                            ->with(Data::DefaultValueExpression, $compiler->compilePHPStan($typeContext, $phpDocStartLine, $paramNode->defaultValue)),
-                        $methodTag->parameters,
-                    ),
-                ));
+        foreach ($classPhpDoc->methods() as $tag) {
+            if (!isset($method[$tag->methodName])) {
+                $methods[$tag->methodName] = $this->reflectPhpDocMethod($classContext, $compiler, $tag, $phpDocStartLine);
+            }
         }
 
         return $methods;
+    }
+
+    /**
+     * @param ?positive-int $phpDocStartLine
+     */
+    private function reflectPhpDocMethod(Context $classContext, ConstantExpressionCompiler $compiler, MethodTagValueNode $tag, ?int $phpDocStartLine): TypedMap
+    {
+        $classContext = $classContext->enterMethod($tag->methodName, array_column($tag->templateTypes, 'name'));
+        $typeReflector = new TypeReflector($classContext);
+
+        return (new TypedMap())
+            ->with(Data::Context, $classContext)
+            ->with(Data::Annotated, true)
+            ->with(Data::Templates, $this->reflectTemplates($typeReflector, $phpDocStartLine, $tag->templateTypes))
+            ->with(Data::Visibility, Visibility::Public)
+            ->with(Data::Static, $tag->isStatic)
+            ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->returnType)))
+            ->with(Data::Parameters, $this->reflectPhpDocMethodParameters($classContext, $typeReflector, $compiler, $phpDocStartLine, $tag->parameters));
+    }
+
+    /**
+     * @param ?positive-int $phpDocStartLine
+     * @param array<MethodTagValueParameterNode> $tags
+     * @return array<non-empty-string, TypedMap>
+     */
+    private function reflectPhpDocMethodParameters(Context $context, TypeReflector $typeReflector, ConstantExpressionCompiler $compiler, ?int $phpDocStartLine, array $tags): array
+    {
+        $parameters = [];
+
+        foreach ($tags as $tag) {
+            $name = trim($tag->parameterName, '$');
+            \assert($name !== '', 'Parameter name must not be empty');
+
+            $parameters[$name] = (new TypedMap())
+                ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->type)))
+                ->with(Data::ByReference, $tag->isReference)
+                ->with(Data::Variadic, $tag->isVariadic)
+                ->with(Data::DefaultValueExpression, $compiler->compilePHPStan($context, $phpDocStartLine, $tag->defaultValue));
+        }
+
+        return $parameters;
     }
 
     private function addAnnotatedType(TypeReflector $typeReflector, TypeData $type, ?TypeNode $node): TypeData

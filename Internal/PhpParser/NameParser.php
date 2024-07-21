@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\TypeContext;
+namespace Typhoon\Reflection\Internal\PhpParser;
 
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;

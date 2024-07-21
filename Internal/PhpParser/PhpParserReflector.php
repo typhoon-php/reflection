@@ -37,6 +37,8 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerProvider;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\ConstantExpression\Values;
+use Typhoon\Reflection\Internal\Context\Context;
+use Typhoon\Reflection\Internal\Context\ContextProvider;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TraitMethodAlias;
@@ -44,8 +46,6 @@ use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
-use Typhoon\Reflection\Internal\TypeContext\TypeContext;
-use Typhoon\Reflection\Internal\TypeContext\TypeContextProvider;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
@@ -63,7 +63,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
     public IdMap $reflected;
 
     public function __construct(
-        private readonly TypeContextProvider $typeContextProvider,
+        private readonly ContextProvider $contextProvider,
         private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
         private readonly TypedMap $baseData = new TypedMap(),
     ) {
@@ -74,23 +74,21 @@ final class PhpParserReflector extends NodeVisitorAbstract
     public function leaveNode(Node $node): ?int
     {
         if ($node instanceof Function_) {
-            $typeContext = $this->typeContextProvider->get();
-            $id = $typeContext->id;
-            \assert($id instanceof NamedFunctionId);
+            $context = $this->contextProvider->get();
+            \assert($context->site instanceof NamedFunctionId);
 
-            $data = $this->baseData->withMap($this->reflectFunction($node, $typeContext));
-            $this->reflected = $this->reflected->with($id, $data);
+            $data = $this->baseData->withMap($this->reflectFunction($node, $context));
+            $this->reflected = $this->reflected->with($context->site, $data);
 
             return null;
         }
 
         if ($node instanceof ClassLike) {
-            $typeContext = $this->typeContextProvider->get();
-            $id = $typeContext->id;
-            \assert($id instanceof NamedClassId || $id instanceof AnonymousClassId);
+            $context = $this->contextProvider->get();
+            \assert($context->site instanceof NamedClassId || $context->site instanceof AnonymousClassId);
 
-            $data = $this->baseData->withMap($this->reflectClass($node, $typeContext));
-            $this->reflected = $this->reflected->with($id, $data);
+            $data = $this->baseData->withMap($this->reflectClass($node, $context));
+            $this->reflected = $this->reflected->with($context->site, $data);
 
             return null;
         }
@@ -98,18 +96,18 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return null;
     }
 
-    private function reflectFunction(FunctionLike $node, TypeContext $typeContext): TypedMap
+    private function reflectFunction(FunctionLike $node, Context $context): TypedMap
     {
         return $this
-            ->reflectFunctionLike($node, $typeContext)
-            ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '');
+            ->reflectFunctionLike($node, $context)
+            ->with(Data::Namespace, $context->namespace());
     }
 
-    private function reflectClass(ClassLike $node, TypeContext $typeContext): TypedMap
+    private function reflectClass(ClassLike $node, Context $context): TypedMap
     {
         $data = $this->reflectNode($node)
-            ->with(Data::TypeContext, $typeContext)
-            ->with(Data::Namespace, $typeContext->namespace()?->toString() ?? '')
+            ->with(Data::Context, $context)
+            ->with(Data::Namespace, $context->namespace())
             ->with(Data::ConstantExpressionCompiler, $this->constantExpressionCompilerProvider->get())
             ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups));
 
@@ -122,8 +120,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::Abstract, $node->isAbstract())
                 ->with(Data::NativeReadonly, $node->isReadonly())
                 ->with(Data::NativeFinal, $node->isFinal())
-                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
-                ->with(Data::Properties, $this->reflectProperties($typeContext, $node->getProperties()))
+                ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
+                ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
@@ -131,13 +129,13 @@ final class PhpParserReflector extends NodeVisitorAbstract
             return $data
                 ->with(Data::ClassKind, ClassKind::Interface)
                 ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->extends))
-                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
+                ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
         if ($node instanceof Enum_) {
             /** @var ?Type<int|string> */
-            $backingType = $this->reflectType($typeContext, $node->scalarType);
+            $backingType = $this->reflectType($context, $node->scalarType);
 
             return $data
                 ->with(Data::ClassKind, ClassKind::Enum)
@@ -145,7 +143,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->withMap($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal, true)
                 ->with(Data::BackingType, $backingType)
-                ->with(Data::Constants, $this->reflectConstants($typeContext, $node->stmts))
+                ->with(Data::Constants, $this->reflectConstants($context, $node->stmts))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
@@ -154,8 +152,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return $data
             ->with(Data::ClassKind, ClassKind::Trait)
             ->withMap($this->reflectTraitUses($node->getTraitUses()))
-            ->with(Data::Constants, $this->reflectConstants($typeContext, $node->getConstants()))
-            ->with(Data::Properties, $this->reflectProperties($typeContext, $node->getProperties()))
+            ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
+            ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
             ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
     }
 
@@ -315,7 +313,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      * @param array<Stmt> $nodes
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectConstants(TypeContext $typeContext, array $nodes): array
+    private function reflectConstants(Context $context, array $nodes): array
     {
         $compiler = $this->constantExpressionCompilerProvider->get();
         $constants = [];
@@ -327,7 +325,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                     ->reflectNode($node)
                     ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                     ->with(Data::NativeFinal, $node->isFinal())
-                    ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->type)))
+                    ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
                     ->with(Data::Visibility, $this->reflectVisibility($node->flags));
 
                 foreach ($node->consts as $const) {
@@ -339,8 +337,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
             if ($node instanceof EnumCase) {
                 if ($enumType === null) {
-                    \assert($typeContext->id instanceof NamedClassId, 'Enum cannot be an anonymous class');
-                    $enumType = types::object($typeContext->id);
+                    \assert($context->site instanceof NamedClassId, 'Enum cannot be an anonymous class');
+                    $enumType = types::object($context->site);
                 }
 
                 $constants[$node->name->name] = $this
@@ -363,7 +361,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      * @param array<Property> $nodes
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectProperties(TypeContext $typeContext, array $nodes): array
+    private function reflectProperties(Context $context, array $nodes): array
     {
         $compiler = $this->constantExpressionCompilerProvider->get();
         $properties = [];
@@ -374,7 +372,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeReadonly, $node->isReadonly())
-                ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->type)))
+                ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags));
 
             foreach ($node->props as $prop) {
@@ -391,15 +389,15 @@ final class PhpParserReflector extends NodeVisitorAbstract
         return $properties;
     }
 
-    private function reflectFunctionLike(FunctionLike $node, TypeContext $typeContext): TypedMap
+    private function reflectFunctionLike(FunctionLike $node, Context $context): TypedMap
     {
         return $this->reflectNode($node)
-            ->with(Data::TypeContext, $typeContext)
-            ->with(Data::Type, new TypeData($this->reflectType($typeContext, $node->getReturnType())))
+            ->with(Data::Context, $context)
+            ->with(Data::Type, new TypeData($this->reflectType($context, $node->getReturnType())))
             ->with(Data::ByReference, $node->returnsByRef())
             ->with(Data::Generator, GeneratorVisitor::isGenerator($node))
             ->with(Data::Attributes, $this->reflectAttributes($node->getAttrGroups()))
-            ->with(Data::Parameters, $this->reflectParameters($typeContext, $node->getParams()));
+            ->with(Data::Parameters, $this->reflectParameters($context, $node->getParams()));
     }
 
     /**
@@ -411,7 +409,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
         $methods = [];
 
         foreach ($nodes as $node) {
-            $methods[$node->name->name] = $this->reflectFunctionLike($node, $this->typeContextProvider->get())
+            $methods[$node->name->name] = $this->reflectFunctionLike($node, $this->contextProvider->get())
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeFinal, $node->isFinal())
@@ -425,7 +423,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      * @param array<Node\Param> $nodes
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectParameters(TypeContext $typeContext, array $nodes): array
+    private function reflectParameters(Context $context, array $nodes): array
     {
         $compiler = $this->constantExpressionCompilerProvider->get();
         $parameters = [];
@@ -436,7 +434,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
                 ->with(Data::Type, new TypeData($this->reflectType(
-                    typeContext: $typeContext,
+                    context: $context,
                     node: $node->type,
                     nullable: $node->default instanceof ConstFetch && $node->default->name->toCodeString() === 'null',
                 )))
@@ -463,30 +461,30 @@ final class PhpParserReflector extends NodeVisitorAbstract
     /**
      * @return ($node is null ? null : Type)
      */
-    private function reflectType(TypeContext $typeContext, null|Name|Identifier|ComplexType $node, bool $nullable = false): ?Type
+    private function reflectType(Context $context, null|Name|Identifier|ComplexType $node, bool $nullable = false): ?Type
     {
         if ($node === null) {
             return null;
         }
 
         if ($nullable) {
-            return types::nullable($this->reflectType($typeContext, $node));
+            return types::nullable($this->reflectType($context, $node));
         }
 
         if ($node instanceof NullableType) {
-            return types::nullable($this->reflectType($typeContext, $node->type));
+            return types::nullable($this->reflectType($context, $node->type));
         }
 
         if ($node instanceof UnionType) {
             return types::union(...array_map(
-                fn(Node $child): Type => $this->reflectType($typeContext, $child),
+                fn(Node $child): Type => $this->reflectType($context, $child),
                 $node->types,
             ));
         }
 
         if ($node instanceof IntersectionType) {
             return types::intersection(...array_map(
-                fn(Node $child): Type => $this->reflectType($typeContext, $child),
+                fn(Node $child): Type => $this->reflectType($context, $child),
                 $node->types,
             ));
         }
@@ -513,7 +511,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
         }
 
         if ($node instanceof Name) {
-            return $typeContext->resolveType($node);
+            return $context->resolveNameAsType($node->toCodeString());
         }
 
         /** @psalm-suppress MixedArgument */

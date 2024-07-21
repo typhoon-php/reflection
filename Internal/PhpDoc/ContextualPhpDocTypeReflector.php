@@ -30,15 +30,14 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\TypeContext\NameParser;
-use Typhoon\Reflection\Internal\TypeContext\TypeContext;
+use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Type\Parameter;
 use Typhoon\Type\ShapeElement;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
 /**
- * This class must not be used as "service", because it injects TypeContext.
+ * This class must not be used as "service", because it injects Context.
  *
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
@@ -46,7 +45,7 @@ use Typhoon\Type\types;
 final class ContextualPhpDocTypeReflector
 {
     public function __construct(
-        private readonly TypeContext $typeContext = new TypeContext(),
+        private readonly Context $context,
     ) {}
 
     /**
@@ -54,7 +53,7 @@ final class ContextualPhpDocTypeReflector
      */
     public function resolveClass(IdentifierTypeNode $node): string
     {
-        return $this->typeContext->resolveClass(NameParser::parse($node->name))->toString();
+        return $this->context->resolveClassName($node->name);
     }
 
     /**
@@ -123,6 +122,7 @@ final class ContextualPhpDocTypeReflector
     }
 
     /**
+     * @param non-empty-string $name
      * @param list<TypeNode> $genericTypes
      */
     private function reflectIdentifier(string $name, array $genericTypes = []): Type
@@ -207,7 +207,7 @@ final class ContextualPhpDocTypeReflector
             'void' => types::void,
             'scalar' => types::scalar,
             'never' => types::never,
-            default => $this->typeContext->resolveType(NameParser::parse($name), array_map($this->reflectType(...), $genericTypes)),
+            default => $this->context->resolveNameAsType($name, array_map($this->reflectType(...), $genericTypes)),
         };
     }
 
@@ -356,7 +356,7 @@ final class ContextualPhpDocTypeReflector
                 throw new InvalidPhpDocType(sprintf('PhpDoc node %s with empty class is not supported', $exprNode::class));
             }
 
-            $class = $this->typeContext->resolveType(NameParser::parse($exprNode->className));
+            $class = $this->context->resolveNameAsType($exprNode->className);
 
             if ($exprNode->name === 'class') {
                 return types::class($class);
@@ -434,16 +434,16 @@ final class ContextualPhpDocTypeReflector
         $name = ltrim($node->parameterName, '$');
         \assert($name !== '', 'Parameter name must not be empty');
 
-        $id = $this->typeContext->id;
+        $site = $this->context->site;
 
-        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId || $id instanceof MethodId) {
-            return types::arg(Id::parameter($id, $name));
+        if ($site instanceof NamedFunctionId || $site instanceof AnonymousFunctionId || $site instanceof MethodId) {
+            return types::arg(Id::parameter($site, $name));
         }
 
-        if ($id === null) {
+        if ($site === null) {
             throw new InvalidPhpDocType('Conditional type in global scope is not supported');
         }
 
-        throw new InvalidPhpDocType(sprintf('Conditional type on %s is not supported', $id->describe()));
+        throw new InvalidPhpDocType(sprintf('Conditional type on %s is not supported', $site->describe()));
     }
 }

@@ -53,7 +53,7 @@ enum Data
     public const AliasType = Data\AliasTypeKey::Key;
     public const TraitMethodAliases = Data\TraitMethodAliasesKey::Key;
     public const TraitMethodPrecedence = Data\TraitMethodPrecedenceKey::Key;
-    public const TypeContext = Data\TypeContextKey::Key;
+    public const Context = Data\ContextKey::Key;
     public const UnresolvedChangeDetectors = Data\UnresolvedChangeDetectorsKey::Key;
     public const UnresolvedInterfaces = Data\UnresolvedInterfacesKey::Key;
     public const UnresolvedParent = Data\UnresolvedParentKey::Key;

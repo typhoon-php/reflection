@@ -20,16 +20,16 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum RemoveTypeContext implements ConstantReflectionHook, FunctionReflectionHook, ClassReflectionHook
+enum RemoveContext implements ConstantReflectionHook, FunctionReflectionHook, ClassReflectionHook
 {
     case Instance;
 
     public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
     {
         return $data
-            ->without(Data::TypeContext)
+            ->without(Data::Context)
             ->with(Data::Methods, array_map(
-                static fn(TypedMap $data): TypedMap => $data->without(Data::TypeContext),
+                static fn(TypedMap $data): TypedMap => $data->without(Data::Context),
                 $data[Data::Methods],
             ));
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\TypeContext;
+namespace Typhoon\Reflection\Internal\Context;
 
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassLike;
@@ -13,5 +13,5 @@ use PhpParser\Node\Stmt\ClassLike;
  */
 interface AnnotatedTypesDriver
 {
-    public function reflectTypeDeclarations(ClassLike|FunctionLike $node): TypeDeclarations;
+    public function reflectAnnotatedTypeNames(FunctionLike|ClassLike $node): AnnotatedTypeNames;
 }
