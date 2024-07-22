@@ -34,6 +34,11 @@ final class ConstantFetch implements Expression
         return $this->globalName;
     }
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return $this;
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         // todo via reflection

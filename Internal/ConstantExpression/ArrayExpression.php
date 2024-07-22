@@ -20,6 +20,17 @@ final class ArrayExpression implements Expression
         private readonly array $elements,
     ) {}
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return new self(array_map(
+            static fn(ArrayElement $element): ArrayElement => new ArrayElement(
+                key: $element->key instanceof Expression ? $element->key->recompile($self, $parent) : $element->key,
+                value: $element->value->recompile($self, $parent),
+            ),
+            $this->elements,
+        ));
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         $array = [];

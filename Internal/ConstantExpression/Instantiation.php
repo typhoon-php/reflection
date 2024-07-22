@@ -21,6 +21,17 @@ final class Instantiation implements Expression
         private readonly array $arguments,
     ) {}
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return new self(
+            class: $this->class->recompile($self, $parent),
+            arguments: array_map(
+                static fn(Expression $expression): Expression => $expression->recompile($self, $parent),
+                $this->arguments,
+            ),
+        );
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         /** @psalm-suppress MixedMethodCall */

@@ -13,15 +13,13 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\VariadicPlaceholder;
-use Typhoon\DeclarationId\AnonymousFunctionId;
-use Typhoon\DeclarationId\MethodId;
-use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ArrayElement;
 use Typhoon\Reflection\Internal\ConstantExpression\ArrayExpression;
 use Typhoon\Reflection\Internal\ConstantExpression\ArrayFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\ArrayFetchCoalesce;
 use Typhoon\Reflection\Internal\ConstantExpression\BinaryOperation;
 use Typhoon\Reflection\Internal\ConstantExpression\ClassConstantFetch;
+use Typhoon\Reflection\Internal\ConstantExpression\CompilationContext;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\ConstantExpression\Instantiation;
@@ -34,16 +32,15 @@ use Typhoon\Reflection\Internal\Context\Context;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
- * @todo add full anonymous classes and parent::class support
  */
 final class ConstantExpressionCompiler
 {
-    private const ANONYMOUS_FUNCTION_NAME = '{closure}';
-    private const ANONYMOUS_CLASS_NAME = '{anonymous-class}';
+    private readonly CompilationContext $context;
 
-    public function __construct(
-        private readonly Context $context,
-    ) {}
+    public function __construct(Context $context)
+    {
+        $this->context = new CompilationContext($context);
+    }
 
     /**
      * @return ($expr is null ? null : Expression)
@@ -57,17 +54,16 @@ final class ConstantExpressionCompiler
             $expr instanceof Scalar\DNumber => new Value($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
             $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
-            $expr instanceof Scalar\MagicConst\File => new Value($this->context->file ?? ''),
-            $expr instanceof Scalar\MagicConst\Dir => new Value($this->context->directory() ?? ''),
-            $expr instanceof Scalar\MagicConst\Namespace_ => new Value($this->context->namespace()),
-            $expr instanceof Scalar\MagicConst\Function_ => $this->function(),
-            $expr instanceof Scalar\MagicConst\Class_ => new Value($this->context->self?->name ?? ''),
-            $expr instanceof Scalar\MagicConst\Trait_ => new Value($this->context->trait?->name ?? ''),
-            $expr instanceof Scalar\MagicConst\Method => $this->method(),
+            $expr instanceof Scalar\MagicConst\File => $this->context->magicFile(),
+            $expr instanceof Scalar\MagicConst\Dir => $this->context->magicDir(),
+            $expr instanceof Scalar\MagicConst\Namespace_ => $this->context->magicNamespace(),
+            $expr instanceof Scalar\MagicConst\Function_ => $this->context->magicFunction(),
+            $expr instanceof Scalar\MagicConst\Class_ => $this->context->magicClass(),
+            $expr instanceof Scalar\MagicConst\Trait_ => $this->context->magicTrait(),
+            $expr instanceof Scalar\MagicConst\Method => $this->context->magicMethod(),
             $expr instanceof Coalesce && $expr->left instanceof Expr\ArrayDimFetch => new ArrayFetchCoalesce(
                 array: $this->compile($expr->left->var),
-                key: $this->compile($expr->left->dim
-                    ?? throw new \LogicException('Unexpected array append operation in a constant expression')),
+                key: $this->compile($expr->left->dim ?? throw new \LogicException('Unexpected array append operation in a constant expression')),
                 default: $this->compile($expr->right),
             ),
             $expr instanceof Expr\BinaryOp => new BinaryOperation(
@@ -99,38 +95,6 @@ final class ConstantExpressionCompiler
             ),
             default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
         };
-    }
-
-    private function function(): Value
-    {
-        $declaration = $this->context->declaration;
-
-        if ($declaration instanceof NamedFunctionId) {
-            return new Value($declaration->name);
-        }
-
-        if ($declaration instanceof AnonymousFunctionId) {
-            $namespace = $this->context->namespace();
-
-            if ($namespace === '') {
-                return new Value(self::ANONYMOUS_FUNCTION_NAME);
-            }
-
-            return new Value($namespace . '\\' . self::ANONYMOUS_FUNCTION_NAME);
-        }
-
-        return new Value('');
-    }
-
-    private function method(): Value
-    {
-        $declaration = $this->context->declaration;
-
-        if (!$declaration instanceof MethodId) {
-            return new Value('');
-        }
-
-        return new Value(sprintf('%s::%s', $declaration->class->name ?? '', $declaration->name));
     }
 
     private function compileConstant(Name $name): Expression
@@ -187,9 +151,9 @@ final class ConstantExpressionCompiler
         if ($name instanceof Name) {
             if ($name->isSpecialClassName()) {
                 return match ($name->toLowerString()) {
-                    'self' => new Value($this->context->self?->name ?? throw new \LogicException()),
-                    'parent' => new Value($this->context->parent?->name ?? throw new \LogicException('Cannot resolve parent class')),
-                    'static' => throw new \LogicException('Unexpected static type usage in a constant expression'),
+                    'self' => $this->context->self(),
+                    'parent' => $this->context->parent(),
+                    'static' => $this->context->static(),
                 };
             }
 

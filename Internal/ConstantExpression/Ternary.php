@@ -19,6 +19,15 @@ final class Ternary implements Expression
         private readonly Expression $else,
     ) {}
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return new self(
+            condition: $this->condition->recompile($self, $parent),
+            if: $this->if?->recompile($self, $parent),
+            else: $this->else,
+        );
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         if ($this->if === null) {

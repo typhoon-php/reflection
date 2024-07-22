@@ -162,14 +162,20 @@ final class ParameterAdapter extends \ReflectionParameter
         }
 
         if ($expression instanceof ClassConstantFetch) {
-            $functionId = $this->reflection->id->function;
-            $expressionClass = $expression->class($this->reflector);
+            $name = $expression->name($this->reflector);
 
-            if ($functionId instanceof MethodId && $expressionClass === $functionId->class->name) {
-                $expressionClass = 'self';
+            if ($name === 'class') {
+                return null;
             }
 
-            return $expressionClass . '::' . $expression->name($this->reflector);
+            $functionId = $this->reflection->id->function;
+            $class = $expression->class($this->reflector);
+
+            if ($functionId instanceof MethodId && $class === $functionId->class->name) {
+                $class = 'self';
+            }
+
+            return $class . '::' . $name;
         }
 
         return null;
@@ -238,7 +244,8 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         $expression = $this->reflection->data[Data::DefaultValueExpression];
 
-        return $expression instanceof ConstantFetch || $expression instanceof ClassConstantFetch;
+        return $expression instanceof ConstantFetch
+            || ($expression instanceof ClassConstantFetch && $expression->name($this->reflector) !== 'class');
     }
 
     public function isOptional(): bool

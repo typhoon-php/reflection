@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
-use Typhoon\DeclarationId\Id;
 use Typhoon\Reflection\TyphoonReflector;
 
 /**
@@ -41,6 +40,14 @@ final class ClassConstantFetch implements Expression
         return $name;
     }
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return new self(
+            class: $this->class->recompile($self, $parent),
+            name: $this->name->recompile($self, $parent),
+        );
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         $class = $this->class($reflector);
@@ -54,6 +61,6 @@ final class ClassConstantFetch implements Expression
             return \constant($class . '::' . $name);
         }
 
-        return $reflector->reflect(Id::namedClass($class))->constants()[$name]->value();
+        return $reflector->reflectClass($class)->constants()[$name]->value();
     }
 }

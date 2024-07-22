@@ -103,7 +103,7 @@ final class ClassInheritance
     private function applyOneUsed(string $traitName, array $typeArguments): void
     {
         $traitId = Id::namedClass($traitName);
-        $traitData = $this->reflector->reflect($traitId);
+        $traitData = $this->recompileTraitExpressions($this->reflector->reflect($traitId));
 
         $this->changeDetectors[] = $traitData[Data::ChangeDetector];
         $typeResolver = TypeResolver::from($this->id, $this->data, $traitId, $traitData, $typeArguments);
@@ -242,5 +242,42 @@ final class ClassInheritance
     private function method(string $name): MethodInheritance
     {
         return $this->methods[$name] ??= new MethodInheritance();
+    }
+
+    private function recompileTraitExpressions(TypedMap $data): TypedMap
+    {
+        // todo anonymous
+        $self = $this->id->name ?? 'anon';
+        $unresolvedParent = $this->data[Data::UnresolvedParent];
+        $parent = $unresolvedParent === null ? null : $unresolvedParent[0];
+
+        return $data
+            ->with(Data::Constants, array_map(
+                static fn(TypedMap $constant): TypedMap => $constant->with(
+                    Data::ValueExpression,
+                    $constant[Data::ValueExpression]->recompile($self, $parent),
+                ),
+                $data[Data::Constants],
+            ))
+            ->with(Data::Properties, array_map(
+                static fn(TypedMap $property): TypedMap => $property->with(
+                    Data::DefaultValueExpression,
+                    $property[Data::DefaultValueExpression]?->recompile($self, $parent),
+                ),
+                $data[Data::Properties],
+            ))
+            ->with(Data::Methods, array_map(
+                static fn(TypedMap $method): TypedMap => $method->with(
+                    Data::Parameters,
+                    array_map(
+                        static fn(TypedMap $parameter): TypedMap => $parameter->with(
+                            Data::DefaultValueExpression,
+                            $parameter[Data::DefaultValueExpression]?->recompile($self, $parent),
+                        ),
+                        $method[Data::Parameters],
+                    ),
+                ),
+                $data[Data::Methods],
+            ));
     }
 }

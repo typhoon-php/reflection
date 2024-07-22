@@ -9,25 +9,24 @@ use Typhoon\Reflection\TyphoonReflector;
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
- * @template-covariant TValue of int|float|string|array
- * @implements Expression<TValue>
+ * @implements Expression<non-empty-string>
  */
-final class Value implements Expression
+final class TraitSelf implements Expression
 {
     /**
-     * @param TValue $value
+     * @param non-empty-string $trait
      */
     public function __construct(
-        public readonly int|float|string|array $value,
+        private readonly string $trait,
     ) {}
 
     public function recompile(string $self, ?string $parent): Expression
     {
-        return $this;
+        return new Value($self);
     }
 
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
-        return $this->value;
+        return $this->trait;
     }
 }

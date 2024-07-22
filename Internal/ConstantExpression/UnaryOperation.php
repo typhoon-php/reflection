@@ -21,6 +21,14 @@ final class UnaryOperation implements Expression
         private readonly string $operator,
     ) {}
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return new self(
+            expression: $this->expression->recompile($self, $parent),
+            operator: $this->operator,
+        );
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         return match ($this->operator) {

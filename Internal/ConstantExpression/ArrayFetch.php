@@ -18,6 +18,14 @@ final class ArrayFetch implements Expression
         private readonly Expression $key,
     ) {}
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return new self(
+            array: $this->array->recompile($self, $parent),
+            key: $this->key->recompile($self, $parent),
+        );
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
         /** @psalm-suppress MixedArrayAccess, MixedArrayOffset */

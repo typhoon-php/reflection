@@ -17,6 +17,11 @@ enum Values implements Expression
     case True;
     case False;
 
+    public function recompile(string $self, ?string $parent): Expression
+    {
+        return $this;
+    }
+
     public function evaluate(?TyphoonReflector $reflector = null): ?bool
     {
         return match ($this) {
