@@ -50,10 +50,7 @@ final class CodeReflector
             nameContext: $nameResolver->getNameContext(),
             annotatedTypesDriver: $this->annotatedTypesDriver,
         );
-        $reflector = new PhpParserReflector(
-            contextProvider: $contextVisitor,
-            resourceData: $resourceData,
-        );
+        $reflector = new PhpParserReflector($resourceData);
 
         $traverser = new NodeTraverser();
 
