@@ -14,7 +14,7 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
-use Typhoon\Reflection\Internal\PhpParser\FixNodeStartLineVisitor;
+use Typhoon\Reflection\Internal\PhpParser\FixNodeLocationVisitor;
 use Typhoon\Reflection\Internal\PhpParser\GeneratorVisitor;
 use Typhoon\Reflection\Internal\PhpParser\PhpParserChecker;
 use Typhoon\Reflection\Internal\PhpParser\PhpParserReflector;
@@ -39,10 +39,10 @@ final class CodeReflector
         $code = $baseData[Data::Code] ?? throw new \LogicException('Code must be defined');
         $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
 
-        /** @psalm-suppress MixedArgument, UnusedPsalmSuppress */
+        /** @psalm-suppress MixedArgument, ArgumentTypeCoercion, UnusedPsalmSuppress */
         $linesFixer = method_exists($this->phpParser, 'getTokens')
-            ? new FixNodeStartLineVisitor($this->phpParser->getTokens())
-            : FixNodeStartLineVisitor::fromCode($code);
+            ? new FixNodeLocationVisitor($this->phpParser->getTokens())
+            : FixNodeLocationVisitor::fromCode($code);
 
         $file = $baseData[Data::File];
         $nameResolver = new NameResolver();
