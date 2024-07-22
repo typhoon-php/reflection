@@ -10,7 +10,7 @@ namespace Typhoon\Reflection\Internal;
  */
 enum Data
 {
-    public const ArgumentExpressions = Data\ArgumentExpressionsKey::Key;
+    public const ArgumentsExpression = Data\ArgumentsExpressionKey::Key;
     public const AttributeClassName = Data\AttributeClassNameKey::Key;
     public const AttributeRepeated = Data\BoolKeys::AttributeRepeated;
     public const Attributes = Data\AttributesKey::Key;

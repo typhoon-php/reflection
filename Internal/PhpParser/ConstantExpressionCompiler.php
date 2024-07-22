@@ -127,7 +127,8 @@ final class ConstantExpressionCompiler
 
     private function compileArray(Expr\Array_ $expr): Expression
     {
-        $items = array_values(array_filter($expr->items));
+        /** @var list<Expr\ArrayItem> */
+        $items = $expr->items;
 
         if ($items === []) {
             return new Value([]);

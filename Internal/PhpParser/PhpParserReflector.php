@@ -34,7 +34,10 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Internal\ConstantExpression\ArrayElement;
+use Typhoon\Reflection\Internal\ConstantExpression\ArrayExpression;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
+use Typhoon\Reflection\Internal\ConstantExpression\Value;
 use Typhoon\Reflection\Internal\ConstantExpression\Values;
 use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
@@ -401,7 +404,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 $attributes[] = (new TypedMap())
                     ->with(Data::Location, $this->reflectLocation($attr))
                     ->with(Data::AttributeClassName, $attr->name->toString())
-                    ->with(Data::ArgumentExpressions, $this->reflectArguments($compiler, $attr->args));
+                    ->with(Data::ArgumentsExpression, $this->reflectArguments($compiler, $attr->args));
             }
         }
 
@@ -410,21 +413,24 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     /**
      * @param array<Node\Arg> $nodes
-     * @return array<Expression>
+     * @return Expression<array>
      */
-    private function reflectArguments(ConstantExpressionCompiler $compiler, array $nodes): array
+    private function reflectArguments(ConstantExpressionCompiler $compiler, array $nodes): Expression
     {
-        $arguments = [];
+        $elements = [];
 
         foreach ($nodes as $node) {
-            if ($node->name === null) {
-                $arguments[] = $compiler->compile($node->value);
-            } else {
-                $arguments[$node->name->name] = $compiler->compile($node->value);
-            }
+            $elements[] = new ArrayElement(
+                key: $node->name === null ? null : new Value($node->name->name),
+                value: $compiler->compile($node->value),
+            );
         }
 
-        return $arguments;
+        if ($elements === []) {
+            return new Value([]);
+        }
+
+        return new ArrayExpression($elements);
     }
 
     /**

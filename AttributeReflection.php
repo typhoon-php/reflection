@@ -12,7 +12,6 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
-use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -96,10 +95,7 @@ final class AttributeReflection
 
     public function arguments(): array
     {
-        return array_map(
-            fn(Expression $expression): mixed => $expression->evaluate($this->reflector),
-            $this->data[Data::ArgumentExpressions],
-        );
+        return $this->data[Data::ArgumentsExpression]->evaluate($this->reflector);
     }
 
     public function newInstance(): object
