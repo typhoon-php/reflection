@@ -25,7 +25,6 @@ use Typhoon\Reflection\Internal\CodeReflector;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnum;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
-use Typhoon\Reflection\Internal\CompleteReflection\RemoveConstantExpressionCompiler;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodsAbstract;
@@ -85,7 +84,6 @@ final class TyphoonReflector
                 SetTemplatesIndexes::Instance,
                 RemoveContext::Instance,
                 RemoveCode::Instance,
-                RemoveConstantExpressionCompiler::Instance,
             ]),
         );
     }

@@ -252,12 +252,22 @@ final class Context
         );
     }
 
+    public function directory(): ?string
+    {
+        if ($this->file === null) {
+            return null;
+        }
+
+        return \dirname($this->file);
+    }
+
     public function namespace(): string
     {
         return $this->nameContext->getNamespace()?->toString() ?? '';
     }
 
     /**
+     * @psalm-suppress PossiblyUnusedMethod
      * @param non-empty-string $unresolvedName
      * @return array{non-empty-string, ?non-empty-string}
      */

@@ -13,8 +13,6 @@ use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
-use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use function Typhoon\Reflection\Internal\array_value_last;
 use function Typhoon\Reflection\Internal\column;
 
@@ -26,20 +24,21 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
 {
     private readonly Context $fileContext;
 
-    private readonly string $code;
-
     /**
      * @var list<Context>
      */
     private array $declarationContextStack = [];
 
+    /**
+     * @param ?non-empty-string $file
+     */
     public function __construct(
+        ?string $file,
+        private readonly string $code,
         private readonly NameContext $nameContext,
-        private readonly AnnotatedTypesDriver $annotatedTypesDriver,
-        TypedMap $resourceData,
+        private readonly AnnotatedTypesDriver $annotatedTypesDriver = NullAnnotatedTypesDriver::Instance,
     ) {
-        $this->fileContext = Context::start($resourceData[Data::File]);
-        $this->code = $resourceData[Data::Code];
+        $this->fileContext = Context::start($file);
     }
 
     public function get(): Context

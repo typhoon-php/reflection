@@ -11,7 +11,6 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerVisitor;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
 use Typhoon\Reflection\Internal\PhpParser\FixNodeLocationVisitor;
@@ -44,17 +43,15 @@ final class CodeReflector
             ? new FixNodeLocationVisitor($this->phpParser->getTokens())
             : FixNodeLocationVisitor::fromCode($code);
 
-        $file = $resourceData[Data::File];
         $nameResolver = new NameResolver();
         $contextVisitor = new ContextVisitor(
+            file: $resourceData[Data::File],
+            code: $code,
             nameContext: $nameResolver->getNameContext(),
             annotatedTypesDriver: $this->annotatedTypesDriver,
-            resourceData: $resourceData,
         );
-        $expressionCompilerVisitor = new ConstantExpressionCompilerVisitor($file);
         $reflector = new PhpParserReflector(
             contextProvider: $contextVisitor,
-            constantExpressionCompilerProvider: $expressionCompilerVisitor,
             resourceData: $resourceData,
         );
 
@@ -68,7 +65,6 @@ final class CodeReflector
         $traverser->addVisitor(new GeneratorVisitor());
         $traverser->addVisitor($nameResolver);
         $traverser->addVisitor($contextVisitor);
-        $traverser->addVisitor($expressionCompilerVisitor);
 
         if (PhpParserChecker::isVisitorLeaveReversed()) {
             $traverser->addVisitor($reflector);

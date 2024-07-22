@@ -34,7 +34,6 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompilerProvider;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\ConstantExpression\Values;
 use Typhoon\Reflection\Internal\Context\Context;
@@ -66,7 +65,6 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     public function __construct(
         private readonly ContextProvider $contextProvider,
-        private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
         private readonly TypedMap $resourceData,
     ) {
         /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap> */
@@ -112,8 +110,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
             ->with(Data::Namespace, $context->namespace())
-            ->with(Data::ConstantExpressionCompiler, $this->constantExpressionCompilerProvider->get())
-            ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups));
+            ->with(Data::Attributes, $this->reflectAttributes(new ConstantExpressionCompiler($context), $node->attrGroups));
 
         if ($node instanceof Class_) {
             return $data
@@ -255,7 +252,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectConstants(Context $context, array $nodes): array
     {
-        $compiler = $this->constantExpressionCompilerProvider->get();
+        $compiler = new ConstantExpressionCompiler($context);
         $constants = [];
         $enumType = null;
 
@@ -264,7 +261,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 $data = (new TypedMap())
                     ->with(Data::PhpDoc, $node->getDocComment())
                     ->with(Data::Location, $this->reflectLocation($node))
-                    ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
+                    ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
                     ->with(Data::NativeFinal, $node->isFinal())
                     ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
                     ->with(Data::Visibility, $this->reflectVisibility($node->flags));
@@ -285,7 +282,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 $constants[$node->name->name] = (new TypedMap())
                     ->with(Data::PhpDoc, $node->getDocComment())
                     ->with(Data::Location, $this->reflectLocation($node))
-                    ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
+                    ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
                     ->with(Data::NativeFinal, false)
                     ->with(Data::EnumCase, true)
                     ->with(Data::Type, new TypeData(annotated: types::classConstant($enumType, $node->name->name)))
@@ -305,14 +302,14 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectProperties(Context $context, array $nodes): array
     {
-        $compiler = $this->constantExpressionCompilerProvider->get();
+        $compiler = new ConstantExpressionCompiler($context);
         $properties = [];
 
         foreach ($nodes as $node) {
             $data = (new TypedMap())
                 ->with(Data::PhpDoc, $node->getDocComment())
                 ->with(Data::Location, $this->reflectLocation($node))
-                ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
+                ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeReadonly, $node->isReadonly())
                 ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
@@ -334,6 +331,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
     private function reflectFunctionLike(FunctionLike $node, Context $context): TypedMap
     {
+        $compiler = new ConstantExpressionCompiler($context);
+
         return (new TypedMap())
             ->with(Data::PhpDoc, $node->getDocComment())
             ->with(Data::Location, $this->reflectLocation($node))
@@ -341,7 +340,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             ->with(Data::Type, new TypeData($this->reflectType($context, $node->getReturnType())))
             ->with(Data::ByReference, $node->returnsByRef())
             ->with(Data::Generator, GeneratorVisitor::isGenerator($node))
-            ->with(Data::Attributes, $this->reflectAttributes($node->getAttrGroups()))
+            ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->getAttrGroups()))
             ->with(Data::Parameters, $this->reflectParameters($context, $node->getParams()));
     }
 
@@ -370,7 +369,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      */
     private function reflectParameters(Context $context, array $nodes): array
     {
-        $compiler = $this->constantExpressionCompilerProvider->get();
+        $compiler = new ConstantExpressionCompiler($context);
         $parameters = [];
 
         foreach ($nodes as $node) {
@@ -379,7 +378,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 ->with(Data::PhpDoc, $node->getDocComment())
                 ->with(Data::Location, $this->reflectLocation($node))
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
-                ->with(Data::Attributes, $this->reflectAttributes($node->attrGroups))
+                ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
                 ->with(Data::Type, new TypeData($this->reflectType(
                     context: $context,
                     node: $node->type,
@@ -399,7 +398,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
      * @param array<AttributeGroup> $attributeGroups
      * @return list<TypedMap>
      */
-    private function reflectAttributes(array $attributeGroups): array
+    private function reflectAttributes(ConstantExpressionCompiler $compiler, array $attributeGroups): array
     {
         $attributes = [];
 
@@ -408,7 +407,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
                 $attributes[] = (new TypedMap())
                     ->with(Data::Location, $this->reflectLocation($attr))
                     ->with(Data::AttributeClassName, $attr->name->toString())
-                    ->with(Data::ArgumentExpressions, $this->reflectArguments($attr->args));
+                    ->with(Data::ArgumentExpressions, $this->reflectArguments($compiler, $attr->args));
             }
         }
 
@@ -419,9 +418,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
      * @param array<Node\Arg> $nodes
      * @return array<Expression>
      */
-    private function reflectArguments(array $nodes): array
+    private function reflectArguments(ConstantExpressionCompiler $compiler, array $nodes): array
     {
-        $compiler = $this->constantExpressionCompilerProvider->get();
         $arguments = [];
 
         foreach ($nodes as $node) {

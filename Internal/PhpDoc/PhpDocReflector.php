@@ -21,7 +21,6 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ClassHook;
-use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompiler;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypeNames;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\Context\Context;
@@ -156,7 +155,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
             ])
             ->with(Data::Methods, [
                 ...$data[Data::Methods],
-                ...$this->reflectPhpDocMethods($code, $data[Data::Context], $data[Data::ConstantExpressionCompiler], $phpDoc->methodTags()),
+                ...$this->reflectPhpDocMethods($code, $data[Data::Context], $phpDoc->methodTags()),
             ]);
     }
 
@@ -333,7 +332,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
      * @param list<PhpDocTagNode<MethodTagValueNode>> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocMethods(string $code, Context $classContext, ConstantExpressionCompiler $compiler, array $tags): array
+    private function reflectPhpDocMethods(string $code, Context $classContext, array $tags): array
     {
         $methods = [];
 
@@ -358,7 +357,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
                         $tag->value->templateTypes,
                     ),
                 ))
-                ->with(Data::Parameters, $this->reflectPhpDocMethodParameters($code, $context, $typeReflector, $compiler, $tag->value->parameters));
+                ->with(Data::Parameters, $this->reflectPhpDocMethodParameters($code, $context, $typeReflector, $tag->value->parameters));
         }
 
         return $methods;
@@ -368,7 +367,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
      * @param array<MethodTagValueParameterNode> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocMethodParameters(string $code, Context $context, TypeReflector $typeReflector, ConstantExpressionCompiler $compiler, array $tags): array
+    private function reflectPhpDocMethodParameters(string $code, Context $context, TypeReflector $typeReflector, array $tags): array
     {
         $parameters = [];
 
@@ -380,8 +379,8 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
                 ->with(Data::Location, $this->reflectLocation($code, $tag))
                 ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->type)))
                 ->with(Data::ByReference, $tag->isReference)
-                ->with(Data::Variadic, $tag->isVariadic)
-                ->with(Data::DefaultValueExpression, $compiler->compilePHPStan($context, $tag->defaultValue));
+                ->with(Data::Variadic, $tag->isVariadic);
+            // ->with(Data::DefaultValueExpression, $compiler->compilePHPStan($context, $tag->defaultValue))
         }
 
         return $parameters;
