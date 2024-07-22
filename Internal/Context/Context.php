@@ -78,7 +78,6 @@ final class Context
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @param positive-int $line
      * @param positive-int $column
      * @param list<non-empty-string> $templateNames

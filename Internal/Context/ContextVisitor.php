@@ -6,7 +6,11 @@ namespace Typhoon\Reflection\Internal\Context;
 
 use PhpParser\NameContext;
 use PhpParser\Node;
+use PhpParser\Node\Expr\ArrowFunction;
+use PhpParser\Node\Expr\Closure;
+use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Function_;
@@ -67,18 +71,33 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             return null;
         }
 
+        if ($node instanceof Closure || $node instanceof ArrowFunction) {
+            $line = $node->getStartLine();
+            \assert($line > 0);
+            $offset = $node->getStartFilePos();
+            \assert($offset >= 0);
+
+            $this->declarationContextStack[] = $this->get()->enterAnonymousFunction(
+                line: $line,
+                column: column($this->code, $offset),
+                templateNames: $this->annotatedTypesDriver->reflectAnnotatedTypeNames($node)->templateNames,
+            );
+
+            return null;
+        }
+
         if ($node instanceof Class_) {
             $typeNames = $this->annotatedTypesDriver->reflectAnnotatedTypeNames($node);
 
             if ($node->name === null) {
-                $startPosition = $node->getStartFilePos();
-                \assert($startPosition >= 0);
-                $startLine = $node->getStartLine();
-                \assert($startLine > 0);
+                $line = $node->getStartLine();
+                \assert($line > 0);
+                $offset = $node->getStartFilePos();
+                \assert($offset >= 0);
 
                 $this->declarationContextStack[] = $this->get()->enterAnonymousClass(
-                    line: $startLine,
-                    column: column($this->code, $startPosition),
+                    line: $line,
+                    column: column($this->code, $offset),
                     parentName: $node->extends?->toString(),
                     aliasNames: $typeNames->aliasNames,
                     templateNames: $typeNames->templateNames,
@@ -154,13 +173,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
 
     public function leaveNode(Node $node)
     {
-        if ($node instanceof Function_
-         || $node instanceof Class_
-         || $node instanceof Interface_
-         || $node instanceof Trait_
-         || $node instanceof Enum_
-         || $node instanceof ClassMethod
-        ) {
+        if ($node instanceof FunctionLike || $node instanceof ClassLike) {
             array_pop($this->declarationContextStack);
 
             return null;
