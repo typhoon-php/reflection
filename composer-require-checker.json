@@ -1,6 +1,8 @@
 {
     "symbol-whitelist" : [
         "Composer\\Autoload\\ClassLoader",
+        "PhpParser\\Node\\Scalar\\DNumber",
+        "PhpParser\\Node\\Scalar\\LNumber",
         "Typhoon\\PhpStormReflectionStubs\\PhpStormStubsLocator"
     ]
 }
