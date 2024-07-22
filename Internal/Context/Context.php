@@ -33,7 +33,7 @@ final class Context
     private function __construct(
         public readonly ?string $file,
         private NameContext $nameContext,
-        public readonly null|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $site = null,
+        public readonly null|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $declaration = null,
         public readonly null|NamedClassId|AnonymousClassId $self = null,
         public readonly ?NamedClassId $trait = null,
         public readonly ?NamedClassId $parent = null,
@@ -66,14 +66,14 @@ final class Context
      */
     public function enterFunction(string $name, array $templateNames = []): self
     {
-        $site = Id::namedFunction($name);
+        $declaration = Id::namedFunction($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
+            declaration: $declaration,
             aliases: $this->aliases,
-            templates: self::templatesFromNames($site, $templateNames),
+            templates: self::templatesFromNames($declaration, $templateNames),
         );
     }
 
@@ -86,19 +86,19 @@ final class Context
     public function enterAnonymousFunction(int $line, int $column, array $templateNames = []): self
     {
         \assert($this->file !== null);
-        $site = Id::anonymousFunction($this->file, $line, $column);
+        $declaration = Id::anonymousFunction($this->file, $line, $column);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
+            declaration: $declaration,
             self: $this->self,
             trait: $this->trait,
             parent: $this->parent,
             aliases: $this->aliases,
             templates: [
                 ...$this->templates,
-                ...self::templatesFromNames($site, $templateNames),
+                ...self::templatesFromNames($declaration, $templateNames),
             ],
         );
     }
@@ -115,19 +115,19 @@ final class Context
         array $aliasNames = [],
         array $templateNames = [],
     ): self {
-        $site = Id::namedClass($name);
+        $declaration = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
-            self: $site,
+            declaration: $declaration,
+            self: $declaration,
             parent: $parentName === null ? null : Id::namedClass($parentName),
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($site, $aliasNames),
+                ...self::aliasesFromNames($declaration, $aliasNames),
             ],
-            templates: self::templatesFromNames($site, $templateNames),
+            templates: self::templatesFromNames($declaration, $templateNames),
         );
     }
 
@@ -146,19 +146,19 @@ final class Context
         array $templateNames = [],
     ): self {
         \assert($this->file !== null);
-        $site = Id::anonymousClass($this->file, $line, $column);
+        $declaration = Id::anonymousClass($this->file, $line, $column);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
-            self: $site,
+            declaration: $declaration,
+            self: $declaration,
             parent: $parentName === null ? null : Id::namedClass($parentName),
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($site, $aliasNames),
+                ...self::aliasesFromNames($declaration, $aliasNames),
             ],
-            templates: self::templatesFromNames($site, $templateNames),
+            templates: self::templatesFromNames($declaration, $templateNames),
         );
     }
 
@@ -169,18 +169,18 @@ final class Context
      */
     public function enterInterface(string $name, array $aliasNames = [], array $templateNames = []): self
     {
-        $site = Id::namedClass($name);
+        $declaration = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
-            self: $site,
+            declaration: $declaration,
+            self: $declaration,
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($site, $aliasNames),
+                ...self::aliasesFromNames($declaration, $aliasNames),
             ],
-            templates: self::templatesFromNames($site, $templateNames),
+            templates: self::templatesFromNames($declaration, $templateNames),
         );
     }
 
@@ -191,18 +191,18 @@ final class Context
      */
     public function enterEnum(string $name, array $aliasNames = [], array $templateNames = []): self
     {
-        $site = Id::namedClass($name);
+        $declaration = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
-            self: $site,
+            declaration: $declaration,
+            self: $declaration,
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($site, $aliasNames),
+                ...self::aliasesFromNames($declaration, $aliasNames),
             ],
-            templates: self::templatesFromNames($site, $templateNames),
+            templates: self::templatesFromNames($declaration, $templateNames),
         );
     }
 
@@ -213,18 +213,18 @@ final class Context
      */
     public function enterTrait(string $name, array $aliasNames = [], array $templateNames = []): self
     {
-        $site = Id::namedClass($name);
+        $declaration = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
-            trait: $site,
+            declaration: $declaration,
+            trait: $declaration,
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($site, $aliasNames),
+                ...self::aliasesFromNames($declaration, $aliasNames),
             ],
-            templates: self::templatesFromNames($site, $templateNames),
+            templates: self::templatesFromNames($declaration, $templateNames),
         );
     }
 
@@ -234,20 +234,20 @@ final class Context
      */
     public function enterMethod(string $name, array $templateNames): self
     {
-        \assert($this->site instanceof NamedClassId || $this->site instanceof AnonymousClassId);
-        $site = Id::method($this->site, $name);
+        \assert($this->declaration instanceof NamedClassId || $this->declaration instanceof AnonymousClassId);
+        $declaration = Id::method($this->declaration, $name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            site: $site,
+            declaration: $declaration,
             self: $this->self,
             trait: $this->trait,
             parent: $this->parent,
             aliases: $this->aliases,
             templates: [
                 ...$this->templates,
-                ...self::templatesFromNames($site, $templateNames),
+                ...self::templatesFromNames($declaration, $templateNames),
             ],
         );
     }
@@ -334,11 +334,11 @@ final class Context
      * @return array<non-empty-string, TemplateId>
      */
     private static function templatesFromNames(
-        NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $site,
+        NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $declaration,
         array $names,
     ): array {
         return array_combine($names, array_map(
-            static fn(string $templateName): TemplateId => Id::template($site, $templateName),
+            static fn(string $templateName): TemplateId => Id::template($declaration, $templateName),
             $names,
         ));
     }

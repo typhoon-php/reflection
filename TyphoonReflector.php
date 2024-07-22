@@ -236,7 +236,7 @@ final class TyphoonReflector
             $id instanceof MethodId => $this->reflect($id->class)->methods()[$id->name],
             $id instanceof ParameterId => $this->reflect($id->function)->parameters()[$id->name],
             $id instanceof AliasId => $this->reflect($id->class)->aliases()[$id->name],
-            $id instanceof TemplateId => $this->reflect($id->site)->templates()[$id->name],
+            $id instanceof TemplateId => $this->reflect($id->declaration)->templates()[$id->name],
             default => throw new \LogicException($id->describe() . ' is not supported yet'),
         };
     }

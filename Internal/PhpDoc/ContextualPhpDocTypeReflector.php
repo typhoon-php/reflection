@@ -434,16 +434,19 @@ final class ContextualPhpDocTypeReflector
         $name = ltrim($node->parameterName, '$');
         \assert($name !== '', 'Parameter name must not be empty');
 
-        $site = $this->context->site;
+        $declaration = $this->context->declaration;
 
-        if ($site instanceof NamedFunctionId || $site instanceof AnonymousFunctionId || $site instanceof MethodId) {
-            return types::arg(Id::parameter($site, $name));
+        if ($declaration instanceof NamedFunctionId
+         || $declaration instanceof AnonymousFunctionId
+         || $declaration instanceof MethodId
+        ) {
+            return types::arg(Id::parameter($declaration, $name));
         }
 
-        if ($site === null) {
+        if ($declaration === null) {
             throw new InvalidPhpDocType('Conditional type in global scope is not supported');
         }
 
-        throw new InvalidPhpDocType(sprintf('Conditional type on %s is not supported', $site->describe()));
+        throw new InvalidPhpDocType(sprintf('Conditional type on %s is not supported', $declaration->describe()));
     }
 }
