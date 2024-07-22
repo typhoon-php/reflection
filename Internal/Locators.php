@@ -15,7 +15,7 @@ use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
 use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
-use Typhoon\Reflection\Resource;
+use Typhoon\Reflection\Locator\Resource;
 
 /**
  * @internal

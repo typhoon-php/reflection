@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal;
 
-use Typhoon\ChangeDetector\ChangeDetectors;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\Internal\IdMap;
@@ -12,7 +11,7 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Exception\DeclarationNotFoundInResource;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
-use Typhoon\Reflection\Resource;
+use Typhoon\Reflection\Locator\Resource;
 
 /**
  * @internal
@@ -69,7 +68,7 @@ final class ReflectorSession implements Reflector
     }
 
     /**
-     * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, \Typhoon\Reflection\Resource>
+     * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, \Typhoon\Reflection\Locator\Resource>
      */
     public static function reflectResource(
         CodeReflector $codeReflector,
@@ -120,7 +119,7 @@ final class ReflectorSession implements Reflector
 
         $this->reflectResourceIntoBuffer($resource);
 
-        $data = $this->buffer[$id] ?? throw new DeclarationNotFoundInResource($resource->baseData, $id);
+        $data = $this->buffer[$id] ?? throw new DeclarationNotFoundInResource($resource->data, $id);
 
         if ($data instanceof \Closure) {
             $data = $data();
@@ -133,7 +132,7 @@ final class ReflectorSession implements Reflector
     private function reflectResourceIntoBuffer(Resource $resource): void
     {
         $reflected = $this->codeReflector
-            ->reflectCode($resource->baseData)
+            ->reflectCode($resource->data)
             ->map(fn(TypedMap $data, NamedFunctionId|NamedClassId|AnonymousClassId $id): \Closure => function () use ($resource, $id, $data): TypedMap {
                 $data = $resource->hooks->process($id, $data, $this);
 
@@ -149,7 +148,7 @@ final class ReflectorSession implements Reflector
     private function addNoColumnAnonymousClassesToBuffer(Resource $resource, array $reflectedIds): void
     {
         $lineToIds = [];
-        $changeDetector = null;
+        $changeDetector = $resource->data[Data::ChangeDetector];
 
         foreach ($reflectedIds as $reflectedId) {
             if ($reflectedId instanceof AnonymousClassId) {
@@ -166,8 +165,6 @@ final class ReflectorSession implements Reflector
 
                 continue;
             }
-
-            $changeDetector ??= ChangeDetectors::from($resource->baseData[Data::UnresolvedChangeDetectors] ?: throw new \LogicException('Change detector is required for anonymous class resolution'));
 
             $this->buffer = $this->buffer->with($noColumnId, (new TypedMap())
                 ->with(Data::ChangeDetector, $changeDetector)

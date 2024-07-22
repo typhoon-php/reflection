@@ -10,7 +10,6 @@ use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Resource;
 
 /**
  * @api
@@ -18,7 +17,7 @@ use Typhoon\Reflection\Resource;
 final class DeterministicLocator implements ConstantLocator, NamedFunctionLocator, NamedClassLocator, AnonymousLocator
 {
     /**
-     * @param IdMap<ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId, \Typhoon\Reflection\Resource> $resources
+     * @param IdMap<ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId, \Typhoon\Reflection\Locator\Resource> $resources
      */
     public function __construct(
         private IdMap $resources,

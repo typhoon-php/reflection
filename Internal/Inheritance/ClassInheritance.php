@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\Inheritance;
 
 use Typhoon\ChangeDetector\ChangeDetector;
+use Typhoon\ChangeDetector\ChangeDetectors;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
@@ -36,7 +37,7 @@ final class ClassInheritance
     private array $methods = [];
 
     /**
-     * @var list<ChangeDetector>
+     * @var non-empty-list<ChangeDetector>
      */
     private array $changeDetectors;
 
@@ -60,7 +61,7 @@ final class ClassInheritance
         private readonly NamedClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
     ) {
-        $this->changeDetectors = $data[Data::UnresolvedChangeDetectors];
+        $this->changeDetectors = [$data[Data::ChangeDetector]];
     }
 
     public static function resolve(Reflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
@@ -195,7 +196,7 @@ final class ClassInheritance
     {
         return $this
             ->data
-            ->with(Data::UnresolvedChangeDetectors, $this->changeDetectors)
+            ->with(Data::ChangeDetector, ChangeDetectors::from($this->changeDetectors))
             ->with(Data::Parents, $this->parents)
             ->with(Data::Interfaces, [...$this->ownInterfaces, ...$this->inheritedInterfaces])
             ->with(Data::Constants, array_filter(array_map(

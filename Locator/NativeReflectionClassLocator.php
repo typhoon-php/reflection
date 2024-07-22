@@ -7,7 +7,6 @@ namespace Typhoon\Reflection\Locator;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
-use Typhoon\Reflection\Resource;
 
 /**
  * @api
@@ -28,13 +27,13 @@ final class NativeReflectionClassLocator implements NamedClassLocator
             return null;
         }
 
-        $baseData = new TypedMap();
+        $data = new TypedMap();
         $extension = $reflection->getExtensionName();
 
         if ($extension !== false) {
-            $baseData = $baseData->with(Data::PhpExtension, $extension);
+            $data = $data->with(Data::PhpExtension, $extension);
         }
 
-        return Resource::fromFile($file, $baseData);
+        return Resource::fromFile($file, $data);
     }
 }

@@ -27,7 +27,6 @@ use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToPrope
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveConstantExpressionCompiler;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
-use Typhoon\Reflection\Internal\CompleteReflection\ResolveChangeDetector;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributesRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodsAbstract;
 use Typhoon\Reflection\Internal\CompleteReflection\SetParametersIndexes;
@@ -49,6 +48,7 @@ use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
+use Typhoon\Reflection\Locator\Resource;
 
 /**
  * @api
@@ -83,7 +83,6 @@ final class TyphoonReflector
                 SetAttributesRepeated::Instance,
                 SetParametersIndexes::Instance,
                 SetTemplatesIndexes::Instance,
-                ResolveChangeDetector::Instance,
                 RemoveContext::Instance,
                 RemoveCode::Instance,
                 RemoveConstantExpressionCompiler::Instance,

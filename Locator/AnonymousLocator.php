@@ -6,7 +6,6 @@ namespace Typhoon\Reflection\Locator;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
-use Typhoon\Reflection\Resource;
 
 /**
  * @api

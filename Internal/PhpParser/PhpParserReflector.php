@@ -67,7 +67,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
     public function __construct(
         private readonly ContextProvider $contextProvider,
         private readonly ConstantExpressionCompilerProvider $constantExpressionCompilerProvider,
-        private readonly TypedMap $baseData,
+        private readonly TypedMap $resourceData,
     ) {
         /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap> */
         $this->reflected = new IdMap();
@@ -79,7 +79,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             $context = $this->contextProvider->get();
             \assert($context->declaration instanceof NamedFunctionId);
 
-            $data = $this->baseData->withMap($this->reflectFunction($node, $context));
+            $data = $this->resourceData->withMap($this->reflectFunction($node, $context));
             $this->reflected = $this->reflected->with($context->declaration, $data);
 
             return null;
@@ -89,7 +89,7 @@ final class PhpParserReflector extends NodeVisitorAbstract
             $context = $this->contextProvider->get();
             \assert($context->declaration instanceof NamedClassId || $context->declaration instanceof AnonymousClassId);
 
-            $data = $this->baseData->withMap($this->reflectClass($node, $context));
+            $data = $this->resourceData->withMap($this->reflectClass($node, $context));
             $this->reflected = $this->reflected->with($context->declaration, $data);
 
             return null;
@@ -518,8 +518,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
             endPosition: $endPosition,
             startLine: $startLine,
             endLine: $endLine,
-            startColumn: column($this->baseData[Data::Code], $startPosition),
-            endColumn: column($this->baseData[Data::Code], $endPosition),
+            startColumn: column($this->resourceData[Data::Code], $startPosition),
+            endColumn: column($this->resourceData[Data::Code], $endPosition),
         );
     }
 

@@ -36,10 +36,10 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
     public function __construct(
         private readonly NameContext $nameContext,
         private readonly AnnotatedTypesDriver $annotatedTypesDriver,
-        TypedMap $baseData,
+        TypedMap $resourceData,
     ) {
-        $this->fileContext = Context::start($baseData[Data::File]);
-        $this->code = $baseData[Data::Code];
+        $this->fileContext = Context::start($resourceData[Data::File]);
+        $this->code = $resourceData[Data::Code];
     }
 
     public function get(): Context
