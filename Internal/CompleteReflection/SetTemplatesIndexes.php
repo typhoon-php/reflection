@@ -8,9 +8,9 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\FunctionHook;
 use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
@@ -18,7 +18,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum SetTemplatesIndexes implements FunctionReflectionHook, ClassReflectionHook
+enum SetTemplatesIndexes implements FunctionHook, ClassHook
 {
     case Instance;
 

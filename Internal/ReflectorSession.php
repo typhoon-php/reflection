@@ -29,7 +29,7 @@ final class ReflectorSession implements Reflector
         private readonly CodeReflector $codeReflector,
         private readonly Locators $locators,
         private readonly Cache $cache,
-        private readonly ReflectionHooks $hooks,
+        private readonly Hooks $hooks,
     ) {
         /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap|\Closure(): TypedMap> */
         $this->buffer = new IdMap();
@@ -39,7 +39,7 @@ final class ReflectorSession implements Reflector
         CodeReflector $codeReflector,
         Locators $locators,
         Cache $cache,
-        ReflectionHooks $hooks,
+        Hooks $hooks,
         NamedFunctionId|NamedClassId|AnonymousClassId $id,
     ): TypedMap {
         $session = new self(
@@ -75,7 +75,7 @@ final class ReflectorSession implements Reflector
         CodeReflector $codeReflector,
         Locators $locators,
         Cache $cache,
-        ReflectionHooks $hooks,
+        Hooks $hooks,
         Resource $resource,
     ): IdMap {
         $session = new self(

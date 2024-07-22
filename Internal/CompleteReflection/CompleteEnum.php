@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Internal\CompleteReflection;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TypeData;
@@ -19,7 +19,7 @@ use Typhoon\Type\types;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum CompleteEnumReflection implements ClassReflectionHook
+enum CompleteEnum implements ClassHook
 {
     case Instance;
 

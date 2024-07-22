@@ -11,7 +11,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-interface ConstantReflectionHook
+interface ConstantHook
 {
     public function process(ConstantId $id, TypedMap $data, Reflector $reflector): TypedMap;
 }

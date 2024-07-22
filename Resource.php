@@ -6,11 +6,11 @@ namespace Typhoon\Reflection;
 
 use Typhoon\ChangeDetector\FileChangeDetector;
 use Typhoon\Reflection\Exception\FileIsNotReadable;
-use Typhoon\Reflection\Internal\ClassReflectionHook;
-use Typhoon\Reflection\Internal\ConstantReflectionHook;
+use Typhoon\Reflection\Internal\ClassHook;
+use Typhoon\Reflection\Internal\ConstantHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\FunctionReflectionHook;
-use Typhoon\Reflection\Internal\ReflectionHooks;
+use Typhoon\Reflection\Internal\FunctionHook;
+use Typhoon\Reflection\Internal\Hooks;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -20,10 +20,10 @@ final class Resource
 {
     public readonly TypedMap $baseData;
 
-    public readonly ReflectionHooks $hooks;
+    public readonly Hooks $hooks;
 
     /**
-     * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
+     * @param list<ConstantHook|FunctionHook|ClassHook> $hooks
      */
     public function __construct(
         // TODO remove
@@ -32,11 +32,11 @@ final class Resource
         array $hooks = [],
     ) {
         $this->baseData = $baseData->with(Data::Code, $code);
-        $this->hooks = new ReflectionHooks($hooks);
+        $this->hooks = new Hooks($hooks);
     }
 
     /**
-     * @param list<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
+     * @param list<ConstantHook|FunctionHook|ClassHook> $hooks
      */
     public static function fromFile(string $file, TypedMap $baseData = new TypedMap(), array $hooks = []): self
     {

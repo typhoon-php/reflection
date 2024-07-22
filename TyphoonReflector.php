@@ -22,7 +22,7 @@ use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache;
 use Typhoon\Reflection\Internal\CodeReflector;
-use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnumReflection;
+use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnum;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveConstantExpressionCompiler;
@@ -34,10 +34,10 @@ use Typhoon\Reflection\Internal\CompleteReflection\SetParametersIndexes;
 use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertiesReadonly;
 use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndexes;
+use Typhoon\Reflection\Internal\Hooks;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locators;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
-use Typhoon\Reflection\Internal\ReflectionHooks;
 use Typhoon\Reflection\Internal\ReflectorSession;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
@@ -72,10 +72,10 @@ final class TyphoonReflector
             ),
             locators: new Locators($locators ?? self::defaultLocators()),
             cache: new Cache($cache),
-            hooks: new ReflectionHooks([
+            hooks: new Hooks([
                 $phpDocReflector,
                 CopyPromotedParametersToProperties::Instance,
-                CompleteEnumReflection::Instance,
+                CompleteEnum::Instance,
                 SetStringableInterface::Instance,
                 ResolveClassInheritance::Instance,
                 SetInterfaceMethodsAbstract::Instance,
@@ -117,7 +117,7 @@ final class TyphoonReflector
         private readonly CodeReflector $codeReflector,
         private readonly Locators $locators,
         private readonly Cache $cache,
-        private readonly ReflectionHooks $hooks,
+        private readonly Hooks $hooks,
     ) {}
 
     /**

@@ -20,7 +20,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassReflectionHook;
+use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantExpressionCompiler;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypeNames;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
@@ -29,7 +29,7 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\FunctionReflectionHook;
+use Typhoon\Reflection\Internal\FunctionHook;
 use Typhoon\Reflection\Internal\PhpDoc\ContextualPhpDocTypeReflector as TypeReflector;
 use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -44,7 +44,7 @@ use function Typhoon\Reflection\Internal\map;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class PhpDocReflector implements AnnotatedTypesDriver, ClassReflectionHook, FunctionReflectionHook
+final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, FunctionHook
 {
     public function __construct(
         private readonly PhpDocParser $parser = new PhpDocParser(),

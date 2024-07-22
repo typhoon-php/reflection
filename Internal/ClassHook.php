@@ -12,7 +12,7 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-interface ClassReflectionHook
+interface ClassHook
 {
     public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap;
 }

@@ -15,38 +15,38 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ReflectionHooks
+final class Hooks
 {
     /**
-     * @var list<ConstantReflectionHook>
+     * @var list<ConstantHook>
      */
     private array $constantHooks = [];
 
     /**
-     * @var list<FunctionReflectionHook>
+     * @var list<FunctionHook>
      */
     private array $functionHooks = [];
 
     /**
-     * @var list<ClassReflectionHook>
+     * @var list<ClassHook>
      */
     private array $classHooks = [];
 
     /**
-     * @param iterable<ConstantReflectionHook|FunctionReflectionHook|ClassReflectionHook> $hooks
+     * @param iterable<ConstantHook|FunctionHook|ClassHook> $hooks
      */
     public function __construct(iterable $hooks)
     {
         foreach ($hooks as $hook) {
-            if ($hook instanceof ConstantReflectionHook) {
+            if ($hook instanceof ConstantHook) {
                 $this->constantHooks[] = $hook;
             }
 
-            if ($hook instanceof FunctionReflectionHook) {
+            if ($hook instanceof FunctionHook) {
                 $this->functionHooks[] = $hook;
             }
 
-            if ($hook instanceof ClassReflectionHook) {
+            if ($hook instanceof ClassHook) {
                 $this->classHooks[] = $hook;
             }
         }
