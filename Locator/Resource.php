@@ -50,27 +50,29 @@ final class Resource
             throw new \RuntimeException('Failed to acquire shared lock on file ' . $file);
         }
 
-        $mtime = @filemtime($file);
+        try {
+            $mtime = @filemtime($file);
 
-        if ($mtime === false) {
-            throw new FileIsNotReadable($file);
+            if ($mtime === false) {
+                throw new FileIsNotReadable($file);
+            }
+
+            $code = @file_get_contents($file);
+
+            if ($code === false) {
+                throw new FileIsNotReadable($file);
+            }
+
+            return new self(
+                data: $data
+                    ->with(Data::Code, $code)
+                    ->with(Data::File, $file)
+                    ->with(Data::ChangeDetector, new FileChangeDetector($file, $mtime, md5($code))),
+                hooks: new Hooks($hooks),
+            );
+        } finally {
+            @fclose($handle);
         }
-
-        $code = @file_get_contents($file);
-
-        if ($code === false) {
-            throw new FileIsNotReadable($file);
-        }
-
-        fclose($handle);
-
-        return new self(
-            data: $data
-                ->with(Data::Code, $code)
-                ->with(Data::File, $file)
-                ->with(Data::ChangeDetector, new FileChangeDetector($file, $mtime, md5($code))),
-            hooks: new Hooks($hooks),
-        );
     }
 
     /**
