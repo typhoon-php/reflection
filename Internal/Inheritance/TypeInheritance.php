@@ -45,6 +45,8 @@ final class TypeInheritance
                 return $this->own;
             }
 
+            $ownResolved = $this->own->get();
+
             foreach ($this->inherited as [$inherited, $typeResolver]) {
                 // If own type is different (weakened parameter type or strengthened return type), we want to keep it.
                 // This should be compared according to variance with a proper type comparator,
@@ -53,8 +55,8 @@ final class TypeInheritance
                     continue;
                 }
 
-                // If inherited type resolves to same native type, we should continue to look for something more interesting.
-                if (self::typesEqual($inherited->get(), $this->own->native)) {
+                // If inherited type resolves to equal own type, we should continue to look for something more interesting.
+                if (self::typesEqual($inherited->get(), $ownResolved)) {
                     continue;
                 }
 
