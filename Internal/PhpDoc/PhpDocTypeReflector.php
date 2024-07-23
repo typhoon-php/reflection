@@ -40,7 +40,7 @@ use Typhoon\Type\types;
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
-final class TypeReflector
+final class PhpDocTypeReflector
 {
     public function __construct(
         private readonly Context $context,

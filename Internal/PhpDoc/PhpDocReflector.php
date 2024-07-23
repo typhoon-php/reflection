@@ -94,7 +94,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
             return $data;
         }
 
-        $typeReflector = new TypeReflector($data[Data::Context]);
+        $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
         $paramTypes = $phpDoc->paramTypes();
 
         return $data
@@ -118,7 +118,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
     private function reflectClass(string $code, TypedMap $data): TypedMap
     {
-        $typeReflector = new TypeReflector($data[Data::Context]);
+        $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
 
         $data = $data
             ->with(Data::Constants, array_map(
@@ -161,7 +161,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
     /**
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectAliases(string $code, TypeReflector $typeReflector, PhpDoc $phpDoc): array
+    private function reflectAliases(string $code, PhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
     {
         $aliases = [];
 
@@ -187,7 +187,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
      * @param list<PhpDocTagNode<TemplateTagValueNode>> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectTemplates(string $code, TypeReflector $typeReflector, array $tags): array
+    private function reflectTemplates(string $code, PhpDocTypeReflector $typeReflector, array $tags): array
     {
         $templates = [];
 
@@ -208,7 +208,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
     /**
      * @return ?array{non-empty-string, list<Type>}
      */
-    private function reflectParent(TypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): ?array
+    private function reflectParent(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): ?array
     {
         $parent = $data[Data::UnresolvedParent];
 
@@ -228,7 +228,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
     /**
      * @return array<non-empty-string, list<Type>>
      */
-    private function reflectInterfaces(TypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): array
+    private function reflectInterfaces(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): array
     {
         $interfaces = $data[Data::UnresolvedInterfaces];
 
@@ -252,7 +252,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
     /**
      * @return array<non-empty-string, list<Type>>
      */
-    private function reflectUses(TypeReflector $typeReflector, TypedMap $data): array
+    private function reflectUses(PhpDocTypeReflector $typeReflector, TypedMap $data): array
     {
         $uses = $data[Data::UnresolvedTraits];
 
@@ -275,7 +275,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         return $uses;
     }
 
-    private function reflectConstant(TypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectConstant(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -288,7 +288,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
             ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
     }
 
-    private function reflectNativeProperty(TypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectNativeProperty(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -305,7 +305,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
      * @param list<PhpDocTagNode<PropertyTagValueNode>> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocProperties(string $code, TypeReflector $typeReflector, array $tags): array
+    private function reflectPhpDocProperties(string $code, PhpDocTypeReflector $typeReflector, array $tags): array
     {
         $properties = [];
 
@@ -338,7 +338,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         foreach ($tags as $tag) {
             $name = $tag->value->methodName;
             $context = $classContext->enterMethod($name, array_column($tag->value->templateTypes, 'name'));
-            $typeReflector = new TypeReflector($context);
+            $typeReflector = new PhpDocTypeReflector($context);
             $methods[$name] = (new TypedMap())
                 ->with(Data::Location, $this->reflectLocation($code, $tag))
                 ->with(Data::Context, $context)
@@ -366,9 +366,9 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
      * @param array<MethodTagValueParameterNode> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocMethodParameters(string $code, Context $context, TypeReflector $typeReflector, array $tags): array
+    private function reflectPhpDocMethodParameters(string $code, Context $context, PhpDocTypeReflector $typeReflector, array $tags): array
     {
-        $compiler = new ConstantExpressionCompiler($context);
+        $compiler = new PhpDocConstantExpressionCompiler($context);
         $parameters = [];
 
         foreach ($tags as $tag) {
@@ -387,7 +387,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         return $parameters;
     }
 
-    private function addAnnotatedType(TypeReflector $typeReflector, TypeData $type, ?TypeNode $node): TypeData
+    private function addAnnotatedType(PhpDocTypeReflector $typeReflector, TypeData $type, ?TypeNode $node): TypeData
     {
         if ($node === null) {
             return $type;
@@ -399,7 +399,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
     /**
      * @param list<TypeNode> $throwsTypes
      */
-    private function reflectThrowsType(TypeReflector $typeReflector, array $throwsTypes): ?Type
+    private function reflectThrowsType(PhpDocTypeReflector $typeReflector, array $throwsTypes): ?Type
     {
         if ($throwsTypes === []) {
             return null;

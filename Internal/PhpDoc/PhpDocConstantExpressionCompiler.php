@@ -29,7 +29,7 @@ use Typhoon\Reflection\Internal\Context\Context;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class ConstantExpressionCompiler
+final class PhpDocConstantExpressionCompiler
 {
     private readonly CompilationContext $context;
 
