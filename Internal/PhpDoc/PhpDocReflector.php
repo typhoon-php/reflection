@@ -86,7 +86,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         return $this->reflectClass($data[Data::Code], $data);
     }
 
-    private function reflectFunctionLike(string $code, TypedMap $data, bool $constructor = false): TypedMap
+    private function reflectFunctionLike(string $code, TypedMap $data): TypedMap
     {
         $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
@@ -102,15 +102,12 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
         return $data->with(Data::Parameters, map(
             $data[Data::Parameters],
-            function (TypedMap $parameter, string $name) use ($constructor, $typeReflector, $paramTypes): TypedMap {
-                $type = $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $paramTypes[$name] ?? null);
-                $parameter = $parameter->with(Data::Type, $type);
+            function (TypedMap $parameter, string $name) use ($typeReflector, $paramTypes): TypedMap {
+                $phpDoc = $this->parsePhpDoc($parameter[Data::PhpDoc]);
 
-                if ($constructor && $parameter[Data::Promoted]) {
-                    return $this->reflectNativeProperty($typeReflector, $parameter);
-                }
-
-                return $parameter;
+                return $parameter
+                    ->with(Data::AnnotatedReadonly, $parameter[Data::AnnotatedReadonly] || ($phpDoc?->hasReadonly() ?? false))
+                    ->with(Data::Type, $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $phpDoc?->varType() ?? $paramTypes[$name] ?? null));
             },
         ));
     }
@@ -128,9 +125,9 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
                 fn(TypedMap $property): TypedMap => $this->reflectNativeProperty($typeReflector, $property),
                 $data[Data::Properties],
             ))
-            ->with(Data::Methods, map(
+            ->with(Data::Methods, array_map(
+                fn(TypedMap $method): TypedMap => $this->reflectFunctionLike($code, $method),
                 $data[Data::Methods],
-                fn(TypedMap $method, string $name): TypedMap => $this->reflectFunctionLike($code, $method, $name === '__construct'),
             ));
 
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);

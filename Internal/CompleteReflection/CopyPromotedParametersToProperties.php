@@ -35,14 +35,21 @@ enum CopyPromotedParametersToProperties implements ClassHook
             return $data;
         }
 
+        $parameters = $constructor[Data::Parameters];
         $properties = $data[Data::Properties];
 
-        foreach ($constructor[Data::Parameters] as $name => $parameter) {
+        foreach ($parameters as $name => $parameter) {
             if ($parameter[Data::Promoted]) {
+                $parameters[$name] = $parameter->without(Data::NativeReadonly, Data::AnnotatedReadonly, Data::Visibility);
                 $properties[$name] = $parameter->without(Data::DefaultValueExpression);
             }
         }
 
-        return $data->with(Data::Properties, $properties);
+        return $data
+            ->with(Data::Methods, [
+                ...$data[Data::Methods],
+                '__construct' => $constructor->with(Data::Parameters, $parameters),
+            ])
+            ->with(Data::Properties, $properties);
     }
 }
