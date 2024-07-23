@@ -22,6 +22,7 @@ use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache;
 use Typhoon\Reflection\Internal\CodeReflector;
+use Typhoon\Reflection\Internal\CompleteReflection\CleanUpInternallyDefined;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnum;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
@@ -84,6 +85,7 @@ final class TyphoonReflector
                 SetTemplatesIndexes::Instance,
                 RemoveContext::Instance,
                 RemoveCode::Instance,
+                CleanUpInternallyDefined::Instance,
             ]),
         );
     }
