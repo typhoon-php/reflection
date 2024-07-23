@@ -37,12 +37,10 @@ use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
 /**
- * This class must not be used as "service", because it injects Context.
- *
  * @internal
  * @psalm-internal Typhoon\Reflection\Internal\PhpDoc
  */
-final class ContextualPhpDocTypeReflector
+final class TypeReflector
 {
     public function __construct(
         private readonly Context $context,
