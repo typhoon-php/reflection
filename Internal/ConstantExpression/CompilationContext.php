@@ -22,6 +22,24 @@ final class CompilationContext
         private readonly Context $context,
     ) {}
 
+    /**
+     * @param non-empty-string $unresolvedName
+     * @return array{non-empty-string, ?non-empty-string}
+     */
+    public function resolveConstantName(string $unresolvedName): array
+    {
+        return $this->context->resolveConstantName($unresolvedName);
+    }
+
+    /**
+     * @param non-empty-string $unresolvedName
+     * @return non-empty-string
+     */
+    public function resolveClassName(string $unresolvedName): string
+    {
+        return $this->context->resolveClassName($unresolvedName);
+    }
+
     public function magicFile(): Value
     {
         return new Value($this->context->file ?? '');

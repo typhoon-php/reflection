@@ -368,6 +368,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
      */
     private function reflectPhpDocMethodParameters(string $code, Context $context, TypeReflector $typeReflector, array $tags): array
     {
+        $compiler = new ConstantExpressionCompiler($context);
         $parameters = [];
 
         foreach ($tags as $tag) {
@@ -375,11 +376,12 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
             \assert($name !== '', 'Parameter name must not be empty');
 
             $parameters[$name] = (new TypedMap())
+                ->with(Data::Annotated, true)
                 ->with(Data::Location, $this->reflectLocation($code, $tag))
                 ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->type)))
                 ->with(Data::ByReference, $tag->isReference)
-                ->with(Data::Variadic, $tag->isVariadic);
-            // ->with(Data::DefaultValueExpression, $compiler->compilePHPStan($context, $tag->defaultValue))
+                ->with(Data::Variadic, $tag->isVariadic)
+                ->with(Data::DefaultValueExpression, $compiler->compile($tag->defaultValue));
         }
 
         return $parameters;

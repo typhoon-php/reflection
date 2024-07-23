@@ -266,7 +266,6 @@ final class Context
     }
 
     /**
-     * @psalm-suppress PossiblyUnusedMethod
      * @param non-empty-string $unresolvedName
      * @return array{non-empty-string, ?non-empty-string}
      */

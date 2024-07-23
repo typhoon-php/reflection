@@ -34,12 +34,12 @@ final class NameMap implements \ArrayAccess, \IteratorAggregate, \Countable
     public function offsetGet(mixed $offset): mixed
     {
         if (\is_int($offset)) {
-            $name = $this->names()[$offset] ?? throw new \RuntimeException();
+            $name = $this->names()[$offset] ?? throw new \RuntimeException(sprintf('Offset %s is not set', $offset));
 
             return $this->values[$name];
         }
 
-        return $this->values[$offset] ?? throw new \RuntimeException();
+        return $this->values[$offset] ?? throw new \RuntimeException(sprintf('Offset %s is not set', $offset));
     }
 
     /**

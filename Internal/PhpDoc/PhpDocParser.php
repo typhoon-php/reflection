@@ -13,7 +13,6 @@ use PHPStan\PhpDocParser\Ast\PhpDoc\TemplateTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasImportTagValueNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\TypeAliasTagValueNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
-use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser as PHPStanPhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser;
@@ -32,8 +31,8 @@ final class PhpDocParser
         private readonly PhpDocTagPrioritizer $tagPrioritizer = new PrefixBasedPhpDocTagPrioritizer(),
         private readonly Lexer $lexer = new Lexer(),
         private readonly PHPStanPhpDocParser $parser = new PHPStanPhpDocParser(
-            typeParser: new TypeParser(new ConstExprParser()),
-            constantExprParser: new ConstExprParser(),
+            typeParser: new TypeParser(new AlwaysTrimmingConstExprParser(unescapeStrings: true)),
+            constantExprParser: new AlwaysTrimmingConstExprParser(unescapeStrings: true, usedAttributes: ['lines' => true]),
             usedAttributes: ['lines' => true, 'indexes' => true],
         ),
     ) {}

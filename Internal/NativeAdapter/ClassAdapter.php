@@ -13,6 +13,7 @@ use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\MethodReflection;
+use Typhoon\Reflection\NameMap;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\TyphoonReflector;
 
@@ -113,14 +114,13 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getConstructor(): ?\ReflectionMethod
     {
-        return ($this->reflection->methods()['__construct'] ?? null)?->native();
+        return ($this->nativeMethods()['__construct'] ?? null)?->native();
     }
 
     public function getDefaultProperties(): array
     {
         return $this
-            ->reflection
-            ->properties()
+            ->nativeProperties()
             ->filter(static fn(PropertyReflection $property): bool => $property->hasDefaultValue())
             ->map(static fn(PropertyReflection $property): mixed => $property->defaultValue())
             ->toArray();
@@ -174,14 +174,13 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getMethod(string $name): \ReflectionMethod
     {
-        return $this->reflection->methods()[$name]->native();
+        return $this->nativeMethods()[$name]->native();
     }
 
     public function getMethods(?int $filter = null): array
     {
         return $this
-            ->reflection
-            ->methods()
+            ->nativeMethods()
             ->map(static fn(MethodReflection $method): \ReflectionMethod => $method->native())
             ->filter(static fn(\ReflectionMethod $method): bool => $filter === null || ($method->getModifiers() & $filter) !== 0)
             ->toList();
@@ -232,8 +231,7 @@ final class ClassAdapter extends \ReflectionClass
     public function getProperties(?int $filter = null): array
     {
         return $this
-            ->reflection
-            ->properties()
+            ->nativeProperties()
             ->map(static fn(PropertyReflection $property): \ReflectionProperty => $property->native())
             ->filter(static fn(\ReflectionProperty $property): bool => $filter === null || ($property->getModifiers() & $filter) !== 0)
             ->toList();
@@ -241,7 +239,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getProperty(string $name): \ReflectionProperty
     {
-        return $this->reflection->properties()[$name]->native();
+        return $this->nativeProperties()[$name]->native();
     }
 
     public function getReflectionConstant(string $name): \ReflectionClassConstant|false
@@ -327,12 +325,12 @@ final class ClassAdapter extends \ReflectionClass
 
     public function hasMethod(string $name): bool
     {
-        return isset($this->reflection->methods()[$name]);
+        return isset($this->nativeMethods()[$name]);
     }
 
     public function hasProperty(string $name): bool
     {
-        return isset($this->reflection->properties()[$name]);
+        return isset($this->nativeProperties()[$name]);
     }
 
     public function implementsInterface(string|\ReflectionClass $interface): bool
@@ -376,7 +374,7 @@ final class ClassAdapter extends \ReflectionClass
         }
 
         if ($this->reflection->isInterface() || $this->reflection->isTrait()) {
-            return $this->reflection->methods()->any(static fn(MethodReflection $method): bool => $method->isAbstract());
+            return $this->nativeMethods()->any(static fn(MethodReflection $method): bool => $method->isAbstract());
         }
 
         return false;
@@ -391,7 +389,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         return $this->reflection->isClass()
             && !$this->reflection->isAbstract()
-            && (!isset($this->reflection->methods()['__clone']) || $this->reflection->methods()['__clone']->isPublic());
+            && (!isset($this->nativeMethods()['__clone']) || $this->nativeMethods()['__clone']->isPublic());
     }
 
     public function isEnum(): bool
@@ -417,7 +415,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         return $this->reflection->isClass()
             && !$this->reflection->isAbstract()
-            && (($this->reflection->methods()['__construct'] ?? null)?->isPublic() ?? true);
+            && (($this->nativeMethods()['__construct'] ?? null)?->isPublic() ?? true);
     }
 
     public function isInterface(): bool
@@ -511,6 +509,28 @@ final class ClassAdapter extends \ReflectionClass
         $this->loadNative();
 
         parent::setStaticPropertyValue($name, $value);
+    }
+
+    /**
+     * @return NameMap<PropertyReflection>
+     */
+    private function nativeProperties(): NameMap
+    {
+        return $this
+            ->reflection
+            ->properties()
+            ->filter(static fn(PropertyReflection $property): bool => $property->isNative());
+    }
+
+    /**
+     * @return NameMap<MethodReflection>
+     */
+    private function nativeMethods(): NameMap
+    {
+        return $this
+            ->reflection
+            ->methods()
+            ->filter(static fn(MethodReflection $method): bool => $method->isNative());
     }
 
     private bool $nativeLoaded = false;
