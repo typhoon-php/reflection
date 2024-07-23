@@ -16,8 +16,11 @@ use Typhoon\Type\types;
 final class TypeData
 {
     public function __construct(
+        /** @readonly */
         public ?Type $native = null,
+        /** @readonly */
         public ?Type $annotated = null,
+        /** @readonly */
         public ?Type $tentative = null,
     ) {}
 
