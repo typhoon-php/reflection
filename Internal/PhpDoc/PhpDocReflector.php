@@ -88,32 +88,31 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
     private function reflectFunctionLike(string $code, TypedMap $data, bool $constructor = false): TypedMap
     {
+        $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
-        if ($phpDoc === null) {
-            return $data;
+        if ($phpDoc !== null) {
+            $data = $data
+                ->with(Data::Templates, $this->reflectTemplates($code, $typeReflector, $phpDoc->templateTags()))
+                ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->returnType()))
+                ->with(Data::ThrowsType, $this->reflectThrowsType($typeReflector, $phpDoc->throwsTypes()));
         }
 
-        $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
-        $paramTypes = $phpDoc->paramTypes();
+        $paramTypes = $phpDoc?->paramTypes() ?? [];
 
-        return $data
-            ->with(Data::Templates, $this->reflectTemplates($code, $typeReflector, $phpDoc->templateTags()))
-            ->with(Data::Parameters, map(
-                $data[Data::Parameters],
-                function (TypedMap $parameter, string $name) use ($constructor, $typeReflector, $paramTypes): TypedMap {
-                    $type = $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $paramTypes[$name] ?? null);
-                    $parameter = $parameter->with(Data::Type, $type);
+        return $data->with(Data::Parameters, map(
+            $data[Data::Parameters],
+            function (TypedMap $parameter, string $name) use ($constructor, $typeReflector, $paramTypes): TypedMap {
+                $type = $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $paramTypes[$name] ?? null);
+                $parameter = $parameter->with(Data::Type, $type);
 
-                    if ($constructor && $parameter[Data::Promoted]) {
-                        return $this->reflectNativeProperty($typeReflector, $parameter);
-                    }
+                if ($constructor && $parameter[Data::Promoted]) {
+                    return $this->reflectNativeProperty($typeReflector, $parameter);
+                }
 
-                    return $parameter;
-                },
-            ))
-            ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->returnType()))
-            ->with(Data::ThrowsType, $this->reflectThrowsType($typeReflector, $phpDoc->throwsTypes()));
+                return $parameter;
+            },
+        ));
     }
 
     private function reflectClass(string $code, TypedMap $data): TypedMap
