@@ -142,7 +142,7 @@ final class ParameterReflection
 
     private ?ParameterAdapter $native = null;
 
-    public function native(): \ReflectionParameter
+    public function toNativeReflection(): \ReflectionParameter
     {
         return $this->native ??= new ParameterAdapter($this, $this->reflector);
     }

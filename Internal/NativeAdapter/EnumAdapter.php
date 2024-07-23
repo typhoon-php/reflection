@@ -62,7 +62,7 @@ final class EnumAdapter extends \ReflectionEnum
 
     public function getCase(string $name): \ReflectionEnumUnitCase
     {
-        $case = ($this->reflection->enumCases()[$name] ?? throw new \ReflectionException())->native();
+        $case = ($this->reflection->enumCases()[$name] ?? throw new \ReflectionException())->toNativeReflection();
         \assert($case instanceof \ReflectionEnumUnitCase);
 
         return $case;
@@ -74,7 +74,7 @@ final class EnumAdapter extends \ReflectionEnum
             ->reflection
             ->enumCases()
             ->map(static function (ClassConstantReflection $constant): \ReflectionEnumUnitCase {
-                $native = $constant->native();
+                $native = $constant->toNativeReflection();
                 \assert($native instanceof \ReflectionEnumUnitCase);
 
                 return $native;

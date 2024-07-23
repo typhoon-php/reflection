@@ -96,16 +96,16 @@ final class MethodAdapter extends \ReflectionMethod
         $declaringClassId = $this->reflection->data[Data::DeclaringClassId];
 
         if ($declaringClassId instanceof AnonymousClassId) {
-            return $this->reflector->reflect($this->reflection->id->class)->native();
+            return $this->reflector->reflect($this->reflection->id->class)->toNativeReflection();
         }
 
         $declaringClass = $this->reflector->reflect($declaringClassId);
 
         if ($declaringClass->isTrait()) {
-            return $this->reflection->class()->native();
+            return $this->reflection->class()->toNativeReflection();
         }
 
-        return $declaringClass->native();
+        return $declaringClass->toNativeReflection();
     }
 
     public function getDocComment(): string|false
@@ -175,7 +175,7 @@ final class MethodAdapter extends \ReflectionMethod
         return $this
             ->reflection
             ->parameters()
-            ->map(static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->native())
+            ->map(static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNativeReflection())
             ->toList();
     }
 

@@ -205,7 +205,7 @@ final class MethodReflection
 
     private ?MethodAdapter $native = null;
 
-    public function native(): \ReflectionMethod
+    public function toNativeReflection(): \ReflectionMethod
     {
         return $this->native ??= new MethodAdapter($this, $this->reflector);
     }

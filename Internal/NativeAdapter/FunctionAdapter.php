@@ -155,7 +155,7 @@ final class FunctionAdapter extends \ReflectionFunction
         return $this
             ->reflection
             ->parameters()
-            ->map(static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->native())
+            ->map(static fn(ParameterReflection $parameter): \ReflectionParameter => $parameter->toNativeReflection())
             ->toList();
     }
 

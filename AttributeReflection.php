@@ -106,7 +106,7 @@ final class AttributeReflection
 
     private ?AttributeAdapter $native = null;
 
-    public function native(): \ReflectionAttribute
+    public function toNativeReflection(): \ReflectionAttribute
     {
         return $this->native ??= new AttributeAdapter($this);
     }

@@ -107,14 +107,14 @@ final class ClassAdapter extends \ReflectionClass
         return $this
             ->reflection
             ->constants()
-            ->filter(static fn(ClassConstantReflection $constant): bool => $filter === null || ($constant->native()->getModifiers() & $filter) !== 0)
+            ->filter(static fn(ClassConstantReflection $constant): bool => $filter === null || ($constant->toNativeReflection()->getModifiers() & $filter) !== 0)
             ->map(static fn(ClassConstantReflection $constant): mixed => $constant->value())
             ->toArray();
     }
 
     public function getConstructor(): ?\ReflectionMethod
     {
-        return ($this->nativeMethods()['__construct'] ?? null)?->native();
+        return ($this->nativeMethods()['__construct'] ?? null)?->toNativeReflection();
     }
 
     public function getDefaultProperties(): array
@@ -167,21 +167,21 @@ final class ClassAdapter extends \ReflectionClass
         $interfaces = $this->getInterfaceNames();
 
         return array_combine($interfaces, array_map(
-            fn(string $name): \ReflectionClass => $this->reflector->reflect(Id::namedClass($name))->native(),
+            fn(string $name): \ReflectionClass => $this->reflector->reflect(Id::namedClass($name))->toNativeReflection(),
             $interfaces,
         ));
     }
 
     public function getMethod(string $name): \ReflectionMethod
     {
-        return $this->nativeMethods()[$name]->native();
+        return $this->nativeMethods()[$name]->toNativeReflection();
     }
 
     public function getMethods(?int $filter = null): array
     {
         return $this
             ->nativeMethods()
-            ->map(static fn(MethodReflection $method): \ReflectionMethod => $method->native())
+            ->map(static fn(MethodReflection $method): \ReflectionMethod => $method->toNativeReflection())
             ->filter(static fn(\ReflectionMethod $method): bool => $filter === null || ($method->getModifiers() & $filter) !== 0)
             ->toList();
     }
@@ -225,26 +225,26 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getParentClass(): \ReflectionClass|false
     {
-        return $this->reflection->parent()?->native() ?? false;
+        return $this->reflection->parent()?->toNativeReflection() ?? false;
     }
 
     public function getProperties(?int $filter = null): array
     {
         return $this
             ->nativeProperties()
-            ->map(static fn(PropertyReflection $property): \ReflectionProperty => $property->native())
+            ->map(static fn(PropertyReflection $property): \ReflectionProperty => $property->toNativeReflection())
             ->filter(static fn(\ReflectionProperty $property): bool => $filter === null || ($property->getModifiers() & $filter) !== 0)
             ->toList();
     }
 
     public function getProperty(string $name): \ReflectionProperty
     {
-        return $this->nativeProperties()[$name]->native();
+        return $this->nativeProperties()[$name]->toNativeReflection();
     }
 
     public function getReflectionConstant(string $name): \ReflectionClassConstant|false
     {
-        return ($this->reflection->constants()[$name] ?? null)?->native() ?? false;
+        return ($this->reflection->constants()[$name] ?? null)?->toNativeReflection() ?? false;
     }
 
     public function getReflectionConstants(?int $filter = null): array
@@ -252,7 +252,7 @@ final class ClassAdapter extends \ReflectionClass
         return $this
             ->reflection
             ->constants()
-            ->map(static fn(ClassConstantReflection $constant): \ReflectionClassConstant => $constant->native())
+            ->map(static fn(ClassConstantReflection $constant): \ReflectionClassConstant => $constant->toNativeReflection())
             ->filter(static fn(\ReflectionClassConstant $constant): bool => $filter === null || ($constant->getModifiers() & $filter) !== 0)
             ->toList();
     }
@@ -312,7 +312,7 @@ final class ClassAdapter extends \ReflectionClass
         $traits = [];
 
         foreach ($this->getTraitNames() as $name) {
-            $traits[$name] = $this->reflector->reflect(Id::namedClass($name))->native();
+            $traits[$name] = $this->reflector->reflect(Id::namedClass($name))->toNativeReflection();
         }
 
         return $traits;
@@ -347,7 +347,7 @@ final class ClassAdapter extends \ReflectionClass
             }
 
             try {
-                $interfaceReflection = $this->reflector->reflect($interfaceId)->native();
+                $interfaceReflection = $this->reflector->reflect($interfaceId)->toNativeReflection();
             } catch (DeclarationNotFound) {
                 throw new \ReflectionException(sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
             }
