@@ -8,7 +8,7 @@ use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon
  * @template-covariant T
  */
 interface Expression
