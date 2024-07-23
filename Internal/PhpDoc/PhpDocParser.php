@@ -33,6 +33,7 @@ final class PhpDocParser
         private readonly PHPStanPhpDocParser $parser = new PHPStanPhpDocParser(
             typeParser: new TypeParser(new AlwaysTrimmingConstExprParser(unescapeStrings: true)),
             constantExprParser: new AlwaysTrimmingConstExprParser(unescapeStrings: true, usedAttributes: ['lines' => true]),
+            requireWhitespaceBeforeDescription: true,
             usedAttributes: ['lines' => true, 'indexes' => true],
         ),
     ) {}
