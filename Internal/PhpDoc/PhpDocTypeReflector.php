@@ -142,7 +142,7 @@ final class PhpDocTypeReflector
                     min: $this->reflectIntLimit($genericTypes[0], 'min'),
                     max: $this->reflectIntLimit($genericTypes[1], 'max'),
                 ),
-                default => throw new InvalidPhpDocType(sprintf('int range type should have 2 arguments, got %d', \count($genericTypes)))
+                default => throw new InvalidPhpDocType(sprintf('int range type should have 2 type arguments, got %d', \count($genericTypes)))
             },
             'int-mask', 'int-mask-of' => types::intMaskOf(types::union(...array_map($this->reflectType(...), $genericTypes))),
             'numeric' => types::numeric,
@@ -158,11 +158,11 @@ final class PhpDocTypeReflector
             'array-key' => types::arrayKey,
             'key-of' => match ($number = \count($genericTypes)) {
                 1 => types::keyOf($this->reflectType($genericTypes[0])),
-                default => throw new InvalidPhpDocType(sprintf('key-of type should have 1 argument, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('key-of type should have 1 type argument, got %d', $number)),
             },
             'value-of' => match ($number = \count($genericTypes)) {
                 1 => types::valueOf($this->reflectType($genericTypes[0])),
-                default => throw new InvalidPhpDocType(sprintf('value-of type should have 1 argument, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('value-of type should have 1 type argument, got %d', $number)),
             },
             'literal-int' => types::literalInt,
             'literal-string' => types::literalString,
@@ -174,30 +174,30 @@ final class PhpDocTypeReflector
             'list' => match ($number = \count($genericTypes)) {
                 0 => types::list(),
                 1 => types::list($this->reflectType($genericTypes[0])),
-                default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 argument, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 type argument, got %d', $number)),
             },
             'non-empty-list' => match ($number = \count($genericTypes)) {
                 0 => types::nonEmptyList(),
                 1 => types::nonEmptyList($this->reflectType($genericTypes[0])),
-                default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 argument, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 type argument, got %d', $number)),
             },
             'array' => match ($number = \count($genericTypes)) {
                 0 => types::array,
                 1 => types::array(value: $this->reflectType($genericTypes[0])),
                 2 => types::array($this->reflectType($genericTypes[0]), $this->reflectType($genericTypes[1])),
-                default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 arguments, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 type arguments, got %d', $number)),
             },
             'non-empty-array' => match ($number = \count($genericTypes)) {
                 0 => types::nonEmptyArray(),
                 1 => types::nonEmptyArray(value: $this->reflectType($genericTypes[0])),
                 2 => types::nonEmptyArray($this->reflectType($genericTypes[0]), $this->reflectType($genericTypes[1])),
-                default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 arguments, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 type arguments, got %d', $number)),
             },
             'iterable' => match ($number = \count($genericTypes)) {
                 0 => types::iterable,
                 1 => types::iterable(value: $this->reflectType($genericTypes[0])),
                 2 => types::iterable(...array_map($this->reflectType(...), $genericTypes)),
-                default => throw new InvalidPhpDocType(sprintf('iterable type should have at most 2 arguments, got %d', $number)),
+                default => throw new InvalidPhpDocType(sprintf('iterable type should have at most 2 type arguments, got %d', $number)),
             },
             'object' => types::object,
             'callable' => types::callable,
@@ -205,7 +205,19 @@ final class PhpDocTypeReflector
             'void' => types::void,
             'scalar' => types::scalar,
             'never' => types::never,
-            default => $this->context->resolveNameAsType($name, array_map($this->reflectType(...), $genericTypes)),
+            default => match ($class = $this->context->resolveClassName($name)) {
+                \Traversable::class, \Iterator::class, \IteratorAggregate::class => match ($number = \count($genericTypes)) {
+                    1 => types::object($class, [types::mixed, $this->reflectType($genericTypes[0])]),
+                    0, 2 => types::object($class, array_map($this->reflectType(...), $genericTypes)),
+                    default => throw new InvalidPhpDocType(sprintf('%s type should have at most 2 type arguments, got %d', $class, $number)),
+                },
+                \Generator::class => match ($number = \count($genericTypes)) {
+                    1 => types::generator(value: $this->reflectType($genericTypes[0])),
+                    0, 2, 3, 4 => types::generator(...array_map($this->reflectType(...), $genericTypes)),
+                    default => throw new InvalidPhpDocType(sprintf('Generator type should have at most 4 type arguments, got %d', $number)),
+                },
+                default => $this->context->resolveNameAsType($name, array_map($this->reflectType(...), $genericTypes))
+            },
         };
     }
 
@@ -219,11 +231,11 @@ final class PhpDocTypeReflector
         }
 
         if (!$type instanceof ConstTypeNode) {
-            throw new InvalidPhpDocType(sprintf('Invalid int range %s argument: %s', $parameterName, $type));
+            throw new InvalidPhpDocType(sprintf('Invalid int range %s type argument: %s', $parameterName, $type));
         }
 
         if (!$type->constExpr instanceof ConstExprIntegerNode) {
-            throw new InvalidPhpDocType(sprintf('Invalid int range %s argument: %s', $parameterName, $type));
+            throw new InvalidPhpDocType(sprintf('Invalid int range %s type argument: %s', $parameterName, $type));
         }
 
         return (int) $type->constExpr->value;
