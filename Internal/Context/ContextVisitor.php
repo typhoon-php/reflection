@@ -33,7 +33,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
     /**
      * @var list<Context>
      */
-    private array $declarationContextStack = [];
+    private array $contextStack = [];
 
     /**
      * @param ?non-empty-string $file
@@ -56,13 +56,13 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
 
     public function current(): Context
     {
-        return array_value_last($this->declarationContextStack)
+        return array_value_last($this->contextStack)
             ?? $this->fileContext->withNameContext($this->nameContext);
     }
 
     public function beforeTraverse(array $nodes): ?array
     {
-        $this->declarationContextStack = [];
+        $this->contextStack = [];
 
         return null;
     }
@@ -76,7 +76,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 name: $node->namespacedName->toString(),
                 templateNames: $this->annotatedTypesDriver->reflectAnnotatedTypeNames($node)->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -93,7 +93,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 column: column($this->code, $offset),
                 templateNames: $this->annotatedTypesDriver->reflectAnnotatedTypeNames($node)->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -115,7 +115,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                     aliasNames: $typeNames->aliasNames,
                     templateNames: $typeNames->templateNames,
                 );
-                $this->declarationContextStack[] = $context;
+                $this->contextStack[] = $context;
                 $node->setAttribute(self::ATTRIBUTE, $context);
 
                 return null;
@@ -129,7 +129,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -144,7 +144,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -159,7 +159,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -174,7 +174,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -187,7 +187,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 name: $node->name->name,
                 templateNames: $typeNames->templateNames,
             );
-            $this->declarationContextStack[] = $context;
+            $this->contextStack[] = $context;
             $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
@@ -199,7 +199,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
     public function leaveNode(Node $node)
     {
         if ($node instanceof FunctionLike || $node instanceof ClassLike) {
-            array_pop($this->declarationContextStack);
+            array_pop($this->contextStack);
 
             return null;
         }
