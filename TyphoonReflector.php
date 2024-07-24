@@ -77,7 +77,6 @@ final class TyphoonReflector
                 CopyPromotedParametersToProperties::Instance,
                 CompleteEnum::Instance,
                 SetStringableInterface::Instance,
-                ResolveClassInheritance::Instance,
                 SetInterfaceMethodsAbstract::Instance,
                 SetReadonlyClassPropertiesReadonly::Instance,
                 SetAttributesRepeated::Instance,
@@ -86,6 +85,7 @@ final class TyphoonReflector
                 RemoveContext::Instance,
                 RemoveCode::Instance,
                 CleanUpInternallyDefined::Instance,
+                ResolveClassInheritance::Instance,
             ]),
         );
     }
