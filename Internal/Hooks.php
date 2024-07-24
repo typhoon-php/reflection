@@ -38,25 +38,7 @@ final class Hooks implements ConstantHook, FunctionHook, ClassHook
     public function __construct(iterable $hooks = [])
     {
         foreach ($hooks as $hook) {
-            if ($hook instanceof self) {
-                $this->constantHooks = [...$this->constantHooks, ...$hook->constantHooks];
-                $this->functionHooks = [...$this->functionHooks, ...$hook->functionHooks];
-                $this->classHooks = [...$this->classHooks, ...$hook->classHooks];
-
-                continue;
-            }
-
-            if ($hook instanceof ConstantHook) {
-                $this->constantHooks[] = $hook;
-            }
-
-            if ($hook instanceof FunctionHook) {
-                $this->functionHooks[] = $hook;
-            }
-
-            if ($hook instanceof ClassHook) {
-                $this->classHooks[] = $hook;
-            }
+            $this->add($hook);
         }
     }
 
@@ -76,5 +58,28 @@ final class Hooks implements ConstantHook, FunctionHook, ClassHook
         }
 
         return $data;
+    }
+
+    private function add(ConstantHook|FunctionHook|ClassHook $hook): void
+    {
+        if ($hook instanceof self) {
+            $this->constantHooks = [...$this->constantHooks, ...$hook->constantHooks];
+            $this->functionHooks = [...$this->functionHooks, ...$hook->functionHooks];
+            $this->classHooks = [...$this->classHooks, ...$hook->classHooks];
+
+            return;
+        }
+
+        if ($hook instanceof ConstantHook) {
+            $this->constantHooks[] = $hook;
+        }
+
+        if ($hook instanceof FunctionHook) {
+            $this->functionHooks[] = $hook;
+        }
+
+        if ($hook instanceof ClassHook) {
+            $this->classHooks[] = $hook;
+        }
     }
 }
