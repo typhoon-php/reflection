@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\TyphoonReflector;
 
 /**
@@ -11,17 +12,19 @@ use Typhoon\Reflection\TyphoonReflector;
  * @psalm-internal Typhoon\Reflection
  * @implements Expression<non-empty-string>
  */
-enum TraitParent implements Expression
+final class ParentClass implements Expression
 {
-    case Instance;
+    public function __construct(
+        private readonly NamedClassId $resolvedClass,
+    ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
-        return Value::from($self);
+        return $context->parent();
     }
 
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
-        throw new \LogicException('Parent in trait');
+        return $this->resolvedClass->name;
     }
 }

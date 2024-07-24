@@ -20,12 +20,12 @@ final class ArrayExpression implements Expression
         private readonly array $elements,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(array_map(
             static fn(ArrayElement $element): ArrayElement => new ArrayElement(
-                key: $element->key instanceof Expression ? $element->key->recompile($self, $parent) : $element->key,
-                value: $element->value->recompile($self, $parent),
+                key: $element->key instanceof Expression ? $element->key->recompile($context) : $element->key,
+                value: $element->value->recompile($context),
             ),
             $this->elements,
         ));

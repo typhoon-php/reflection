@@ -42,7 +42,7 @@ final class Value implements Expression
         };
     }
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return $this;
     }

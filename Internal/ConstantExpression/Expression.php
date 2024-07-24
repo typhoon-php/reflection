@@ -14,11 +14,9 @@ use Typhoon\Reflection\TyphoonReflector;
 interface Expression
 {
     /**
-     * @param non-empty-string $self
-     * @param ?non-empty-string $parent
      * @return Expression<T>
      */
-    public function recompile(string $self, ?string $parent): self;
+    public function recompile(CompilationContext $context): self;
 
     /**
      * @return T

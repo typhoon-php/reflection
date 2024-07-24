@@ -99,11 +99,11 @@ final class CompilationContext
     {
         if ($this->context->self !== null) {
             // todo anonymous
-            return Value::from($this->context->self->name ?? '');
+            return Value::from($this->context->self->name ?? throw new \LogicException('anonymous'));
         }
 
         if ($this->context->trait !== null) {
-            return new TraitSelf($this->context->trait->name);
+            return new MagicClassInTrait($this->context->trait->name);
         }
 
         return Value::from('');
@@ -132,20 +132,19 @@ final class CompilationContext
     }
 
     /**
-     * @return Expression<string>
+     * @return Expression<non-empty-string>
      */
     public function self(): Expression
     {
         if ($this->context->self !== null) {
-            // todo anonymous
-            return Value::from($this->context->self->name ?? '');
+            return new SelfClass($this->context->self);
         }
 
         if ($this->context->trait !== null) {
-            return new TraitSelf($this->context->trait->name);
+            return new SelfClassInTrait($this->context->trait);
         }
 
-        throw new \LogicException('No self!');
+        throw new \LogicException('Not in a class!');
     }
 
     /**
@@ -154,11 +153,11 @@ final class CompilationContext
     public function parent(): Expression
     {
         if ($this->context->parent !== null) {
-            return Value::from($this->context->parent->name);
+            return new ParentClass($this->context->parent);
         }
 
         if ($this->context->trait !== null) {
-            return TraitParent::Instance;
+            return ParentClassInTrait::Instance;
         }
 
         throw new \LogicException('No parent!');

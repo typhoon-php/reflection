@@ -19,12 +19,12 @@ final class ArrayFetchCoalesce implements Expression
         private readonly Expression $default,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(
-            array: $this->array->recompile($self, $parent),
-            key: $this->key->recompile($self, $parent),
-            default: $this->default->recompile($self, $parent),
+            array: $this->array->recompile($context),
+            key: $this->key->recompile($context),
+            default: $this->default->recompile($context),
         );
     }
 

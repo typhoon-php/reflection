@@ -6,13 +6,15 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
-use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\ConstantExpression\ClassConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
+use Typhoon\Reflection\Internal\ConstantExpression\MagicClassInTrait;
+use Typhoon\Reflection\Internal\ConstantExpression\ParentClass;
+use Typhoon\Reflection\Internal\ConstantExpression\SelfClass;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\TyphoonReflector;
@@ -157,25 +159,30 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         $expression = $this->reflection->data[Data::DefaultValueExpression];
 
+        if ($expression instanceof MagicClassInTrait) {
+            return '__CLASS__';
+        }
+
         if ($expression instanceof ConstantFetch) {
             return $expression->name($this->reflector);
         }
 
         if ($expression instanceof ClassConstantFetch) {
-            $name = $expression->name($this->reflector);
+            $name = $expression->evaluateName($this->reflector);
 
             if ($name === 'class') {
                 return null;
             }
 
-            $functionId = $this->reflection->id->function;
-            $class = $expression->class($this->reflector);
-
-            if ($functionId instanceof MethodId && $class === $functionId->class->name) {
-                $class = 'self';
+            if ($expression->class instanceof SelfClass) {
+                return 'self::' . $name;
             }
 
-            return $class . '::' . $name;
+            if ($expression->class instanceof ParentClass) {
+                return 'parent::' . $name;
+            }
+
+            return $expression->evaluateClass($this->reflector) . '::' . $name;
         }
 
         return null;
@@ -245,7 +252,8 @@ final class ParameterAdapter extends \ReflectionParameter
         $expression = $this->reflection->data[Data::DefaultValueExpression];
 
         return $expression instanceof ConstantFetch
-            || ($expression instanceof ClassConstantFetch && $expression->name($this->reflector) !== 'class');
+            || $expression instanceof MagicClassInTrait
+            || ($expression instanceof ClassConstantFetch && $expression->evaluateName($this->reflector) !== 'class');
     }
 
     public function isOptional(): bool

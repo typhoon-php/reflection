@@ -22,7 +22,7 @@ enum Values implements Expression
     case EmptyString;
     case EmptyArray;
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return $this;
     }

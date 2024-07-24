@@ -14,14 +14,14 @@ use Typhoon\Reflection\TyphoonReflector;
 final class ClassConstantFetch implements Expression
 {
     public function __construct(
-        private readonly Expression $class,
+        public readonly Expression $class,
         private readonly Expression $name,
     ) {}
 
     /**
      * @return non-empty-string
      */
-    public function class(?TyphoonReflector $reflector = null): string
+    public function evaluateClass(?TyphoonReflector $reflector = null): string
     {
         $class = $this->class->evaluate($reflector);
         \assert(\is_string($class) && $class !== '');
@@ -32,7 +32,7 @@ final class ClassConstantFetch implements Expression
     /**
      * @return non-empty-string
      */
-    public function name(?TyphoonReflector $reflector = null): string
+    public function evaluateName(?TyphoonReflector $reflector = null): string
     {
         $name = $this->name->evaluate($reflector);
         \assert(\is_string($name) && $name !== '');
@@ -40,18 +40,18 @@ final class ClassConstantFetch implements Expression
         return $name;
     }
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(
-            class: $this->class->recompile($self, $parent),
-            name: $this->name->recompile($self, $parent),
+            class: $this->class->recompile($context),
+            name: $this->name->recompile($context),
         );
     }
 
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
-        $class = $this->class($reflector);
-        $name = $this->name($reflector);
+        $class = $this->evaluateClass($reflector);
+        $name = $this->evaluateName($reflector);
 
         if ($name === 'class') {
             return $class;

@@ -19,11 +19,11 @@ final class BinaryOperation implements Expression
         private readonly string $operator,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(
-            left: $this->left->recompile($self, $parent),
-            right: $this->right->recompile($self, $parent),
+            left: $this->left->recompile($context),
+            right: $this->right->recompile($context),
             operator: $this->operator,
         );
     }

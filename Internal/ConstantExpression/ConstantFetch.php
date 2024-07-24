@@ -34,7 +34,7 @@ final class ConstantFetch implements Expression
         return $this->globalName;
     }
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return $this;
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\ConstantExpression;
 
+use Typhoon\DeclarationId\AnonymousClassId;
+use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\TyphoonReflector;
 
 /**
@@ -11,22 +13,19 @@ use Typhoon\Reflection\TyphoonReflector;
  * @psalm-internal Typhoon\Reflection
  * @implements Expression<non-empty-string>
  */
-final class TraitSelf implements Expression
+final class SelfClass implements Expression
 {
-    /**
-     * @param non-empty-string $trait
-     */
     public function __construct(
-        private readonly string $trait,
+        private readonly NamedClassId|AnonymousClassId $class,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
-        return Value::from($self);
+        return $context->self();
     }
 
     public function evaluate(?TyphoonReflector $reflector = null): mixed
     {
-        return $this->trait;
+        return $this->class->name ?? throw new \LogicException('Anonymous!');
     }
 }

@@ -21,12 +21,12 @@ final class Instantiation implements Expression
         private readonly array $arguments,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(
-            class: $this->class->recompile($self, $parent),
+            class: $this->class->recompile($context),
             arguments: array_map(
-                static fn(Expression $expression): Expression => $expression->recompile($self, $parent),
+                static fn(Expression $expression): Expression => $expression->recompile($context),
                 $this->arguments,
             ),
         );

@@ -19,11 +19,11 @@ final class Ternary implements Expression
         private readonly Expression $else,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(
-            condition: $this->condition->recompile($self, $parent),
-            if: $this->if?->recompile($self, $parent),
+            condition: $this->condition->recompile($context),
+            if: $this->if?->recompile($context),
             else: $this->else,
         );
     }

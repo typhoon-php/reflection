@@ -21,10 +21,10 @@ final class UnaryOperation implements Expression
         private readonly string $operator,
     ) {}
 
-    public function recompile(string $self, ?string $parent): Expression
+    public function recompile(CompilationContext $context): Expression
     {
         return new self(
-            expression: $this->expression->recompile($self, $parent),
+            expression: $this->expression->recompile($context),
             operator: $this->operator,
         );
     }

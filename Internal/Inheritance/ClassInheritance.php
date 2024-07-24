@@ -9,6 +9,7 @@ use Typhoon\ChangeDetector\ChangeDetectors;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
+use Typhoon\Reflection\Internal\ConstantExpression\CompilationContext;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -246,23 +247,20 @@ final class ClassInheritance
 
     private function recompileTraitExpressions(TypedMap $data): TypedMap
     {
-        // todo anonymous
-        $self = $this->id->name ?? 'anon';
-        $unresolvedParent = $this->data[Data::UnresolvedParent];
-        $parent = $unresolvedParent === null ? null : $unresolvedParent[0];
+        $context = new CompilationContext($this->data[Data::Context]);
 
         return $data
             ->with(Data::Constants, array_map(
                 static fn(TypedMap $constant): TypedMap => $constant->with(
                     Data::ValueExpression,
-                    $constant[Data::ValueExpression]->recompile($self, $parent),
+                    $constant[Data::ValueExpression]->recompile($context),
                 ),
                 $data[Data::Constants],
             ))
             ->with(Data::Properties, array_map(
                 static fn(TypedMap $property): TypedMap => $property->with(
                     Data::DefaultValueExpression,
-                    $property[Data::DefaultValueExpression]?->recompile($self, $parent),
+                    $property[Data::DefaultValueExpression]?->recompile($context),
                 ),
                 $data[Data::Properties],
             ))
@@ -272,7 +270,7 @@ final class ClassInheritance
                     array_map(
                         static fn(TypedMap $parameter): TypedMap => $parameter->with(
                             Data::DefaultValueExpression,
-                            $parameter[Data::DefaultValueExpression]?->recompile($self, $parent),
+                            $parameter[Data::DefaultValueExpression]?->recompile($context),
                         ),
                         $method[Data::Parameters],
                     ),
