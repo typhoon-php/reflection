@@ -12,6 +12,7 @@ use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\FunctionHook;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -21,7 +22,7 @@ enum SetParametersIndexes implements FunctionHook, ClassHook
 {
     case Instance;
 
-    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
             return self::processParameters($data);

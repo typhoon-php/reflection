@@ -6,6 +6,7 @@ namespace Typhoon\Reflection\Internal;
 
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -13,5 +14,5 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 interface ConstantHook
 {
-    public function process(ConstantId $id, TypedMap $data): TypedMap;
+    public function process(ConstantId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap;
 }

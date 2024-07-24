@@ -10,6 +10,7 @@ use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -19,7 +20,7 @@ enum SetInterfaceMethodsAbstract implements ClassHook
 {
     case Instance;
 
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         if ($data[Data::ClassKind] !== ClassKind::Interface) {
             return $data;

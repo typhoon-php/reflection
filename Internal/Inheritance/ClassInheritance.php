@@ -12,11 +12,12 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Type;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection
+ * @psalm-internal Typhoon\Reflection\Internal\Inheritance
  */
 final class ClassInheritance
 {
@@ -55,21 +56,15 @@ final class ClassInheritance
      */
     private array $parents = [];
 
-    /**
-     * @param \Closure(NamedClassId): TypedMap $reflector
-     */
     private function __construct(
         private readonly NamedClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
-        private readonly \Closure $reflector,
+        private readonly TyphoonReflector $reflector,
     ) {
         $this->changeDetectors = [$data[Data::ChangeDetector]];
     }
 
-    /**
-     * @param \Closure(NamedClassId): TypedMap $reflector
-     */
-    public static function resolve(NamedClassId|AnonymousClassId $id, TypedMap $data, \Closure $reflector): TypedMap
+    public static function resolve(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         $resolver = new self($id, $data, $reflector);
         $resolver->applyOwn();
@@ -108,7 +103,7 @@ final class ClassInheritance
     private function applyOneUsed(string $traitName, array $typeArguments): void
     {
         $traitId = Id::namedClass($traitName);
-        $traitData = $this->recompileTraitExpressions(($this->reflector)($traitId));
+        $traitData = $this->recompileTraitExpressions($this->reflector->reflect($traitId)->data);
 
         $this->changeDetectors[] = $traitData[Data::ChangeDetector];
         $typeResolver = TypeResolver::from($this->id, $this->data, $traitId, $traitData, $typeArguments);
@@ -166,7 +161,7 @@ final class ClassInheritance
     private function addInherited(string $className, array $typeArguments): void
     {
         $classId = Id::namedClass($className);
-        $classData = ($this->reflector)($classId);
+        $classData = $this->reflector->reflect($classId)->data;
 
         $this->changeDetectors[] = $classData[Data::ChangeDetector];
 

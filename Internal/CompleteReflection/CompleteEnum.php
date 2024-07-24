@@ -12,6 +12,7 @@ use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\types;
 
 /**
@@ -22,7 +23,7 @@ enum CompleteEnum implements ClassHook
 {
     case Instance;
 
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         if ($data[Data::ClassKind] !== ClassKind::Enum) {
             return $data;

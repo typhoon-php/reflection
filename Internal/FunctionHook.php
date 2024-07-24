@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -14,5 +15,5 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 interface FunctionHook
 {
-    public function process(NamedFunctionId|AnonymousFunctionId $id, TypedMap $data): TypedMap;
+    public function process(NamedFunctionId|AnonymousFunctionId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap;
 }

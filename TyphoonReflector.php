@@ -35,7 +35,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndexes;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Hooks;
-use Typhoon\Reflection\Internal\Inheritance\ClassInheritance;
+use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locators;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
 use Typhoon\Reflection\Internal\PhpParser\CodeReflector;
@@ -87,6 +87,7 @@ final class TyphoonReflector
                 SetAttributesRepeated::Instance,
                 SetParametersIndexes::Instance,
                 SetTemplatesIndexes::Instance,
+                ResolveClassInheritance::Instance,
                 RemoveContext::Instance,
                 RemoveCode::Instance,
                 CleanUpInternallyDefined::Instance,
@@ -290,12 +291,8 @@ final class TyphoonReflector
                     $started = true;
 
                     $data = $resource->data->withMap($idReflector());
-                    $data = $resource->hooks->process($id, $data);
-                    $data = $reflector->hooks->process($id, $data);
-
-                    if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
-                        $data = ClassInheritance::resolve($id, $data, $reflector->reflectData(...));
-                    }
+                    $data = $resource->hooks->process($id, $data, $reflector);
+                    $data = $reflector->hooks->process($id, $data, $reflector);
 
                     $reflector->cache->set($id, $data);
                     $reflector->buffer = $reflector->buffer->without($id);

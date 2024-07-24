@@ -10,6 +10,7 @@ use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -42,7 +43,7 @@ final class Hooks implements ConstantHook, FunctionHook, ClassHook
         }
     }
 
-    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         $hooks = match (true) {
             $id instanceof ConstantId => $this->constantHooks,
@@ -54,7 +55,7 @@ final class Hooks implements ConstantHook, FunctionHook, ClassHook
 
         foreach ($hooks as $hook) {
             /** @psalm-suppress PossiblyInvalidArgument */
-            $data = $hook->process($id, $data);
+            $data = $hook->process($id, $data, $reflector);
         }
 
         return $data;

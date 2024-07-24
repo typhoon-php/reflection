@@ -7,6 +7,7 @@ namespace Typhoon\Reflection\Internal;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\Reflection\TyphoonReflector;
 
 /**
  * @internal
@@ -14,5 +15,5 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 interface ClassHook
 {
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap;
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap;
 }
