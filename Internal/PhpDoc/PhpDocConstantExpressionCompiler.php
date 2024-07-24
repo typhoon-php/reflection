@@ -48,19 +48,22 @@ final class PhpDocConstantExpressionCompiler
             $expr instanceof ConstExprNullNode => Values::Null,
             $expr instanceof ConstExprTrueNode => Values::True,
             $expr instanceof ConstExprFalseNode => Values::False,
-            $expr instanceof ConstExprIntegerNode => new Value((int) $expr->value),
-            $expr instanceof ConstExprFloatNode => new Value((float) $expr->value),
-            $expr instanceof ConstExprStringNode => new Value($expr->value),
+            $expr instanceof ConstExprIntegerNode => Value::from((int) $expr->value),
+            $expr instanceof ConstExprFloatNode => Value::from((float) $expr->value),
+            $expr instanceof ConstExprStringNode => Value::from($expr->value),
             $expr instanceof ConstExprArrayNode => $this->compileArray($expr),
             $expr instanceof ConstFetchNode => $this->compileConstFetch($expr),
             default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
         };
     }
 
+    /**
+     * @return Expression<array>
+     */
     private function compileArray(ConstExprArrayNode $expr): Expression
     {
         if ($expr->items === []) {
-            return new Value([]);
+            return Value::from([]);
         }
 
         return new ArrayExpression(
@@ -79,7 +82,7 @@ final class PhpDocConstantExpressionCompiler
         if ($expr->className !== '') {
             return new ClassConstantFetch(
                 class: $this->compileClassName($expr->className),
-                name: new Value($expr->name),
+                name: Value::from($expr->name),
             );
         }
 
@@ -105,18 +108,18 @@ final class PhpDocConstantExpressionCompiler
             'self' => $this->context->self(),
             'parent' => $this->context->parent(),
             'static' => $this->context->static(),
-            default => new Value($this->context->resolveClassName($name)),
+            default => Value::from($this->context->resolveClassName($name)),
         };
     }
 
     /**
-     * @return Value<positive-int>
+     * @return Expression<positive-int>
      */
-    private static function compileNodeLine(ConstExprNode $expr): Value
+    private static function compileNodeLine(ConstExprNode $expr): Expression
     {
         $line = $expr->getAttribute(Attribute::START_LINE);
         \assert(\is_int($line) && $line > 0);
 
-        return new Value($line);
+        return Value::from($line);
     }
 }

@@ -388,13 +388,13 @@ final class NodeReflector
 
         foreach ($nodes as $node) {
             $elements[] = new ArrayElement(
-                key: $node->name === null ? null : new Value($node->name->name),
+                key: $node->name === null ? null : Value::from($node->name->name),
                 value: $compiler->compile($node->value),
             );
         }
 
         if ($elements === []) {
-            return new Value([]);
+            return Value::from([]);
         }
 
         return new ArrayExpression($elements);

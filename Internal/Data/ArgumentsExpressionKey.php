@@ -20,6 +20,6 @@ enum ArgumentsExpressionKey implements OptionalKey
 
     public function default(TypedMap $map): mixed
     {
-        return new Value([]);
+        return Value::from([]);
     }
 }

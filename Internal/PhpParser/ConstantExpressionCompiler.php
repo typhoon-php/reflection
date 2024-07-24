@@ -51,9 +51,9 @@ final class ConstantExpressionCompiler
             $expr === null => null,
             $expr instanceof Scalar\String_,
             $expr instanceof Scalar\LNumber,
-            $expr instanceof Scalar\DNumber => new Value($expr->value),
+            $expr instanceof Scalar\DNumber => Value::from($expr->value),
             $expr instanceof Expr\Array_ => $this->compileArray($expr),
-            $expr instanceof Scalar\MagicConst\Line => new Value($expr->getStartLine()),
+            $expr instanceof Scalar\MagicConst\Line => Value::from($expr->getStartLine()),
             $expr instanceof Scalar\MagicConst\File => $this->context->magicFile(),
             $expr instanceof Scalar\MagicConst\Dir => $this->context->magicDir(),
             $expr instanceof Scalar\MagicConst\Namespace_ => $this->context->magicNamespace(),
@@ -125,13 +125,16 @@ final class ConstantExpressionCompiler
         return new ConstantFetch($name->toString());
     }
 
+    /**
+     * @return Expression<array>
+     */
     private function compileArray(Expr\Array_ $expr): Expression
     {
         /** @var list<Expr\ArrayItem> */
         $items = $expr->items;
 
         if ($items === []) {
-            return new Value([]);
+            return Value::from([]);
         }
 
         return new ArrayExpression(array_map(
@@ -158,7 +161,7 @@ final class ConstantExpressionCompiler
                 };
             }
 
-            return new Value($name->toString());
+            return Value::from($name->toString());
         }
 
         throw new \LogicException('Unexpected anonymous class in a constant expression');
@@ -167,7 +170,7 @@ final class ConstantExpressionCompiler
     private function compileIdentifier(Expr|Identifier $name): Expression
     {
         if ($name instanceof Identifier) {
-            return new Value($name->name);
+            return Value::from($name->name);
         }
 
         return $this->compile($name);

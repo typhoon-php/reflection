@@ -40,81 +40,105 @@ final class CompilationContext
         return $this->context->resolveClassName($unresolvedName);
     }
 
-    public function magicFile(): Value
+    /**
+     * @return Expression<string>
+     */
+    public function magicFile(): Expression
     {
-        return new Value($this->context->file ?? '');
+        return Value::from($this->context->file ?? '');
     }
 
-    public function magicDir(): Value
+    /**
+     * @return Expression<string>
+     */
+    public function magicDir(): Expression
     {
-        return new Value($this->context->directory() ?? '');
+        return Value::from($this->context->directory() ?? '');
     }
 
-    public function magicNamespace(): Value
+    /**
+     * @return Expression<string>
+     */
+    public function magicNamespace(): Expression
     {
-        return new Value($this->context->namespace());
+        return Value::from($this->context->namespace());
     }
 
-    public function magicFunction(): Value
+    /**
+     * @return Expression<string>
+     */
+    public function magicFunction(): Expression
     {
         $id = $this->context->currentId;
 
         if ($id instanceof NamedFunctionId) {
-            return new Value($id->name);
+            return Value::from($id->name);
         }
 
         if ($id instanceof AnonymousFunctionId) {
             $namespace = $this->context->namespace();
 
             if ($namespace === '') {
-                return new Value(self::ANONYMOUS_FUNCTION_NAME);
+                return Value::from(self::ANONYMOUS_FUNCTION_NAME);
             }
 
-            return new Value($namespace . '\\' . self::ANONYMOUS_FUNCTION_NAME);
+            return Value::from($namespace . '\\' . self::ANONYMOUS_FUNCTION_NAME);
         }
 
         if ($id instanceof MethodId) {
-            return new Value($id->name);
+            return Value::from($id->name);
         }
 
-        return new Value('');
+        return Value::from('');
     }
 
-    public function magicClass(): Value|TraitSelf
+    /**
+     * @return Expression<string>
+     */
+    public function magicClass(): Expression
     {
         if ($this->context->self !== null) {
             // todo anonymous
-            return new Value($this->context->self->name ?? '');
+            return Value::from($this->context->self->name ?? '');
         }
 
         if ($this->context->trait !== null) {
             return new TraitSelf($this->context->trait->name);
         }
 
-        return new Value('');
+        return Value::from('');
     }
 
-    public function magicTrait(): Value
+    /**
+     * @return Expression<string>
+     */
+    public function magicTrait(): Expression
     {
-        return new Value($this->context->trait?->name ?? '');
+        return Value::from($this->context->trait?->name ?? '');
     }
 
-    public function magicMethod(): Value
+    /**
+     * @return Expression<string>
+     */
+    public function magicMethod(): Expression
     {
         $id = $this->context->currentId;
 
         if (!$id instanceof MethodId) {
-            return new Value('');
+            return Value::from('');
         }
 
-        return new Value(sprintf('%s::%s', $id->class->name ?? '', $id->name));
+        return Value::from(sprintf('%s::%s', $id->class->name ?? '', $id->name));
     }
 
-    public function self(): Value|TraitSelf
+    /**
+     * @return Expression<string>
+     */
+    public function self(): Expression
     {
         if ($this->context->self !== null) {
             // todo anonymous
-            return new Value($this->context->self->name ?? '');
+            return Value::from($this->context->self->name ?? '');
         }
 
         if ($this->context->trait !== null) {
@@ -124,10 +148,13 @@ final class CompilationContext
         throw new \LogicException('No self!');
     }
 
-    public function parent(): Value|TraitParent
+    /**
+     * @return Expression<non-empty-string>
+     */
+    public function parent(): Expression
     {
         if ($this->context->parent !== null) {
-            return new Value($this->context->parent->name);
+            return Value::from($this->context->parent->name);
         }
 
         if ($this->context->trait !== null) {

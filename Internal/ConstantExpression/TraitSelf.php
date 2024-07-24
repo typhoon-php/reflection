@@ -22,7 +22,7 @@ final class TraitSelf implements Expression
 
     public function recompile(string $self, ?string $parent): Expression
     {
-        return new Value($self);
+        return Value::from($self);
     }
 
     public function evaluate(?TyphoonReflector $reflector = null): mixed
