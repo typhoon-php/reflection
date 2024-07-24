@@ -77,20 +77,20 @@ final class PhpParserReflector extends NodeVisitorAbstract
     {
         if ($node instanceof Function_) {
             $context = ContextVisitor::fromNode($node);
-            \assert($context->declaration instanceof NamedFunctionId);
+            \assert($context->currentId instanceof NamedFunctionId);
 
             $data = $this->resourceData->withMap($this->reflectFunctionLike($node));
-            $this->reflected = $this->reflected->with($context->declaration, $data);
+            $this->reflected = $this->reflected->with($context->currentId, $data);
 
             return null;
         }
 
         if ($node instanceof ClassLike) {
             $context = ContextVisitor::fromNode($node);
-            \assert($context->declaration instanceof NamedClassId || $context->declaration instanceof AnonymousClassId);
+            \assert($context->currentId instanceof NamedClassId || $context->currentId instanceof AnonymousClassId);
 
             $data = $this->resourceData->withMap($this->reflectClass($node, $context));
-            $this->reflected = $this->reflected->with($context->declaration, $data);
+            $this->reflected = $this->reflected->with($context->currentId, $data);
 
             return null;
         }
@@ -270,8 +270,8 @@ final class PhpParserReflector extends NodeVisitorAbstract
 
             if ($node instanceof EnumCase) {
                 if ($enumType === null) {
-                    \assert($context->declaration instanceof NamedClassId, 'Enum cannot be an anonymous class');
-                    $enumType = types::object($context->declaration);
+                    \assert($context->currentId instanceof NamedClassId, 'Enum cannot be an anonymous class');
+                    $enumType = types::object($context->currentId);
                 }
 
                 $constants[$node->name->name] = (new TypedMap())

@@ -33,7 +33,7 @@ final class Context
     private function __construct(
         public readonly ?string $file,
         private NameContext $nameContext,
-        public readonly null|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $declaration = null,
+        public readonly null|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $currentId = null,
         public readonly null|NamedClassId|AnonymousClassId $self = null,
         public readonly ?NamedClassId $trait = null,
         public readonly ?NamedClassId $parent = null,
@@ -66,14 +66,14 @@ final class Context
      */
     public function enterFunction(string $name, array $templateNames = []): self
     {
-        $declaration = Id::namedFunction($name);
+        $id = Id::namedFunction($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
+            currentId: $id,
             aliases: $this->aliases,
-            templates: self::templatesFromNames($declaration, $templateNames),
+            templates: self::templatesFromNames($id, $templateNames),
         );
     }
 
@@ -85,19 +85,19 @@ final class Context
     public function enterAnonymousFunction(int $line, int $column, array $templateNames = []): self
     {
         \assert($this->file !== null);
-        $declaration = Id::anonymousFunction($this->file, $line, $column);
+        $id = Id::anonymousFunction($this->file, $line, $column);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
+            currentId: $id,
             self: $this->self,
             trait: $this->trait,
             parent: $this->parent,
             aliases: $this->aliases,
             templates: [
                 ...$this->templates,
-                ...self::templatesFromNames($declaration, $templateNames),
+                ...self::templatesFromNames($id, $templateNames),
             ],
         );
     }
@@ -114,19 +114,19 @@ final class Context
         array $aliasNames = [],
         array $templateNames = [],
     ): self {
-        $declaration = Id::namedClass($name);
+        $id = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
-            self: $declaration,
+            currentId: $id,
+            self: $id,
             parent: $parentName === null ? null : Id::namedClass($parentName),
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($declaration, $aliasNames),
+                ...self::aliasesFromNames($id, $aliasNames),
             ],
-            templates: self::templatesFromNames($declaration, $templateNames),
+            templates: self::templatesFromNames($id, $templateNames),
         );
     }
 
@@ -145,19 +145,19 @@ final class Context
         array $templateNames = [],
     ): self {
         \assert($this->file !== null);
-        $declaration = Id::anonymousClass($this->file, $line, $column);
+        $id = Id::anonymousClass($this->file, $line, $column);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
-            self: $declaration,
+            currentId: $id,
+            self: $id,
             parent: $parentName === null ? null : Id::namedClass($parentName),
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($declaration, $aliasNames),
+                ...self::aliasesFromNames($id, $aliasNames),
             ],
-            templates: self::templatesFromNames($declaration, $templateNames),
+            templates: self::templatesFromNames($id, $templateNames),
         );
     }
 
@@ -168,18 +168,18 @@ final class Context
      */
     public function enterInterface(string $name, array $aliasNames = [], array $templateNames = []): self
     {
-        $declaration = Id::namedClass($name);
+        $id = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
-            self: $declaration,
+            currentId: $id,
+            self: $id,
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($declaration, $aliasNames),
+                ...self::aliasesFromNames($id, $aliasNames),
             ],
-            templates: self::templatesFromNames($declaration, $templateNames),
+            templates: self::templatesFromNames($id, $templateNames),
         );
     }
 
@@ -190,18 +190,18 @@ final class Context
      */
     public function enterEnum(string $name, array $aliasNames = [], array $templateNames = []): self
     {
-        $declaration = Id::namedClass($name);
+        $id = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
-            self: $declaration,
+            currentId: $id,
+            self: $id,
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($declaration, $aliasNames),
+                ...self::aliasesFromNames($id, $aliasNames),
             ],
-            templates: self::templatesFromNames($declaration, $templateNames),
+            templates: self::templatesFromNames($id, $templateNames),
         );
     }
 
@@ -212,18 +212,18 @@ final class Context
      */
     public function enterTrait(string $name, array $aliasNames = [], array $templateNames = []): self
     {
-        $declaration = Id::namedClass($name);
+        $id = Id::namedClass($name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
-            trait: $declaration,
+            currentId: $id,
+            trait: $id,
             aliases: [
                 ...$this->aliases,
-                ...self::aliasesFromNames($declaration, $aliasNames),
+                ...self::aliasesFromNames($id, $aliasNames),
             ],
-            templates: self::templatesFromNames($declaration, $templateNames),
+            templates: self::templatesFromNames($id, $templateNames),
         );
     }
 
@@ -233,20 +233,20 @@ final class Context
      */
     public function enterMethod(string $name, array $templateNames): self
     {
-        \assert($this->declaration instanceof NamedClassId || $this->declaration instanceof AnonymousClassId);
-        $declaration = Id::method($this->declaration, $name);
+        \assert($this->currentId instanceof NamedClassId || $this->currentId instanceof AnonymousClassId);
+        $id = Id::method($this->currentId, $name);
 
         return new self(
             file: $this->file,
             nameContext: $this->nameContext,
-            declaration: $declaration,
+            currentId: $id,
             self: $this->self,
             trait: $this->trait,
             parent: $this->parent,
             aliases: $this->aliases,
             templates: [
                 ...$this->templates,
-                ...self::templatesFromNames($declaration, $templateNames),
+                ...self::templatesFromNames($id, $templateNames),
             ],
         );
     }

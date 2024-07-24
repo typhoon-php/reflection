@@ -57,13 +57,13 @@ final class CompilationContext
 
     public function magicFunction(): Value
     {
-        $declaration = $this->context->declaration;
+        $id = $this->context->currentId;
 
-        if ($declaration instanceof NamedFunctionId) {
-            return new Value($declaration->name);
+        if ($id instanceof NamedFunctionId) {
+            return new Value($id->name);
         }
 
-        if ($declaration instanceof AnonymousFunctionId) {
+        if ($id instanceof AnonymousFunctionId) {
             $namespace = $this->context->namespace();
 
             if ($namespace === '') {
@@ -73,8 +73,8 @@ final class CompilationContext
             return new Value($namespace . '\\' . self::ANONYMOUS_FUNCTION_NAME);
         }
 
-        if ($declaration instanceof MethodId) {
-            return new Value($declaration->name);
+        if ($id instanceof MethodId) {
+            return new Value($id->name);
         }
 
         return new Value('');
@@ -101,13 +101,13 @@ final class CompilationContext
 
     public function magicMethod(): Value
     {
-        $declaration = $this->context->declaration;
+        $id = $this->context->currentId;
 
-        if (!$declaration instanceof MethodId) {
+        if (!$id instanceof MethodId) {
             return new Value('');
         }
 
-        return new Value(sprintf('%s::%s', $declaration->class->name ?? '', $declaration->name));
+        return new Value(sprintf('%s::%s', $id->class->name ?? '', $id->name));
     }
 
     public function self(): Value|TraitSelf
