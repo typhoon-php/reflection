@@ -20,6 +20,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Deprecation;
 use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypeNames;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
@@ -92,6 +93,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
         if ($phpDoc !== null) {
             $data = $data
+                ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
                 ->with(Data::Templates, $this->reflectTemplates($code, $typeReflector, $phpDoc->templateTags()))
                 ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->returnType()))
                 ->with(Data::ThrowsType, $this->reflectThrowsType($typeReflector, $phpDoc->throwsTypes()));
@@ -105,6 +107,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
                 $phpDoc = $this->parsePhpDoc($parameter[Data::PhpDoc]);
 
                 return $parameter
+                    ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc?->deprecatedMessage()))
                     ->with(Data::AnnotatedReadonly, $parameter[Data::AnnotatedReadonly] || ($phpDoc?->hasReadonly() ?? false))
                     ->with(Data::Type, $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $phpDoc?->varType() ?? $paramTypes[$name] ?? null));
             },
@@ -117,7 +120,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
         $data = $data
             ->with(Data::Constants, array_map(
-                fn(TypedMap $constant): TypedMap => $this->reflectConstant($typeReflector, $constant),
+                fn(TypedMap $constant): TypedMap => $this->reflectNativeConstant($typeReflector, $constant),
                 $data[Data::Constants],
             ))
             ->with(Data::Properties, array_map(
@@ -136,6 +139,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         }
 
         return $data
+            ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedFinal] || $phpDoc->hasFinal())
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedReadonly] || $phpDoc->hasReadonly())
             ->with(Data::Templates, $this->reflectTemplates($code, $typeReflector, $phpDoc->templateTags()))
@@ -270,7 +274,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         return $uses;
     }
 
-    private function reflectConstant(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectNativeConstant(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -279,6 +283,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         }
 
         return $data
+            ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedFinal] || $phpDoc->hasFinal())
             ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
     }
@@ -292,6 +297,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         }
 
         return $data
+            ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
             ->with(Data::AnnotatedReadonly, $data[Data::AnnotatedReadonly] || $phpDoc->hasReadonly())
             ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
     }
@@ -389,6 +395,15 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         }
 
         return $type->withAnnotated($typeReflector->reflectType($node));
+    }
+
+    private function reflectDeprecation(?string $message): ?Deprecation
+    {
+        if ($message === null) {
+            return null;
+        }
+
+        return new Deprecation($message ?: null);
     }
 
     /**
