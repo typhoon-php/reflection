@@ -36,20 +36,9 @@ final class Cache
         return null;
     }
 
-    /**
-     * @param iterable<Id, TypedMap> $data
-     */
-    public function set(iterable $data): void
+    public function set(Id $id, TypedMap $data): void
     {
-        if ($data === []) {
-            return;
-        }
-
-        $this->cache->setMultiple((static function () use ($data): \Generator {
-            foreach ($data as $id => $item) {
-                yield self::key($id) => $item;
-            }
-        })());
+        $this->cache->set(self::key($id), $data);
     }
 
     private static function key(Id $id): string

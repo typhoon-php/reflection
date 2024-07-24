@@ -29,7 +29,6 @@ use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\FunctionHook;
-use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Location;
 use Typhoon\Type\Type;
@@ -77,7 +76,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         );
     }
 
-    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
             return $this->reflectFunctionLike($data[Data::Code], $data);

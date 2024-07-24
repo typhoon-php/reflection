@@ -8,7 +8,6 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -19,7 +18,7 @@ enum SetStringableInterface implements ClassHook
 {
     case Instance;
 
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         if ($id->name === \Stringable::class || !isset($data[Data::Methods]['__toString'])) {
             return $data;

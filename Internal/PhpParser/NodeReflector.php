@@ -29,11 +29,7 @@ use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\Stmt\TraitUseAdaptation\Alias;
 use PhpParser\Node\Stmt\TraitUseAdaptation\Precedence;
 use PhpParser\Node\UnionType;
-use PhpParser\NodeVisitorAbstract;
-use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\ConstantExpression\ArrayElement;
 use Typhoon\Reflection\Internal\ConstantExpression\ArrayExpression;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
@@ -58,54 +54,19 @@ use function Typhoon\Reflection\Internal\column;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class PhpParserReflector extends NodeVisitorAbstract
+final class NodeReflector
 {
-    /**
-     * @psalm-readonly-allow-private-mutation
-     * @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap>
-     */
-    public IdMap $reflected;
-
-    public function __construct(
-        private readonly TypedMap $resourceData,
-    ) {
-        /** @var IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap> */
-        $this->reflected = new IdMap();
-    }
-
-    public function leaveNode(Node $node): ?int
+    public function reflectClassLike(ClassLike $node): TypedMap
     {
-        if ($node instanceof Function_) {
-            $context = ContextVisitor::fromNode($node);
-            \assert($context->currentId instanceof NamedFunctionId);
+        $context = ContextVisitor::fromNode($node);
+        $compiler = new ConstantExpressionCompiler($context);
 
-            $data = $this->resourceData->withMap($this->reflectFunctionLike($node));
-            $this->reflected = $this->reflected->with($context->currentId, $data);
-
-            return null;
-        }
-
-        if ($node instanceof ClassLike) {
-            $context = ContextVisitor::fromNode($node);
-            \assert($context->currentId instanceof NamedClassId || $context->currentId instanceof AnonymousClassId);
-
-            $data = $this->resourceData->withMap($this->reflectClass($node, $context));
-            $this->reflected = $this->reflected->with($context->currentId, $data);
-
-            return null;
-        }
-
-        return null;
-    }
-
-    private function reflectClass(ClassLike $node, Context $context): TypedMap
-    {
         $data = (new TypedMap())
             ->with(Data::PhpDoc, $node->getDocComment())
             ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
             ->with(Data::Namespace, $context->namespace())
-            ->with(Data::Attributes, $this->reflectAttributes(new ConstantExpressionCompiler($context), $node->attrGroups));
+            ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups));
 
         if ($node instanceof Class_) {
             return $data
@@ -151,6 +112,13 @@ final class PhpParserReflector extends NodeVisitorAbstract
             ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
             ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
             ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
+    }
+
+    public function reflectFunction(Function_ $node): TypedMap
+    {
+        return $this
+            ->reflectFunctionLike($node)
+            ->with(Data::Namespace, ContextVisitor::fromNode($node)->namespace());
     }
 
     /**
@@ -330,7 +298,6 @@ final class PhpParserReflector extends NodeVisitorAbstract
         $compiler = new ConstantExpressionCompiler($context);
 
         return (new TypedMap())
-            ->with(Data::Namespace, $context->namespace())
             ->with(Data::PhpDoc, $node->getDocComment())
             ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
@@ -516,8 +483,11 @@ final class PhpParserReflector extends NodeVisitorAbstract
             endPosition: $endPosition,
             startLine: $startLine,
             endLine: $endLine,
-            startColumn: column($this->resourceData[Data::Code], $startPosition),
-            endColumn: column($this->resourceData[Data::Code], $endPosition),
+            startColumn: 1,
+            endColumn: 1,
+            // TODO
+            // startColumn: column($this->resourceData[Data::Code], $startPosition),
+            // endColumn: column($this->resourceData[Data::Code], $endPosition),
         );
     }
 

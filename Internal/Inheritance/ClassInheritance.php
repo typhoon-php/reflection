@@ -11,13 +11,12 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
-use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection\Internal\Inheritance
+ * @psalm-internal Typhoon\Reflection
  */
 final class ClassInheritance
 {
@@ -56,17 +55,23 @@ final class ClassInheritance
      */
     private array $parents = [];
 
+    /**
+     * @param \Closure(NamedClassId): TypedMap $reflector
+     */
     private function __construct(
-        private readonly Reflector $reflector,
         private readonly NamedClassId|AnonymousClassId $id,
         private readonly TypedMap $data,
+        private readonly \Closure $reflector,
     ) {
         $this->changeDetectors = [$data[Data::ChangeDetector]];
     }
 
-    public static function resolve(Reflector $reflector, NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
+    /**
+     * @param \Closure(NamedClassId): TypedMap $reflector
+     */
+    public static function resolve(NamedClassId|AnonymousClassId $id, TypedMap $data, \Closure $reflector): TypedMap
     {
-        $resolver = new self($reflector, $id, $data);
+        $resolver = new self($id, $data, $reflector);
         $resolver->applyOwn();
         $resolver->applyUsed();
         $resolver->applyInherited();
@@ -103,7 +108,7 @@ final class ClassInheritance
     private function applyOneUsed(string $traitName, array $typeArguments): void
     {
         $traitId = Id::namedClass($traitName);
-        $traitData = $this->recompileTraitExpressions($this->reflector->reflect($traitId));
+        $traitData = $this->recompileTraitExpressions(($this->reflector)($traitId));
 
         $this->changeDetectors[] = $traitData[Data::ChangeDetector];
         $typeResolver = TypeResolver::from($this->id, $this->data, $traitId, $traitData, $typeArguments);
@@ -161,7 +166,7 @@ final class ClassInheritance
     private function addInherited(string $className, array $typeArguments): void
     {
         $classId = Id::namedClass($className);
-        $classData = $this->reflector->reflect($classId);
+        $classData = ($this->reflector)($classId);
 
         $this->changeDetectors[] = $classData[Data::ChangeDetector];
 

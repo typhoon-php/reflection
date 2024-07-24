@@ -42,7 +42,7 @@ final class Hooks implements ConstantHook, FunctionHook, ClassHook
         }
     }
 
-    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         $hooks = match (true) {
             $id instanceof ConstantId => $this->constantHooks,
@@ -54,7 +54,7 @@ final class Hooks implements ConstantHook, FunctionHook, ClassHook
 
         foreach ($hooks as $hook) {
             /** @psalm-suppress PossiblyInvalidArgument */
-            $data = $hook->process($id, $data, $reflector);
+            $data = $hook->process($id, $data);
         }
 
         return $data;

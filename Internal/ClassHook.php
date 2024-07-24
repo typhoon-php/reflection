@@ -14,5 +14,5 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 interface ClassHook
 {
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap;
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap;
 }

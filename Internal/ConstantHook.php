@@ -13,5 +13,5 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
  */
 interface ConstantHook
 {
-    public function process(ConstantId $id, TypedMap $data, Reflector $reflector): TypedMap;
+    public function process(ConstantId $id, TypedMap $data): TypedMap;
 }

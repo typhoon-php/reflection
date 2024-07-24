@@ -13,7 +13,6 @@ use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\ConstantHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\FunctionHook;
-use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -24,7 +23,7 @@ enum RemoveCode implements ConstantHook, FunctionHook, ClassHook
 {
     case Instance;
 
-    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         return $data->without(Data::Code);
     }

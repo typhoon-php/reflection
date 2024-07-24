@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Internal\PhpParser;
 
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
@@ -13,10 +13,6 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
-use Typhoon\Reflection\Internal\PhpParser\FixNodeLocationVisitor;
-use Typhoon\Reflection\Internal\PhpParser\GeneratorVisitor;
-use Typhoon\Reflection\Internal\PhpParser\PhpParserChecker;
-use Typhoon\Reflection\Internal\PhpParser\PhpParserReflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -28,34 +24,34 @@ final class CodeReflector
     public function __construct(
         private readonly Parser $phpParser,
         private readonly AnnotatedTypesDriver $annotatedTypesDriver,
+        private readonly NodeReflector $nodeReflector,
     ) {}
 
     /**
-     * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, TypedMap>
+     * @param ?non-empty-string $file
+     * @return IdMap<NamedFunctionId|NamedClassId|AnonymousClassId, \Closure(): TypedMap>
      */
-    public function reflectCode(TypedMap $resourceData): IdMap
+    public function reflectCode(string $code, ?string $file = null): IdMap
     {
-        $code = $resourceData[Data::Code] ?? throw new \LogicException('Code must be defined');
         $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
 
         /** @psalm-suppress MixedArgument, ArgumentTypeCoercion, UnusedPsalmSuppress */
         $linesFixer = method_exists($this->phpParser, 'getTokens')
             ? new FixNodeLocationVisitor($this->phpParser->getTokens())
             : FixNodeLocationVisitor::fromCode($code);
-
         $nameResolver = new NameResolver();
         $contextVisitor = new ContextVisitor(
-            file: $resourceData[Data::File],
+            file: $file,
             code: $code,
             nameContext: $nameResolver->getNameContext(),
             annotatedTypesDriver: $this->annotatedTypesDriver,
         );
-        $reflector = new PhpParserReflector($resourceData);
+        $collector = new CollectIdReflectorsVisitor($this->nodeReflector);
 
         $traverser = new NodeTraverser();
 
         if (!PhpParserChecker::isVisitorLeaveReversed()) {
-            $traverser->addVisitor($reflector);
+            $traverser->addVisitor($collector);
         }
 
         $traverser->addVisitor($linesFixer);
@@ -64,11 +60,11 @@ final class CodeReflector
         $traverser->addVisitor($contextVisitor);
 
         if (PhpParserChecker::isVisitorLeaveReversed()) {
-            $traverser->addVisitor($reflector);
+            $traverser->addVisitor($collector);
         }
 
         $traverser->traverse($nodes);
 
-        return $reflector->reflected;
+        return $collector->idReflectors;
     }
 }

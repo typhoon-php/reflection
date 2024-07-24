@@ -9,7 +9,6 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
-use Typhoon\Reflection\Internal\Reflector;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
 /**
@@ -20,7 +19,7 @@ enum SetReadonlyClassPropertiesReadonly implements ClassHook
 {
     case Instance;
 
-    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data, Reflector $reflector): TypedMap
+    public function process(NamedClassId|AnonymousClassId $id, TypedMap $data): TypedMap
     {
         if ($data[Data::ClassKind] !== ClassKind::Class_) {
             return $data;

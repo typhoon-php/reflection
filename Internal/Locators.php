@@ -9,7 +9,6 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Exception\LocatorErrored;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
@@ -53,7 +52,7 @@ final class Locators
         }
     }
 
-    public function locate(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id): Resource
+    public function locate(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id): ?Resource
     {
         $locators = match (true) {
             $id instanceof ConstantId => $this->constantLocators,
@@ -76,7 +75,7 @@ final class Locators
             }
         }
 
-        throw new DeclarationNotFound($id);
+        return null;
     }
 
     public function with(ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator $locator): self
