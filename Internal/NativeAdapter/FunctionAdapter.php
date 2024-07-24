@@ -253,7 +253,7 @@ final class FunctionAdapter extends \ReflectionFunction
 
     public function isDeprecated(): bool
     {
-        return false;
+        return $this->reflection->isDeprecated();
     }
 
     public function isGenerator(): bool

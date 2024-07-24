@@ -276,7 +276,7 @@ final class MethodAdapter extends \ReflectionMethod
 
     public function isDeprecated(): bool
     {
-        return false;
+        return $this->reflection->isDeprecated();
     }
 
     public function isDestructor(): bool
