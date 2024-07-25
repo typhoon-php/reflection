@@ -39,6 +39,7 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Hooks;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\Locators;
+use Typhoon\Reflection\Internal\NativeReflector\NativeReflector;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
 use Typhoon\Reflection\Internal\PhpParser\CodeReflector;
 use Typhoon\Reflection\Internal\PhpParser\NodeReflector;
@@ -264,16 +265,29 @@ final class TyphoonReflector
             return $buffered($this);
         }
 
-        $data = $this->cache->get($id);
+        $cachedData = $this->cache->get($id);
 
-        if ($data !== null) {
-            return $data;
+        if ($cachedData !== null) {
+            return $cachedData;
         }
 
-        $resource = $this->locators->locate($id) ?? throw new DeclarationNotFound($id);
-        $this->buffer = $this->buffer->withMap($this->reflectResource($resource));
+        $resource = $this->locators->locate($id);
 
-        return ($this->buffer[$id] ?? throw new DeclarationNotFound($id))($this);
+        if ($resource !== null) {
+            $this->buffer = $this->buffer->withMap($this->reflectResource($resource));
+
+            return ($this->buffer[$id] ?? throw new DeclarationNotFound($id))($this);
+        }
+
+        $nativeData = NativeReflector::reflectData($id);
+
+        if ($nativeData !== null) {
+            $this->cache->set($id, $nativeData);
+
+            return $nativeData;
+        }
+
+        throw new DeclarationNotFound($id);
     }
 
     /**
