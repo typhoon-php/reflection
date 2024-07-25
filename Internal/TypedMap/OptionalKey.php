@@ -8,7 +8,7 @@ namespace Typhoon\Reflection\Internal\TypedMap;
  * @internal
  * @psalm-internal Typhoon
  * @psalm-immutable
- * @template TValue
+ * @template-covariant TValue
  * @extends Key<TValue>
  */
 interface OptionalKey extends Key

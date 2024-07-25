@@ -59,7 +59,7 @@ enum CompleteEnum implements ClassHook
             $methods['from'] = $methods['cases']
                 ->with(Data::Type, new TypeData($staticType))
                 ->with(Data::Parameters, [
-                    'value' => (new TypedMap())->with(Data::Type, new TypeData(types::arrayKey, $backingType)),
+                    'value' => TypedMap::one(Data::Type, new TypeData(types::arrayKey, $backingType)),
                 ]);
 
             $methods['tryFrom'] = $methods['from']

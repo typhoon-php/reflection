@@ -7,25 +7,48 @@ namespace Typhoon\Reflection\Internal\TypedMap;
 /**
  * @internal
  * @psalm-internal Typhoon
- * @readonly
+ * @psalm-immutable
  * @implements \ArrayAccess<Key, mixed>
  * @implements \IteratorAggregate<Key, mixed>
  */
 final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
 {
     /**
-     * @var \SplObjectStorage<Key, mixed>
+     * @var array<non-empty-string, mixed>
      */
-    private \SplObjectStorage $values;
+    private array $values = [];
 
-    public function __construct()
+    /**
+     * @psalm-pure
+     * @return non-empty-string
+     */
+    private static function keyToString(Key $key): string
     {
-        $this->values = new \SplObjectStorage();
+        return $key::class . '::' . $key->name;
     }
 
-    public function __clone()
+    /**
+     * @psalm-pure
+     * @param non-empty-string $stringKey
+     */
+    private static function keyFromString(string $stringKey): Key
     {
-        $this->values = clone $this->values;
+        /** @var Key */
+        return \constant($stringKey);
+    }
+
+    /**
+     * @psalm-immutable
+     * @template T
+     * @param Key<T> $key
+     * @param T $value
+     */
+    public static function one(Key $key, mixed $value): self
+    {
+        $map = new self();
+        $map->values[self::keyToString($key)] = $value;
+
+        return $map;
     }
 
     /**
@@ -35,24 +58,29 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public function with(Key $key, mixed $value): self
     {
+        $stringKey = self::keyToString($key);
+
         if ($key instanceof OptionalKey && $value === $key->default($this)) {
-            if ($this->values->contains($key)) {
-                return $this->without($key);
+            if (isset($this->values[$stringKey])) {
+                $copy = clone $this;
+                unset($copy->values[$stringKey]);
+
+                return $copy;
             }
 
             return $this;
         }
 
         $copy = clone $this;
-        $copy->values->attach($key, $value);
+        $copy->values[$stringKey] = $value;
 
         return $copy;
     }
 
     public function withMap(self $map): self
     {
-        $copy = clone $this;
-        $copy->values->addAll($map->values);
+        $copy = clone $map;
+        $copy->values += $this->values;
 
         return $copy;
     }
@@ -62,7 +90,7 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
         $copy = clone $this;
 
         foreach ($keys as $key) {
-            $copy->values->detach($key);
+            unset($copy->values[self::keyToString($key)]);
         }
 
         return $copy;
@@ -70,7 +98,7 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetExists(mixed $offset): bool
     {
-        return $this->values->contains($offset);
+        return isset($this->values[self::keyToString($offset)]);
     }
 
     /**
@@ -80,13 +108,15 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public function offsetGet(mixed $offset): mixed
     {
-        if ($this->values->contains($offset)) {
+        $key = self::keyToString($offset);
+
+        if (isset($this->values[$key])) {
             /** @var T */
-            return $this->values[$offset];
+            return $this->values[$key];
         }
 
         if ($offset instanceof OptionalKey) {
-            /** @var T */
+            /** @var OptionalKey<T> $offset */
             return $offset->default($this);
         }
 
@@ -108,8 +138,8 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public function getIterator(): \Generator
     {
-        foreach ($this->values as $key) {
-            yield $key => $this->values[$key];
+        foreach ($this->values as $key => $value) {
+            yield self::keyFromString($key) => $value;
         }
     }
 
@@ -120,13 +150,7 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function __serialize(): array
     {
-        $data = [];
-
-        foreach ($this as $key => $value) {
-            $data[$key::class . '::' . $key->name] = $value;
-        }
-
-        return $data;
+        return $this->values;
     }
 
     /**
@@ -134,12 +158,6 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
      */
     public function __unserialize(array $data): void
     {
-        $this->values = new \SplObjectStorage();
-
-        foreach ($data as $enum => $value) {
-            $key = \constant($enum);
-            \assert($key instanceof Key);
-            $this->values->attach($key, $value);
-        }
+        $this->values = $data;
     }
 }

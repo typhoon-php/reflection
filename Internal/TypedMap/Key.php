@@ -8,6 +8,6 @@ namespace Typhoon\Reflection\Internal\TypedMap;
  * @internal
  * @psalm-internal Typhoon
  * @psalm-immutable
- * @template TValue
+ * @template-covariant TValue
  */
 interface Key extends \UnitEnum {}
