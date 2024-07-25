@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\NativeAdapter;
+namespace Typhoon\Reflection\Internal\Type;
 
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\DefaultTypeVisitor;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection\Internal\NativeAdapter
+ * @psalm-internal Typhoon\Reflection
  * @extends DefaultTypeVisitor<bool>
  */
-final class ParameterAllowsNull extends DefaultTypeVisitor
+final class IsNativeTypeNullable extends DefaultTypeVisitor
 {
     public function null(Type $type): mixed
     {

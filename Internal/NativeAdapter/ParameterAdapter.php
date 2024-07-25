@@ -13,6 +13,7 @@ use Typhoon\Reflection\Internal\ConstantExpression\MagicClassInTrait;
 use Typhoon\Reflection\Internal\ConstantExpression\ParentClass;
 use Typhoon\Reflection\Internal\ConstantExpression\SelfClass;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Type\IsNativeTypeNullable;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\TyphoonReflector;
 
@@ -59,7 +60,7 @@ final class ParameterAdapter extends \ReflectionParameter
         return $this
             ->reflection
             ->type(DeclarationKind::Native)
-            ?->accept(new ParameterAllowsNull())
+            ?->accept(new IsNativeTypeNullable())
             ?? true;
     }
 
