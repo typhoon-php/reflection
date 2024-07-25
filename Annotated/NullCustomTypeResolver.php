@@ -11,7 +11,7 @@ use Typhoon\Type\Type;
  */
 final class NullCustomTypeResolver implements CustomTypeResolver
 {
-    public function resolveCustomType(string $name, array $typeArguments, TypeContext $context): ?Type
+    public function resolveCustomType(string $unresolvedName, array $typeArguments, TypeContext $context): ?Type
     {
         return null;
     }

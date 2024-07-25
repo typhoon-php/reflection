@@ -12,8 +12,8 @@ use Typhoon\Type\Type;
 interface CustomTypeResolver
 {
     /**
-     * @param non-empty-string $name
+     * @param non-empty-string $unresolvedName
      * @param list<Type> $typeArguments
      */
-    public function resolveCustomType(string $name, array $typeArguments, TypeContext $context): ?Type;
+    public function resolveCustomType(string $unresolvedName, array $typeArguments, TypeContext $context): ?Type;
 }
