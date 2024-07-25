@@ -130,7 +130,14 @@ final class PhpDocTypeReflector
             'true' => types::true,
             'false' => types::false,
             'bool', 'boolean' => types::bool,
-            'float', 'double' => types::float,
+            'float', 'double' => match (\count($genericTypes)) {
+                0 => types::float,
+                2 => types::floatRange(
+                    min: $this->reflectFloatLimit($genericTypes[0], 'min'),
+                    max: $this->reflectFloatLimit($genericTypes[1], 'max'),
+                ),
+                default => throw new InvalidPhpDocType(sprintf('float range type should have 2 type arguments, got %d', \count($genericTypes)))
+            },
             'positive-int' => types::positiveInt,
             'negative-int' => types::negativeInt,
             'non-negative-int' => types::nonNegativeInt,
@@ -239,6 +246,26 @@ final class PhpDocTypeReflector
         }
 
         return (int) $type->constExpr->value;
+    }
+
+    /**
+     * @param 'min'|'max' $parameterName
+     */
+    private function reflectFloatLimit(TypeNode $type, string $parameterName): ?float
+    {
+        if ($type instanceof IdentifierTypeNode && $type->name === $parameterName) {
+            return null;
+        }
+
+        if (!$type instanceof ConstTypeNode) {
+            throw new InvalidPhpDocType(sprintf('Invalid float range %s type argument: %s', $parameterName, $type));
+        }
+
+        if ($type->constExpr instanceof ConstExprFloatNode || $type->constExpr instanceof ConstExprIntegerNode) {
+            return (float) $type->constExpr->value;
+        }
+
+        throw new InvalidPhpDocType(sprintf('Invalid float range %s type argument: %s', $parameterName, $type));
     }
 
     private function reflectListShape(ArrayShapeNode $node): Type

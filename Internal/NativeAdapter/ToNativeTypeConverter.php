@@ -52,7 +52,7 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         throw new NonConvertableType($type);
     }
 
-    public function float(Type $type): mixed
+    public function float(Type $type, ?float $min, ?float $max): mixed
     {
         return NamedTypeAdapter::float();
     }
