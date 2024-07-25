@@ -27,7 +27,8 @@ enum Data
     public const Abstract = Data\BoolKeys::IsAbstract;
     public const AnnotatedFinal = Data\BoolKeys::AnnotatedFinal;
     public const AnnotatedReadonly = Data\BoolKeys::AnnotatedReadonly;
-    public const ByReference = Data\BoolKeys::ByReference;
+    public const ReturnsReference = Data\BoolKeys::ReturnsReference;
+    public const PassedBy = Data\PassedByKey::Key;
     public const Generator = Data\BoolKeys::Generator;
     public const NativeFinal = Data\BoolKeys::NativeFinal;
     public const NativeReadonly = Data\BoolKeys::NativeReadonly;

@@ -65,7 +65,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function canBePassedByValue(): bool
     {
-        return !$this->reflection->isPassedByReference();
+        return $this->reflection->canBePassedByValue();
     }
 
     public function getAttributes(?string $name = null, int $flags = 0): array
@@ -189,7 +189,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function isPassedByReference(): bool
     {
-        return $this->reflection->isPassedByReference();
+        return $this->reflection->canBePassedByReference();
     }
 
     public function isPromoted(): bool

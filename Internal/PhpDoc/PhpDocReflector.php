@@ -27,6 +27,7 @@ use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
+use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\FunctionHook;
@@ -381,7 +382,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
                 ->with(Data::Annotated, true)
                 ->with(Data::Location, $this->reflectLocation($code, $tag))
                 ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->type)))
-                ->with(Data::ByReference, $tag->isReference)
+                ->with(Data::PassedBy, $tag->isReference ? PassedBy::Reference : PassedBy::Value)
                 ->with(Data::Variadic, $tag->isVariadic)
                 ->with(Data::DefaultValueExpression, $compiler->compile($tag->defaultValue));
         }

@@ -187,7 +187,7 @@ final class MethodReflection
 
     public function returnsReference(): bool
     {
-        return $this->data[Data::ByReference];
+        return $this->data[Data::ReturnsReference];
     }
 
     /**

@@ -19,7 +19,7 @@ enum BoolKeys implements OptionalKey
     case IsAbstract;
     case AnnotatedFinal;
     case AnnotatedReadonly;
-    case ByReference;
+    case ReturnsReference;
     case EnumCase;
     case Generator;
     case NativeFinal;

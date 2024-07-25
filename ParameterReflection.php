@@ -7,6 +7,7 @@ namespace Typhoon\Reflection;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
@@ -117,9 +118,14 @@ final class ParameterReflection
         return $this->data[Data::Optional];
     }
 
-    public function isPassedByReference(): bool
+    public function canBePassedByValue(): bool
     {
-        return $this->data[Data::ByReference];
+        return \in_array($this->data[Data::PassedBy], [PassedBy::Value, PassedBy::ValueOrReference], true);
+    }
+
+    public function canBePassedByReference(): bool
+    {
+        return \in_array($this->data[Data::PassedBy], [PassedBy::Reference, PassedBy::ValueOrReference], true);
     }
 
     /**

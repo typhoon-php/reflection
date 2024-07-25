@@ -15,6 +15,7 @@ use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\ConstantExpression\Value;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
@@ -240,7 +241,7 @@ enum NativeReflector
                 native: self::reflectType($function->getReturnType(), static: $static, self: $self),
                 tentative: self::reflectType($function->getTentativeReturnType(), static: $static, self: $self),
             ))
-            ->with(Data::ByReference, $function->returnsReference())
+            ->with(Data::ReturnsReference, $function->returnsReference())
             ->with(Data::Generator, $function->isGenerator())
             ->with(Data::Attributes, self::reflectAttributes($function->getAttributes()))
             ->with(Data::Parameters, self::reflectParameters($function->getParameters(), static: $static, self: $self));
@@ -259,7 +260,11 @@ enum NativeReflector
                 ->with(Data::Index, $index)
                 ->with(Data::Attributes, self::reflectAttributes($reflection->getAttributes()))
                 ->with(Data::Type, new TypeData(self::reflectType($reflection->getType(), static: $static, self: $self)))
-                ->with(Data::ByReference, $reflection->isPassedByReference())
+                ->with(Data::PassedBy, match (true) {
+                    $reflection->canBePassedByValue() && $reflection->isPassedByReference() => PassedBy::ValueOrReference,
+                    $reflection->canBePassedByValue() => PassedBy::Value,
+                    default => PassedBy::Reference,
+                })
                 ->with(Data::DefaultValueExpression, self::reflectParameterDefaultValueExpression($reflection))
                 ->with(Data::Optional, $reflection->isOptional())
                 ->with(Data::Promoted, $reflection->isPromoted())

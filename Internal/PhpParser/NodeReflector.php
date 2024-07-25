@@ -39,6 +39,7 @@ use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
+use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\Data\TraitMethodAlias;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
@@ -48,7 +49,6 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Location;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
-use function Typhoon\Reflection\Internal\column;
 
 /**
  * @internal
@@ -298,7 +298,7 @@ final class NodeReflector
             ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
             ->with(Data::Type, new TypeData($this->reflectType($context, $node->getReturnType())))
-            ->with(Data::ByReference, $node->returnsByRef())
+            ->with(Data::ReturnsReference, $node->returnsByRef())
             ->with(Data::Generator, GeneratorVisitor::isGenerator($node))
             ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->getAttrGroups()))
             ->with(Data::Parameters, $this->reflectParameters($context, $node->getParams()));
@@ -344,7 +344,7 @@ final class NodeReflector
                     node: $node->type,
                     nullable: $node->default instanceof ConstFetch && $node->default->name->toCodeString() === 'null',
                 )))
-                ->with(Data::ByReference, $node->byRef)
+                ->with(Data::PassedBy, $node->byRef ? PassedBy::Reference : PassedBy::Value)
                 ->with(Data::DefaultValueExpression, $compiler->compile($node->default))
                 ->with(Data::Promoted, $node->flags !== 0)
                 ->with(Data::NativeReadonly, (bool) ($node->flags & Class_::MODIFIER_READONLY))
