@@ -51,6 +51,7 @@ use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
+use Typhoon\Reflection\Locator\NoSymfonyPolyfillLocator;
 use Typhoon\Reflection\Locator\OnlyLoadedClassLocator;
 use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Reflection\Locator\ScannedResourceLocator;
@@ -63,10 +64,10 @@ final class TyphoonReflector
     private const BUFFER_SIZE = 100;
 
     /**
-     * @param ?list<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
+     * @param ?iterable<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
      */
     public static function build(
-        ?array $locators = null,
+        ?iterable $locators = null,
         CacheInterface $cache = new InMemoryCache(),
         ?Parser $phpParser = null,
     ): self {
@@ -111,13 +112,13 @@ final class TyphoonReflector
             $locators[] = new PhpStormStubsLocator();
         }
 
-        if (ComposerLocator::isSupported()) {
-            $locators[] = new ComposerLocator();
-        }
-
         $locators[] = new OnlyLoadedClassLocator(new NativeReflectionClassLocator());
         $locators[] = new NativeReflectionFunctionLocator();
         $locators[] = new FileAnonymousLocator();
+
+        if (ComposerLocator::isSupported()) {
+            $locators[] = new NoSymfonyPolyfillLocator(new ComposerLocator());
+        }
 
         return $locators;
     }
