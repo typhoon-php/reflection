@@ -59,7 +59,7 @@ final class ParameterAdapter extends \ReflectionParameter
         return $this
             ->reflection
             ->type(DeclarationKind::Native)
-            ?->accept(new ParameterNativeTypeAllowsNull())
+            ?->accept(new ParameterAllowsNull())
             ?? true;
     }
 
@@ -75,11 +75,9 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getClass(): ?\ReflectionClass
     {
-        return $this
-            ->reflection
-            ->type(DeclarationKind::Native)
-            ?->accept(new ParameterNativeTypeGetClass($this->reflection, $this->reflector))
-            ?->toNativeReflection();
+        $this->loadNative();
+
+        return parent::getClass();
     }
 
     public function getDeclaringClass(): ?\ReflectionClass
@@ -158,20 +156,16 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function isArray(): bool
     {
-        return $this
-            ->reflection
-            ->type(DeclarationKind::Native)
-            ?->accept(new ParameterNativeTypeIsArray())
-            ?? false;
+        $this->loadNative();
+
+        return parent::isArray();
     }
 
     public function isCallable(): bool
     {
-        return $this
-            ->reflection
-            ->type(DeclarationKind::Native)
-            ?->accept(new ParameterNativeTypeIsCallable())
-            ?? false;
+        $this->loadNative();
+
+        return parent::isCallable();
     }
 
     public function isDefaultValueAvailable(): bool
