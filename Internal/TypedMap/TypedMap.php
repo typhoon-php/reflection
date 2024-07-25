@@ -94,6 +94,7 @@ final class TypedMap implements \ArrayAccess
      * @template T
      * @param Key<T> $offset
      * @return T
+     * @throws KeyIsNotDefined
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -109,15 +110,15 @@ final class TypedMap implements \ArrayAccess
             return $offset->default($this);
         }
 
-        throw new UndefinedKey($offset);
+        throw new KeyIsNotDefined($offset);
     }
 
-    public function offsetSet(mixed $offset, mixed $value): void
+    public function offsetSet(mixed $offset, mixed $value): never
     {
         throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
     }
 
-    public function offsetUnset(mixed $offset): void
+    public function offsetUnset(mixed $offset): never
     {
         throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
     }

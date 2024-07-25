@@ -8,10 +8,10 @@ namespace Typhoon\Reflection\Internal\TypedMap;
  * @internal
  * @psalm-internal Typhoon
  */
-final class UndefinedKey extends \RuntimeException
+final class KeyIsNotDefined extends \RuntimeException
 {
     public function __construct(Key $key)
     {
-        parent::__construct(\sprintf('Key %s::%s is not defined', $key::class, $key->name));
+        parent::__construct(\sprintf('Key %s::%s is not defined in the TypedMap', $key::class, $key->name));
     }
 }
