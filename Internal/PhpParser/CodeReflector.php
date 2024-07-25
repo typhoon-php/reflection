@@ -11,7 +11,7 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Internal\IdMap;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
+use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 
@@ -23,7 +23,7 @@ final class CodeReflector
 {
     public function __construct(
         private readonly Parser $phpParser,
-        private readonly AnnotatedTypesDriver $annotatedTypesDriver,
+        private readonly AnnotatedDeclarationsDiscoverer $annotatedDeclarationsDiscoverer,
         private readonly NodeReflector $nodeReflector,
     ) {}
 
@@ -44,7 +44,7 @@ final class CodeReflector
             file: $file,
             code: $code,
             nameContext: $nameResolver->getNameContext(),
-            annotatedTypesDriver: $this->annotatedTypesDriver,
+            annotatedDeclarationsDiscoverer: $this->annotatedDeclarationsDiscoverer,
         );
         $collector = new CollectIdReflectorsVisitor($this->nodeReflector);
 

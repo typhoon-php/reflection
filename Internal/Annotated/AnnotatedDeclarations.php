@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal\Context;
+namespace Typhoon\Reflection\Internal\Annotated;
 
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class AnnotatedTypeNames
+final class AnnotatedDeclarations
 {
     /**
      * @param list<non-empty-string> $templateNames

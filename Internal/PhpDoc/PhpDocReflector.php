@@ -20,10 +20,12 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Annotated\CustomTypeResolver;
+use Typhoon\Reflection\Annotated\NullCustomTypeResolver;
 use Typhoon\Reflection\Deprecation;
+use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarations;
+use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
 use Typhoon\Reflection\Internal\ClassHook;
-use Typhoon\Reflection\Internal\Context\AnnotatedTypeNames;
-use Typhoon\Reflection\Internal\Context\AnnotatedTypesDriver;
 use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
@@ -44,21 +46,22 @@ use function Typhoon\Reflection\Internal\map;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, FunctionHook
+final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHook, FunctionHook
 {
     public function __construct(
+        private readonly CustomTypeResolver $customTypeResolver = new NullCustomTypeResolver(),
         private readonly PhpDocParser $parser = new PhpDocParser(),
     ) {}
 
-    public function reflectAnnotatedTypeNames(FunctionLike|ClassLike $node): AnnotatedTypeNames
+    public function discoverAnnotatedDeclarations(FunctionLike|ClassLike $node): AnnotatedDeclarations
     {
         $phpDoc = $this->parsePhpDoc($node->getDocComment());
 
         if ($phpDoc === null) {
-            return new AnnotatedTypeNames();
+            return new AnnotatedDeclarations();
         }
 
-        return new AnnotatedTypeNames(
+        return new AnnotatedDeclarations(
             templateNames: array_map(
                 /** @param PhpDocTagNode<TemplateTagValueNode> $tag */
                 static fn(PhpDocTagNode $tag): string => $tag->value->name,
@@ -90,7 +93,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
     private function reflectFunctionLike(string $code, TypedMap $data): TypedMap
     {
-        $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
+        $typeReflector = new PhpDocTypeReflector($data[Data::Context], $this->customTypeResolver);
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
         if ($phpDoc !== null) {
@@ -118,7 +121,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
 
     private function reflectClass(string $code, TypedMap $data): TypedMap
     {
-        $typeReflector = new PhpDocTypeReflector($data[Data::Context]);
+        $typeReflector = new PhpDocTypeReflector($data[Data::Context], $this->customTypeResolver);
 
         $data = $data
             ->with(Data::Constants, array_map(
@@ -341,7 +344,7 @@ final class PhpDocReflector implements AnnotatedTypesDriver, ClassHook, Function
         foreach ($tags as $tag) {
             $name = $tag->value->methodName;
             $context = $classContext->enterMethod($name, array_column($tag->value->templateTypes, 'name'));
-            $typeReflector = new PhpDocTypeReflector($context);
+            $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
             $methods[$name] = (new TypedMap())
                 ->with(Data::Location, $this->reflectLocation($code, $tag))
                 ->with(Data::Context, $context)

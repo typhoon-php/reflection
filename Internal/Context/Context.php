@@ -15,6 +15,7 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\TemplateId;
+use Typhoon\Reflection\Annotated\TypeContext;
 use Typhoon\Reflection\Internal\PhpParser\NameParser;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
@@ -23,7 +24,7 @@ use Typhoon\Type\types;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class Context
+final class Context implements TypeContext
 {
     /**
      * @param ?non-empty-string $file
@@ -265,10 +266,6 @@ final class Context
         return $this->nameContext->getNamespace()?->toString() ?? '';
     }
 
-    /**
-     * @param non-empty-string $unresolvedName
-     * @return array{non-empty-string, ?non-empty-string}
-     */
     public function resolveConstantName(string $unresolvedName): array
     {
         $resolved = $this->nameContext->getResolvedName(NameParser::parse($unresolvedName), Use_::TYPE_CONSTANT);
@@ -280,19 +277,11 @@ final class Context
         return [$this->namespace() . '\\' . $unresolvedName, $unresolvedName];
     }
 
-    /**
-     * @param non-empty-string $unresolvedName
-     * @return non-empty-string
-     */
     public function resolveClassName(string $unresolvedName): string
     {
         return $this->nameContext->getResolvedClassName(NameParser::parse($unresolvedName))->toString();
     }
 
-    /**
-     * @param non-empty-string $unresolvedName
-     * @param list<Type> $arguments
-     */
     public function resolveNameAsType(string $unresolvedName, array $arguments = []): Type
     {
         if (str_contains($unresolvedName, '\\')) {

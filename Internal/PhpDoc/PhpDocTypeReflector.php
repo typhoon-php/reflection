@@ -30,6 +30,8 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\NamedFunctionId;
+use Typhoon\Reflection\Annotated\CustomTypeResolver;
+use Typhoon\Reflection\Annotated\NullCustomTypeResolver;
 use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Type\Parameter;
 use Typhoon\Type\ShapeElement;
@@ -44,6 +46,7 @@ final class PhpDocTypeReflector
 {
     public function __construct(
         private readonly Context $context,
+        private readonly CustomTypeResolver $customTypeResolver = new NullCustomTypeResolver(),
     ) {}
 
     /**
@@ -121,54 +124,62 @@ final class PhpDocTypeReflector
 
     /**
      * @param non-empty-string $name
-     * @param list<TypeNode> $genericTypes
+     * @param list<TypeNode> $genericNodes
      */
-    private function reflectIdentifier(string $name, array $genericTypes = []): Type
+    private function reflectIdentifier(string $name, array $genericNodes = []): Type
     {
+        $typeArguments = array_map($this->reflectType(...), $genericNodes);
+
+        $customType = $this->customTypeResolver->resolveCustomType($name, $typeArguments, $this->context);
+
+        if ($customType !== null) {
+            return $customType;
+        }
+
         return match ($name) {
             'null' => types::null,
             'true' => types::true,
             'false' => types::false,
             'bool', 'boolean' => types::bool,
-            'float', 'double' => match (\count($genericTypes)) {
+            'float', 'double' => match (\count($genericNodes)) {
                 0 => types::float,
                 2 => types::floatRange(
-                    min: $this->reflectFloatLimit($genericTypes[0], 'min'),
-                    max: $this->reflectFloatLimit($genericTypes[1], 'max'),
+                    min: $this->reflectFloatLimit($genericNodes[0], 'min'),
+                    max: $this->reflectFloatLimit($genericNodes[1], 'max'),
                 ),
-                default => throw new InvalidPhpDocType(sprintf('float range type should have 2 type arguments, got %d', \count($genericTypes)))
+                default => throw new InvalidPhpDocType(sprintf('float range type should have 2 type arguments, got %d', \count($genericNodes)))
             },
             'positive-int' => types::positiveInt,
             'negative-int' => types::negativeInt,
             'non-negative-int' => types::nonNegativeInt,
             'non-positive-int' => types::nonPositiveInt,
             'non-zero-int' => types::nonZeroInt,
-            'int', 'integer' => match (\count($genericTypes)) {
+            'int', 'integer' => match (\count($genericNodes)) {
                 0 => types::int,
                 2 => types::intRange(
-                    min: $this->reflectIntLimit($genericTypes[0], 'min'),
-                    max: $this->reflectIntLimit($genericTypes[1], 'max'),
+                    min: $this->reflectIntLimit($genericNodes[0], 'min'),
+                    max: $this->reflectIntLimit($genericNodes[1], 'max'),
                 ),
-                default => throw new InvalidPhpDocType(sprintf('int range type should have 2 type arguments, got %d', \count($genericTypes)))
+                default => throw new InvalidPhpDocType(sprintf('int range type should have 2 type arguments, got %d', \count($genericNodes)))
             },
-            'int-mask', 'int-mask-of' => types::intMaskOf(types::union(...array_map($this->reflectType(...), $genericTypes))),
+            'int-mask', 'int-mask-of' => types::intMaskOf(types::union(...$typeArguments)),
             'numeric' => types::numeric,
             'non-empty-string' => types::nonEmptyString,
             'string' => types::string,
             'non-falsy-string', 'truthy-string' => types::truthyString,
             'numeric-string' => types::numericString,
-            'class-string' => match (\count($genericTypes)) {
+            'class-string' => match (\count($typeArguments)) {
                 0 => types::classString,
-                1 => types::classString($this->reflectType($genericTypes[0])),
+                1 => types::classString($typeArguments[0]),
                 default => throw new InvalidPhpDocType(),
             },
             'array-key' => types::arrayKey,
-            'key-of' => match ($number = \count($genericTypes)) {
-                1 => types::keyOf($this->reflectType($genericTypes[0])),
+            'key-of' => match ($number = \count($typeArguments)) {
+                1 => types::keyOf($typeArguments[0]),
                 default => throw new InvalidPhpDocType(sprintf('key-of type should have 1 type argument, got %d', $number)),
             },
-            'value-of' => match ($number = \count($genericTypes)) {
-                1 => types::valueOf($this->reflectType($genericTypes[0])),
+            'value-of' => match ($number = \count($typeArguments)) {
+                1 => types::valueOf($typeArguments[0]),
                 default => throw new InvalidPhpDocType(sprintf('value-of type should have 1 type argument, got %d', $number)),
             },
             'literal-int' => types::literalInt,
@@ -178,32 +189,32 @@ final class PhpDocTypeReflector
             'interface-string', 'enum-string', 'trait-string' => types::classString,
             'callable-array' => types::callableArray(),
             'resource', 'closed-resource', 'open-resource' => types::resource,
-            'list' => match ($number = \count($genericTypes)) {
+            'list' => match ($number = \count($typeArguments)) {
                 0 => types::list(),
-                1 => types::list($this->reflectType($genericTypes[0])),
+                1 => types::list($typeArguments[0]),
                 default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 type argument, got %d', $number)),
             },
-            'non-empty-list' => match ($number = \count($genericTypes)) {
+            'non-empty-list' => match ($number = \count($typeArguments)) {
                 0 => types::nonEmptyList(),
-                1 => types::nonEmptyList($this->reflectType($genericTypes[0])),
+                1 => types::nonEmptyList($typeArguments[0]),
                 default => throw new InvalidPhpDocType(sprintf('list type should have at most 1 type argument, got %d', $number)),
             },
-            'array' => match ($number = \count($genericTypes)) {
+            'array' => match ($number = \count($typeArguments)) {
                 0 => types::array,
-                1 => types::array(value: $this->reflectType($genericTypes[0])),
-                2 => types::array($this->reflectType($genericTypes[0]), $this->reflectType($genericTypes[1])),
+                1 => types::array(value: $typeArguments[0]),
+                2 => types::array(...$typeArguments),
                 default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 type arguments, got %d', $number)),
             },
-            'non-empty-array' => match ($number = \count($genericTypes)) {
+            'non-empty-array' => match ($number = \count($typeArguments)) {
                 0 => types::nonEmptyArray(),
-                1 => types::nonEmptyArray(value: $this->reflectType($genericTypes[0])),
-                2 => types::nonEmptyArray($this->reflectType($genericTypes[0]), $this->reflectType($genericTypes[1])),
+                1 => types::nonEmptyArray(value: $typeArguments[0]),
+                2 => types::nonEmptyArray(...$typeArguments),
                 default => throw new InvalidPhpDocType(sprintf('array type should have at most 2 type arguments, got %d', $number)),
             },
-            'iterable' => match ($number = \count($genericTypes)) {
+            'iterable' => match ($number = \count($typeArguments)) {
                 0 => types::iterable,
-                1 => types::iterable(value: $this->reflectType($genericTypes[0])),
-                2 => types::iterable(...array_map($this->reflectType(...), $genericTypes)),
+                1 => types::iterable(value: $typeArguments[0]),
+                2 => types::iterable(...$typeArguments),
                 default => throw new InvalidPhpDocType(sprintf('iterable type should have at most 2 type arguments, got %d', $number)),
             },
             'object' => types::object,
@@ -213,17 +224,17 @@ final class PhpDocTypeReflector
             'scalar' => types::scalar,
             'never' => types::never,
             default => match ($class = $this->context->resolveClassName($name)) {
-                \Traversable::class, \Iterator::class, \IteratorAggregate::class => match ($number = \count($genericTypes)) {
-                    1 => types::object($class, [types::mixed, $this->reflectType($genericTypes[0])]),
-                    0, 2 => types::object($class, array_map($this->reflectType(...), $genericTypes)),
+                \Traversable::class, \Iterator::class, \IteratorAggregate::class => match ($number = \count($typeArguments)) {
+                    1 => types::object($class, [types::mixed, $typeArguments[0]]),
+                    0, 2 => types::object($class, $typeArguments),
                     default => throw new InvalidPhpDocType(sprintf('%s type should have at most 2 type arguments, got %d', $class, $number)),
                 },
-                \Generator::class => match ($number = \count($genericTypes)) {
-                    1 => types::generator(value: $this->reflectType($genericTypes[0])),
-                    0, 2, 3, 4 => types::generator(...array_map($this->reflectType(...), $genericTypes)),
+                \Generator::class => match ($number = \count($typeArguments)) {
+                    1 => types::generator(value: $typeArguments[0]),
+                    0, 2, 3, 4 => types::generator(...$typeArguments),
                     default => throw new InvalidPhpDocType(sprintf('Generator type should have at most 4 type arguments, got %d', $number)),
                 },
-                default => $this->context->resolveNameAsType($name, array_map($this->reflectType(...), $genericTypes))
+                default => $this->context->resolveNameAsType($name, $typeArguments)
             },
         };
     }
