@@ -46,12 +46,12 @@ use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
-use Typhoon\Reflection\Locator\DontAutoloadClassLocator;
 use Typhoon\Reflection\Locator\FileAnonymousLocator;
 use Typhoon\Reflection\Locator\NamedClassLocator;
 use Typhoon\Reflection\Locator\NamedFunctionLocator;
 use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
+use Typhoon\Reflection\Locator\OnlyLoadedClassLocator;
 use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Reflection\Locator\ScannedResourceLocator;
 
@@ -115,7 +115,7 @@ final class TyphoonReflector
             $locators[] = new ComposerLocator();
         }
 
-        $locators[] = new DontAutoloadClassLocator(new NativeReflectionClassLocator());
+        $locators[] = new OnlyLoadedClassLocator(new NativeReflectionClassLocator());
         $locators[] = new NativeReflectionFunctionLocator();
         $locators[] = new FileAnonymousLocator();
 

@@ -10,7 +10,7 @@ use function Typhoon\Reflection\Internal\classLikeExists;
 /**
  * @api
  */
-final class DontAutoloadClassLocator implements NamedClassLocator
+final class OnlyLoadedClassLocator implements NamedClassLocator
 {
     public function __construct(
         private readonly NamedClassLocator $namedClassLocator,
