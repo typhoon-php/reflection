@@ -7,7 +7,6 @@ namespace Typhoon\Reflection\Internal\PhpParser;
 use PhpParser\Node;
 use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\ComplexType;
-use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
@@ -45,6 +44,7 @@ use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
+use Typhoon\Reflection\Internal\Type\IsNativeTypeNullable;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Location;
 use Typhoon\Type\Type;
@@ -334,24 +334,37 @@ final class NodeReflector
 
         foreach ($nodes as $node) {
             \assert($node->var instanceof Variable && \is_string($node->var->name));
+
+            $default = $compiler->compile($node->default);
+
             $parameters[$node->var->name] = (new TypedMap())
                 ->with(Data::PhpDoc, $node->getDocComment())
                 ->with(Data::Location, $this->reflectLocation($node))
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
-                ->with(Data::Type, new TypeData($this->reflectType(
-                    context: $context,
-                    node: $node->type,
-                    nullable: $node->default instanceof ConstFetch && $node->default->name->toCodeString() === 'null',
-                )))
+                ->with(Data::Type, new TypeData($this->reflectParameterType($context, $node->type, $default)))
                 ->with(Data::PassedBy, $node->byRef ? PassedBy::Reference : PassedBy::Value)
-                ->with(Data::DefaultValueExpression, $compiler->compile($node->default))
+                ->with(Data::DefaultValueExpression, $default)
                 ->with(Data::Promoted, $node->flags !== 0)
                 ->with(Data::NativeReadonly, (bool) ($node->flags & Class_::MODIFIER_READONLY))
                 ->with(Data::Variadic, $node->variadic);
         }
 
         return $parameters;
+    }
+
+    private function reflectParameterType(Context $context, null|Name|Identifier|ComplexType $node, ?Expression $default): ?Type
+    {
+        $type = $this->reflectType($context, $node);
+
+        /**
+         * Parameter of myFunction(string $param = null) has an implicitly nullable string type.
+         */
+        if ($default === Values::Null && $type !== null && !$type->accept(new IsNativeTypeNullable())) {
+            return types::nullable($type);
+        }
+
+        return $type;
     }
 
     /**
@@ -399,14 +412,10 @@ final class NodeReflector
     /**
      * @return ($node is null ? null : Type)
      */
-    private function reflectType(Context $context, null|Name|Identifier|ComplexType $node, bool $nullable = false): ?Type
+    private function reflectType(Context $context, null|Name|Identifier|ComplexType $node): ?Type
     {
         if ($node === null) {
             return null;
-        }
-
-        if ($nullable) {
-            return types::nullable($this->reflectType($context, $node));
         }
 
         if ($node instanceof NullableType) {

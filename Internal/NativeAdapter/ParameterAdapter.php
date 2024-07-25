@@ -57,11 +57,9 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function allowsNull(): bool
     {
-        return $this
-            ->reflection
-            ->type(DeclarationKind::Native)
-            ?->accept(new IsNativeTypeNullable())
-            ?? true;
+        $nativeType = $this->reflection->type(DeclarationKind::Native);
+
+        return $nativeType === null || $nativeType->accept(new IsNativeTypeNullable());
     }
 
     public function canBePassedByValue(): bool
