@@ -16,7 +16,7 @@ use Typhoon\Reflection\TyphoonReflector;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum SetInterfaceMethodsAbstract implements ClassHook
+enum SetInterfaceMethodAbstract implements ClassHook
 {
     case Instance;
 

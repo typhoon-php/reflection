@@ -16,7 +16,7 @@ use Typhoon\Reflection\TyphoonReflector;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum CopyPromotedParametersToProperties implements ClassHook
+enum CopyPromotedParameterToProperty implements ClassHook
 {
     case Instance;
 

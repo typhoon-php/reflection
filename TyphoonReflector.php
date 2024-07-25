@@ -24,15 +24,15 @@ use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUpInternallyDefined;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnum;
-use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParametersToProperties;
+use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParameterToProperty;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
-use Typhoon\Reflection\Internal\CompleteReflection\SetAttributesRepeated;
-use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodsAbstract;
-use Typhoon\Reflection\Internal\CompleteReflection\SetParametersIndexes;
-use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertiesReadonly;
+use Typhoon\Reflection\Internal\CompleteReflection\SetAttributeRepeated;
+use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodAbstract;
+use Typhoon\Reflection\Internal\CompleteReflection\SetParameterIndex;
+use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertyReadonly;
 use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
-use Typhoon\Reflection\Internal\CompleteReflection\SetTemplatesIndexes;
+use Typhoon\Reflection\Internal\CompleteReflection\SetTemplateIndex;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Hooks;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
@@ -79,14 +79,14 @@ final class TyphoonReflector
             locators: new Locators($locators ?? self::defaultLocators()),
             hooks: new Hooks([
                 $phpDocReflector,
-                CopyPromotedParametersToProperties::Instance,
+                CopyPromotedParameterToProperty::Instance,
                 CompleteEnum::Instance,
                 SetStringableInterface::Instance,
-                SetInterfaceMethodsAbstract::Instance,
-                SetReadonlyClassPropertiesReadonly::Instance,
-                SetAttributesRepeated::Instance,
-                SetParametersIndexes::Instance,
-                SetTemplatesIndexes::Instance,
+                SetInterfaceMethodAbstract::Instance,
+                SetReadonlyClassPropertyReadonly::Instance,
+                SetAttributeRepeated::Instance,
+                SetParameterIndex::Instance,
+                SetTemplateIndex::Instance,
                 ResolveClassInheritance::Instance,
                 RemoveContext::Instance,
                 RemoveCode::Instance,

@@ -66,7 +66,8 @@ final class NodeReflector
             ->with(Data::Location, $this->reflectLocation($node))
             ->with(Data::Context, $context)
             ->with(Data::Namespace, $context->namespace())
-            ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups));
+            ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
+            ->with(Data::Constants, $this->reflectConstants($context, $node->stmts));
 
         if ($node instanceof Class_) {
             return $data
@@ -77,7 +78,6 @@ final class NodeReflector
                 ->with(Data::Abstract, $node->isAbstract())
                 ->with(Data::NativeReadonly, $node->isReadonly())
                 ->with(Data::NativeFinal, $node->isFinal())
-                ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
                 ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
@@ -86,7 +86,6 @@ final class NodeReflector
             return $data
                 ->with(Data::ClassKind, ClassKind::Interface)
                 ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->extends))
-                ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
@@ -100,7 +99,6 @@ final class NodeReflector
                 ->withMap($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal, true)
                 ->with(Data::BackingType, $backingType)
-                ->with(Data::Constants, $this->reflectConstants($context, $node->stmts))
                 ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
         }
 
@@ -109,7 +107,6 @@ final class NodeReflector
         return $data
             ->with(Data::ClassKind, ClassKind::Trait)
             ->withMap($this->reflectTraitUses($node->getTraitUses()))
-            ->with(Data::Constants, $this->reflectConstants($context, $node->getConstants()))
             ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
             ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
     }
@@ -246,7 +243,6 @@ final class NodeReflector
                     ->with(Data::PhpDoc, $node->getDocComment())
                     ->with(Data::Location, $this->reflectLocation($node))
                     ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
-                    ->with(Data::NativeFinal, false)
                     ->with(Data::EnumCase, true)
                     ->with(Data::Type, new TypeData(annotated: types::classConstant($enumType, $node->name->name)))
                     ->with(Data::Visibility, Visibility::Public)

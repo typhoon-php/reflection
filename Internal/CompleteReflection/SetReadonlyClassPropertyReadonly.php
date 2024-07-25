@@ -16,7 +16,7 @@ use Typhoon\Reflection\TyphoonReflector;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum SetReadonlyClassPropertiesReadonly implements ClassHook
+enum SetReadonlyClassPropertyReadonly implements ClassHook
 {
     case Instance;
 

@@ -60,7 +60,6 @@ enum Data
     public const Variance = Data\VarianceKey::Key;
     public const Constraint = Data\ConstraintKey::Key;
     public const UsePhpDocs = Data\UsePhpDocsKey::Key;
-    public const AnonymousClassColumns = Data\AnonymousClassColumnsKey::Key;
     public const Location = Data\LocationKey::Key;
     public const Code = Data\CodeKey::Key;
     public const Deprecation = Data\DeprecationKey::Key;

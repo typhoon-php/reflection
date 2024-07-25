@@ -18,7 +18,7 @@ use Typhoon\Reflection\TyphoonReflector;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-enum SetAttributesRepeated implements FunctionHook, ClassHook
+enum SetAttributeRepeated implements FunctionHook, ClassHook
 {
     case Instance;
 
