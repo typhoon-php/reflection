@@ -114,7 +114,7 @@ final class ParameterReflection
 
     public function isOptional(): bool
     {
-        return $this->hasDefaultValue() || $this->isVariadic();
+        return $this->data[Data::Optional];
     }
 
     public function isPassedByReference(): bool

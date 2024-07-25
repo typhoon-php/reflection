@@ -30,6 +30,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributeRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodAbstract;
 use Typhoon\Reflection\Internal\CompleteReflection\SetParameterIndex;
+use Typhoon\Reflection\Internal\CompleteReflection\SetParameterOptional;
 use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertyReadonly;
 use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\SetTemplateIndex;
@@ -86,6 +87,7 @@ final class TyphoonReflector
                 SetReadonlyClassPropertyReadonly::Instance,
                 SetAttributeRepeated::Instance,
                 SetParameterIndex::Instance,
+                SetParameterOptional::Instance,
                 SetTemplateIndex::Instance,
                 ResolveClassInheritance::Instance,
                 RemoveContext::Instance,
