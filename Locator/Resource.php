@@ -74,20 +74,4 @@ final class Resource
             @fclose($handle);
         }
     }
-
-    /**
-     * @psalm-assert non-empty-string $file
-     * @phpstan-assert non-empty-string $file
-     * @throws FileIsNotReadable
-     */
-    public static function readFile(string $file): string
-    {
-        $contents = @file_get_contents($file);
-
-        if ($contents === false) {
-            throw new FileIsNotReadable($file);
-        }
-
-        return $contents;
-    }
 }
