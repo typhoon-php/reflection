@@ -9,9 +9,8 @@ namespace Typhoon\Reflection\Internal\TypedMap;
  * @psalm-internal Typhoon
  * @psalm-immutable
  * @implements \ArrayAccess<Key, mixed>
- * @implements \IteratorAggregate<Key, mixed>
  */
-final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
+final class TypedMap implements \ArrayAccess
 {
     /**
      * @var array<non-empty-string, mixed>
@@ -25,16 +24,6 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
     private static function keyToString(Key $key): string
     {
         return $key::class . '::' . $key->name;
-    }
-
-    /**
-     * @psalm-pure
-     * @param non-empty-string $stringKey
-     */
-    private static function keyFromString(string $stringKey): Key
-    {
-        /** @var Key */
-        return \constant($stringKey);
     }
 
     /**
@@ -131,21 +120,6 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
     public function offsetUnset(mixed $offset): void
     {
         throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
-    }
-
-    /**
-     * @return \Generator<Key, mixed>
-     */
-    public function getIterator(): \Generator
-    {
-        foreach ($this->values as $key => $value) {
-            yield self::keyFromString($key) => $value;
-        }
-    }
-
-    public function count(): int
-    {
-        return \count($this->values);
     }
 
     public function __serialize(): array
