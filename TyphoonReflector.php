@@ -307,7 +307,7 @@ final class TyphoonReflector
                     static $started = false;
 
                     if ($started) {
-                        throw new \LogicException(sprintf('Infinite recursive reflection of %s detected', $id->describe()));
+                        throw new \LogicException(\sprintf('Infinite recursive reflection of %s detected', $id->describe()));
                     }
 
                     $started = true;
@@ -351,7 +351,7 @@ final class TyphoonReflector
                 }
 
                 yield $idWithoutColumn => static function () use ($idWithoutColumn, $idsOnLine): never {
-                    throw new \RuntimeException(sprintf(
+                    throw new \RuntimeException(\sprintf(
                         'Cannot reflect %s, because %d anonymous classes are declared at columns %s. ' .
                         'Use TyphoonReflector::reflectAnonymousClass() with a $column argument to reflect the exact class you need',
                         $idWithoutColumn->describe(),

@@ -340,7 +340,7 @@ enum NativeReflector
         }
 
         if (!$reflectionType instanceof \ReflectionNamedType) {
-            throw new \LogicException(sprintf('Unknown reflection type %s', $reflectionType::class));
+            throw new \LogicException(\sprintf('Unknown reflection type %s', $reflectionType::class));
         }
 
         $name = $reflectionType->getName();

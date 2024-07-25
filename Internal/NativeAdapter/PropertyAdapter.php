@@ -34,7 +34,7 @@ final class PropertyAdapter extends \ReflectionProperty
         return match ($name) {
             'name' => $this->reflection->id->name,
             'class' => $this->getDeclaringClass()->name,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
+            default => new \LogicException(\sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
 
@@ -186,7 +186,7 @@ final class PropertyAdapter extends \ReflectionProperty
             return;
         }
 
-        $class = $this->reflection->id->class->name ?? throw new \LogicException(sprintf(
+        $class = $this->reflection->id->class->name ?? throw new \LogicException(\sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->class->describe(),
         ));

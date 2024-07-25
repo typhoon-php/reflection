@@ -93,7 +93,7 @@ final class ConstantExpressionCompiler
                 if: $this->compile($expr->if),
                 else: $this->compile($expr->else),
             ),
-            default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
+            default => throw new \LogicException(\sprintf('Unsupported expression %s', $expr::class)),
         };
     }
 

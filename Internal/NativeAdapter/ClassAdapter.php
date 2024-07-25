@@ -74,7 +74,7 @@ final class ClassAdapter extends \ReflectionClass
     {
         return match ($name) {
             'name' => $this->getName(),
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
+            default => new \LogicException(\sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
 
@@ -200,7 +200,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function getName(): string
     {
-        return $this->reflection->id->name ?? throw new \ReflectionException(sprintf(
+        return $this->reflection->id->name ?? throw new \ReflectionException(\sprintf(
             'Runtime name of anonymous class %s is not available',
             $this->reflection->id->describe(),
         ));
@@ -339,24 +339,24 @@ final class ClassAdapter extends \ReflectionClass
             try {
                 $interfaceId = Id::class($interface);
             } catch (\InvalidArgumentException) {
-                throw new \ReflectionException(sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
+                throw new \ReflectionException(\sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
             }
 
             if ($interfaceId instanceof AnonymousClassId) {
-                throw new \ReflectionException(sprintf('%s is not an interface', self::normalizeNameForException($interface)));
+                throw new \ReflectionException(\sprintf('%s is not an interface', self::normalizeNameForException($interface)));
             }
 
             try {
                 $interfaceReflection = $this->reflector->reflect($interfaceId)->toNativeReflection();
             } catch (DeclarationNotFound) {
-                throw new \ReflectionException(sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
+                throw new \ReflectionException(\sprintf('Interface "%s" does not exist', self::normalizeNameForException($interface)));
             }
         } else {
             $interfaceReflection = $interface;
         }
 
         if (!$interfaceReflection->isInterface()) {
-            throw new \ReflectionException(sprintf('%s is not an interface', self::normalizeNameForException($interfaceReflection->name)));
+            throw new \ReflectionException(\sprintf('%s is not an interface', self::normalizeNameForException($interfaceReflection->name)));
         }
 
         return $this->reflection->isInstanceOf($interfaceReflection->name);
@@ -453,13 +453,13 @@ final class ClassAdapter extends \ReflectionClass
             try {
                 $classId = Id::class($class);
             } catch (\InvalidArgumentException) {
-                throw new \ReflectionException(sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
+                throw new \ReflectionException(\sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
             }
 
             try {
                 $this->reflector->reflect($classId);
             } catch (DeclarationNotFound) {
-                throw new \ReflectionException(sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
+                throw new \ReflectionException(\sprintf('Class "%s" does not exist', self::normalizeNameForException($class)));
             }
 
             return $this->reflection->isInstanceOf($class);
@@ -539,7 +539,7 @@ final class ClassAdapter extends \ReflectionClass
             return;
         }
 
-        $class = $this->reflection->id->name ?? throw new \LogicException(sprintf(
+        $class = $this->reflection->id->name ?? throw new \LogicException(\sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->describe(),
         ));

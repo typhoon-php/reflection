@@ -34,12 +34,12 @@ final class NameMap implements \ArrayAccess, \IteratorAggregate, \Countable
     public function offsetGet(mixed $offset): mixed
     {
         if (\is_int($offset)) {
-            $name = $this->names()[$offset] ?? throw new \RuntimeException(sprintf('Offset %s is not set', $offset));
+            $name = $this->names()[$offset] ?? throw new \RuntimeException(\sprintf('Offset %s is not set', $offset));
 
             return $this->values[$name];
         }
 
-        return $this->values[$offset] ?? throw new \RuntimeException(sprintf('Offset %s is not set', $offset));
+        return $this->values[$offset] ?? throw new \RuntimeException(\sprintf('Offset %s is not set', $offset));
     }
 
     /**
@@ -147,11 +147,11 @@ final class NameMap implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetSet(mixed $offset, mixed $value): never
     {
-        throw new \BadMethodCallException(sprintf('%s is immutable', self::class));
+        throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
     }
 
     public function offsetUnset(mixed $offset): never
     {
-        throw new \BadMethodCallException(sprintf('%s is immutable', self::class));
+        throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
     }
 }

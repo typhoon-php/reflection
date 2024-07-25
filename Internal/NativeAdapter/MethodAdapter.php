@@ -32,7 +32,7 @@ final class MethodAdapter extends \ReflectionMethod
      */
     public static function createFromMethodName(string $method): never
     {
-        throw new \BadMethodCallException(sprintf('%s must never be called', __METHOD__));
+        throw new \BadMethodCallException(\sprintf('%s must never be called', __METHOD__));
     }
 
     /**
@@ -43,7 +43,7 @@ final class MethodAdapter extends \ReflectionMethod
         return match ($name) {
             'name' => $this->getName(),
             'class' => $this->getDeclaringClass()->name,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
+            default => new \LogicException(\sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
 
@@ -344,7 +344,7 @@ final class MethodAdapter extends \ReflectionMethod
             return;
         }
 
-        $class = $this->reflection->id->class->name ?? throw new \LogicException(sprintf(
+        $class = $this->reflection->id->class->name ?? throw new \LogicException(\sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
             $this->reflection->id->class->describe(),
         ));

@@ -53,7 +53,7 @@ final class PhpDocConstantExpressionCompiler
             $expr instanceof ConstExprStringNode => Value::from($expr->value),
             $expr instanceof ConstExprArrayNode => $this->compileArray($expr),
             $expr instanceof ConstFetchNode => $this->compileConstFetch($expr),
-            default => throw new \LogicException(sprintf('Unsupported expression %s', $expr::class)),
+            default => throw new \LogicException(\sprintf('Unsupported expression %s', $expr::class)),
         };
     }
 

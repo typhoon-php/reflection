@@ -15,6 +15,6 @@ final class NonConvertableType extends \ReflectionException
 {
     public function __construct(Type $type)
     {
-        parent::__construct(sprintf('Cannot convert type %s to native ReflectionType', stringify($type)));
+        parent::__construct(\sprintf('Cannot convert type %s to native ReflectionType', stringify($type)));
     }
 }

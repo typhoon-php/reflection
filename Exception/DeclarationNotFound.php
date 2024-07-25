@@ -18,6 +18,6 @@ final class DeclarationNotFound extends \RuntimeException implements ReflectionE
     public function __construct(
         public readonly ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id,
     ) {
-        parent::__construct(sprintf('%s not found', ucfirst($id->describe())));
+        parent::__construct(\sprintf('%s not found', ucfirst($id->describe())));
     }
 }

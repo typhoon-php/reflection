@@ -453,7 +453,7 @@ final class NodeReflector
                 'iterable' => types::iterable,
                 'resource' => types::resource,
                 'mixed' => types::mixed,
-                default => throw new \LogicException(sprintf('Native type "%s" is not supported', $node->name)),
+                default => throw new \LogicException(\sprintf('Native type "%s" is not supported', $node->name)),
             };
         }
 
@@ -462,7 +462,7 @@ final class NodeReflector
         }
 
         /** @psalm-suppress MixedArgument */
-        throw new \LogicException(sprintf('Type node of class %s is not supported', $node::class));
+        throw new \LogicException(\sprintf('Type node of class %s is not supported', $node::class));
     }
 
     private function reflectLocation(Node $node): Location

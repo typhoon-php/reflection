@@ -31,7 +31,7 @@ final class GeneratorVisitor extends NodeVisitorAbstract
             return $attribute;
         }
 
-        throw new \LogicException(sprintf('%s was not used during traversal', self::class));
+        throw new \LogicException(\sprintf('%s was not used during traversal', self::class));
     }
 
     public function beforeTraverse(array $nodes): ?array

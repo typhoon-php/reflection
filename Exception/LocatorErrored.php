@@ -19,6 +19,6 @@ final class LocatorErrored extends \RuntimeException implements ReflectionExcept
         public readonly ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $declarationId,
         \Throwable $error,
     ) {
-        parent::__construct(sprintf('An error occurred when locating %s', $declarationId->describe()), previous: $error);
+        parent::__construct(\sprintf('An error occurred when locating %s', $declarationId->describe()), previous: $error);
     }
 }

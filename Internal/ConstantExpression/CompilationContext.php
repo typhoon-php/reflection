@@ -128,7 +128,7 @@ final class CompilationContext
             return Value::from('');
         }
 
-        return Value::from(sprintf('%s::%s', $id->class->name ?? '', $id->name));
+        return Value::from(\sprintf('%s::%s', $id->class->name ?? '', $id->name));
     }
 
     /**

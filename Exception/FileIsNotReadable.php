@@ -11,6 +11,6 @@ final class FileIsNotReadable extends \RuntimeException implements ReflectionExc
 {
     public function __construct(string $file, ?\Throwable $previous = null)
     {
-        parent::__construct(sprintf('File "%s" does not exist or is not readable', $file), previous: $previous);
+        parent::__construct(\sprintf('File "%s" does not exist or is not readable', $file), previous: $previous);
     }
 }

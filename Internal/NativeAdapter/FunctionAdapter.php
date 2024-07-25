@@ -34,7 +34,7 @@ final class FunctionAdapter extends \ReflectionFunction
     {
         return match ($name) {
             'name' => $this->getName(),
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
+            default => new \LogicException(\sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
 
@@ -295,7 +295,7 @@ final class FunctionAdapter extends \ReflectionFunction
         }
 
         if ($this->reflection->id instanceof AnonymousFunctionId) {
-            throw new \LogicException(sprintf('Cannot natively reflect %s', $this->reflection->id->describe()));
+            throw new \LogicException(\sprintf('Cannot natively reflect %s', $this->reflection->id->describe()));
         }
 
         /** @psalm-suppress ArgumentTypeCoercion */

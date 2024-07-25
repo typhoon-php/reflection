@@ -125,12 +125,12 @@ final class TypedMap implements \ArrayAccess, \IteratorAggregate, \Countable
 
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        throw new \BadMethodCallException(sprintf('%s is immutable', self::class));
+        throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
     }
 
     public function offsetUnset(mixed $offset): void
     {
-        throw new \BadMethodCallException(sprintf('%s is immutable', self::class));
+        throw new \BadMethodCallException(\sprintf('%s is immutable', self::class));
     }
 
     /**

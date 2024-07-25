@@ -39,7 +39,7 @@ final class ParameterAdapter extends \ReflectionParameter
     {
         return match ($name) {
             'name' => $this->reflection->id->name,
-            default => new \LogicException(sprintf('Undefined property %s::$%s', self::class, $name)),
+            default => new \LogicException(\sprintf('Undefined property %s::$%s', self::class, $name)),
         };
     }
 
@@ -219,10 +219,10 @@ final class ParameterAdapter extends \ReflectionParameter
         }
 
         if ($functionId instanceof AnonymousFunctionId) {
-            throw new \LogicException(sprintf('Cannot natively reflect %s', $functionId->describe()));
+            throw new \LogicException(\sprintf('Cannot natively reflect %s', $functionId->describe()));
         }
 
-        $class = $functionId->class->name ?? throw new \LogicException(sprintf(
+        $class = $functionId->class->name ?? throw new \LogicException(\sprintf(
             "Cannot natively reflect %s, because it's runtime name is not available",
             $functionId->class->describe(),
         ));

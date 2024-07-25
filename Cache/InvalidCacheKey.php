@@ -14,6 +14,6 @@ final class InvalidCacheKey extends \InvalidArgumentException implements Invalid
 {
     public function __construct(string $key)
     {
-        parent::__construct(sprintf('"%s" is not a valid PSR-16 cache key', $key));
+        parent::__construct(\sprintf('"%s" is not a valid PSR-16 cache key', $key));
     }
 }

@@ -23,7 +23,7 @@ final class DeclarationNotFoundInResource extends \LogicException implements Ref
     ) {
         $file = $data[Data::File];
 
-        parent::__construct(sprintf(
+        parent::__construct(\sprintf(
             '%s not found in %s',
             ucfirst($id->describe()),
             $file ?? substr($data[Data::Code], 0, 50),
