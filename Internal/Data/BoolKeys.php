@@ -29,6 +29,7 @@ enum BoolKeys implements OptionalKey
     case Variadic;
     case Annotated;
     case Optional;
+    case Cloneable;
 
     public function default(TypedMap $map): mixed
     {

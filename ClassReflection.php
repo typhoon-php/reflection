@@ -265,6 +265,11 @@ final class ClassReflection
         };
     }
 
+    public function isCloneable(): bool
+    {
+        return $this->data[Data::Cloneable];
+    }
+
     /**
      * Unlike {@see \ReflectionClass::getNamespaceName()}, this method returns the actual namespace
      * an anonymous class is defined in.

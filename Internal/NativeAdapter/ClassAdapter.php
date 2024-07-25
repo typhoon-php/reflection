@@ -387,9 +387,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isCloneable(): bool
     {
-        return $this->reflection->isClass()
-            && !$this->reflection->isAbstract()
-            && (!isset($this->nativeMethods()['__clone']) || $this->nativeMethods()['__clone']->isPublic());
+        return $this->reflection->isCloneable();
     }
 
     public function isEnum(): bool

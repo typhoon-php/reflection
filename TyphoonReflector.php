@@ -28,6 +28,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParameterToProper
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributeRepeated;
+use Typhoon\Reflection\Internal\CompleteReflection\SetClassCloneable;
 use Typhoon\Reflection\Internal\CompleteReflection\SetInterfaceMethodAbstract;
 use Typhoon\Reflection\Internal\CompleteReflection\SetParameterIndex;
 use Typhoon\Reflection\Internal\CompleteReflection\SetParameterOptional;
@@ -84,6 +85,7 @@ final class TyphoonReflector
                 CompleteEnum::Instance,
                 SetStringableInterface::Instance,
                 SetInterfaceMethodAbstract::Instance,
+                SetClassCloneable::Instance,
                 SetReadonlyClassPropertyReadonly::Instance,
                 SetAttributeRepeated::Instance,
                 SetParameterIndex::Instance,
