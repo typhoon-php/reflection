@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Locator;
 
 use Typhoon\DeclarationId\NamedClassId;
-use function Typhoon\Reflection\Internal\classLikeExists;
+use function Typhoon\Reflection\Internal\class_like_exists;
 
 /**
  * @api
@@ -18,7 +18,7 @@ final class OnlyLoadedClassLocator implements NamedClassLocator
 
     public function locate(NamedClassId $id): ?Resource
     {
-        if (classLikeExists($id->name)) {
+        if (class_like_exists($id->name)) {
             return $this->namedClassLocator->locate($id);
         }
 

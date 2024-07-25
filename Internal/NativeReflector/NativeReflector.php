@@ -21,7 +21,7 @@ use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
-use function Typhoon\Reflection\Internal\classLikeExists;
+use function Typhoon\Reflection\Internal\class_like_exists;
 
 /**
  * @internal
@@ -41,7 +41,7 @@ enum NativeReflector
             return null;
         }
 
-        if ($id instanceof AnonymousClassId || !classLikeExists($id->name, autoload: false)) {
+        if ($id instanceof AnonymousClassId || !class_like_exists($id->name, autoload: false)) {
             return null;
         }
 

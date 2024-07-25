@@ -87,7 +87,7 @@ function column(string $string, int $offset): int
  * @psalm-internal Typhoon\Reflection
  * @psalm-assert-if-true class-string $name
  */
-function classLikeExists(string $name, bool $autoload = true): bool
+function class_like_exists(string $name, bool $autoload = true): bool
 {
     return class_exists($name, $autoload) || interface_exists($name, $autoload) || trait_exists($name, $autoload);
 }
