@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Internal\Inheritance;
 
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * Used for properties, class constants and method parameters.

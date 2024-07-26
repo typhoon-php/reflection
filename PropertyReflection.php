@@ -8,8 +8,8 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\PropertyAdapter;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

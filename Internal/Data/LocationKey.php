@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\Internal\TypedMap\OptionalKey;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Location;
+use Typhoon\TypedMap\OptionalKey;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

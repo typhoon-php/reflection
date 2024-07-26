@@ -6,8 +6,8 @@ namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\ChangeDetector\ChangeDetector;
 use Typhoon\ChangeDetector\InMemoryChangeDetector;
-use Typhoon\Reflection\Internal\TypedMap\OptionalKey;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\OptionalKey;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

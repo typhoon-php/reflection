@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Internal;
 
 use Psr\SimpleCache\CacheInterface;
 use Typhoon\DeclarationId\Id;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

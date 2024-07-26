@@ -11,7 +11,7 @@ use Typhoon\Reflection\Internal\ConstantHook;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\FunctionHook;
 use Typhoon\Reflection\Internal\Hooks;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

@@ -6,7 +6,7 @@ namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\NamedClassId;
-use Typhoon\Reflection\Internal\TypedMap\Key;
+use Typhoon\TypedMap\Key;
 
 /**
  * @internal

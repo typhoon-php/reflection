@@ -6,8 +6,8 @@ namespace Typhoon\Reflection\Internal;
 
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\TyphoonReflector;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

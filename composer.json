@@ -17,7 +17,8 @@
         "psr/simple-cache": "^3.0",
         "typhoon/change-detector": "^0.4",
         "typhoon/declaration-id": "^0.4",
-        "typhoon/type": "^0.4"
+        "typhoon/type": "^0.4",
+        "typhoon/typed-map": "^0.4"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

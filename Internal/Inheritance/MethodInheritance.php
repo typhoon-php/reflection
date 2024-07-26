@@ -7,7 +7,7 @@ namespace Typhoon\Reflection\Internal\Inheritance;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

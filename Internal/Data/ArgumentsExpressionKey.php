@@ -6,8 +6,8 @@ namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\ConstantExpression\Value;
-use Typhoon\Reflection\Internal\TypedMap\OptionalKey;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\OptionalKey;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

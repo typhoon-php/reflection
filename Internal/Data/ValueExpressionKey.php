@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\Data;
 
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
-use Typhoon\Reflection\Internal\TypedMap\Key;
+use Typhoon\TypedMap\Key;
 
 /**
  * @internal

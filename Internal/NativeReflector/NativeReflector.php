@@ -18,9 +18,9 @@ use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
+use Typhoon\TypedMap\TypedMap;
 use function Typhoon\Reflection\Internal\class_like_exists;
 
 /**

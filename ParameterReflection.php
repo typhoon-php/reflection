@@ -9,8 +9,8 @@ use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

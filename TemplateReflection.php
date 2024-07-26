@@ -6,9 +6,9 @@ namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\TemplateId;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
 use Typhoon\Type\Variance;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

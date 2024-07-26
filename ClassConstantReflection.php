@@ -9,8 +9,8 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassConstantAdapter;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Type\Type;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

@@ -12,9 +12,9 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\ConstantExpression\CompilationContext;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Type;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

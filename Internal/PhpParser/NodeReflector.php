@@ -45,10 +45,10 @@ use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfo;
 use Typhoon\Reflection\Internal\NativeAdapter\NativeTraitInfoKey;
 use Typhoon\Reflection\Internal\Type\IsNativeTypeNullable;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Location;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal

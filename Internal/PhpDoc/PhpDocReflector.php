@@ -33,12 +33,12 @@ use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
 use Typhoon\Reflection\Internal\FunctionHook;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Location;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 use Typhoon\Type\Variance;
+use Typhoon\TypedMap\TypedMap;
 use function Typhoon\Reflection\Internal\column;
 use function Typhoon\Reflection\Internal\map;
 

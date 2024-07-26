@@ -45,7 +45,6 @@ use Typhoon\Reflection\Internal\NativeReflector\NativeReflector;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
 use Typhoon\Reflection\Internal\PhpParser\CodeReflector;
 use Typhoon\Reflection\Internal\PhpParser\NodeReflector;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
 use Typhoon\Reflection\Locator\AnonymousLocator;
 use Typhoon\Reflection\Locator\ComposerLocator;
 use Typhoon\Reflection\Locator\ConstantLocator;
@@ -58,6 +57,7 @@ use Typhoon\Reflection\Locator\NoSymfonyPolyfillLocator;
 use Typhoon\Reflection\Locator\OnlyLoadedClassLocator;
 use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Reflection\Locator\ScannedResourceLocator;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @api

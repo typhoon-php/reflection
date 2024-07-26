@@ -13,7 +13,7 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
-use Typhoon\Reflection\Internal\TypedMap\TypedMap;
+use Typhoon\TypedMap\TypedMap;
 
 /**
  * @internal
