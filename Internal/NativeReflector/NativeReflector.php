@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\NativeReflector;
 
-use Typhoon\ChangeDetector\InMemoryChangeDetector;
+use Typhoon\ChangeDetector\ChangeDetector;
+use Typhoon\ChangeDetector\PhpExtensionVersionChangeDetector;
+use Typhoon\ChangeDetector\PhpVersionChangeDetector;
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
@@ -29,6 +31,8 @@ use function Typhoon\Reflection\Internal\class_like_exists;
  */
 enum NativeReflector
 {
+    private const CORE_EXTENSION = 'Core';
+
     public static function reflectData(NamedFunctionId|NamedClassId|AnonymousClassId $id): ?TypedMap
     {
         if ($id instanceof NamedFunctionId && \function_exists($id->name)) {
@@ -54,13 +58,22 @@ enum NativeReflector
         return null;
     }
 
-    public static function reflectClass(\ReflectionClass $class): TypedMap
+    private static function reflectFunction(\ReflectionFunction $function): TypedMap
+    {
+        return self::reflectFunctionLike($function, static: $function->getClosureCalledClass(), self: $function->getClosureScopeClass())
+            ->with(Data::ChangeDetector, self::reflectChangeDetector($function))
+            ->with(Data::InternallyDefined, true)
+            ->with(Data::PhpExtension, $function->getExtensionName() === false ? null : $function->getExtensionName())
+            ->with(Data::Namespace, $function->getNamespaceName());
+    }
+
+    private static function reflectClass(\ReflectionClass $class): TypedMap
     {
         $data = (new TypedMap())
             ->with(Data::NativeFinal, $class->isFinal())
             ->with(Data::Abstract, (bool) ($class->getModifiers() & \ReflectionClass::IS_EXPLICIT_ABSTRACT))
             ->with(Data::NativeReadonly, self::reflectClassNativeReadonly($class))
-            ->with(Data::ChangeDetector, new InMemoryChangeDetector()) // todo
+            ->with(Data::ChangeDetector, self::reflectChangeDetector($class))
             ->with(Data::InternallyDefined, true)
             ->with(Data::PhpExtension, $class->getExtensionName() === false ? null : $class->getExtensionName())
             ->with(Data::ClassKind, match (true) {
@@ -84,12 +97,23 @@ enum NativeReflector
         return $data;
     }
 
-    public static function reflectFunction(\ReflectionFunction $function): TypedMap
+    private static function reflectChangeDetector(\ReflectionFunction|\ReflectionClass $reflection): ChangeDetector
     {
-        return self::reflectFunctionLike($function, static: $function->getClosureCalledClass(), self: $function->getClosureScopeClass())
-            ->with(Data::InternallyDefined, true)
-            ->with(Data::PhpExtension, $function->getExtensionName() === false ? null : $function->getExtensionName())
-            ->with(Data::Namespace, $function->getNamespaceName());
+        $extension = $reflection->getExtension();
+
+        if ($extension === null) {
+            throw new \LogicException(sprintf(
+                'Internal %s %s is expected to have an extension',
+                $reflection instanceof \ReflectionFunction ? 'function' : 'class',
+                $reflection->name
+            ));
+        }
+
+        if ($extension->name === self::CORE_EXTENSION) {
+            return new PhpVersionChangeDetector();
+        }
+
+        return PhpExtensionVersionChangeDetector::fromReflection($extension);
     }
 
     /**
