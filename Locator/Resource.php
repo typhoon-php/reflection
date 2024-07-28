@@ -40,38 +40,28 @@ final class Resource
      */
     public static function fromFile(string $file, TypedMap $data = new TypedMap(), iterable $hooks = []): self
     {
-        $handle = @fopen($file, 'r');
+        $mtime = @filemtime($file);
 
-        if ($handle === false) {
+        if ($mtime === false) {
             throw new FileIsNotReadable($file);
         }
 
-        if (!@flock($handle, LOCK_SH)) {
-            throw new \RuntimeException('Failed to acquire shared lock on file ' . $file);
+        $code = @file_get_contents($file);
+
+        if ($code === false) {
+            throw new FileIsNotReadable($file);
         }
 
-        try {
-            $mtime = @filemtime($file);
-
-            if ($mtime === false) {
-                throw new FileIsNotReadable($file);
-            }
-
-            $code = @file_get_contents($file);
-
-            if ($code === false) {
-                throw new FileIsNotReadable($file);
-            }
-
-            return new self(
-                data: $data
-                    ->with(Data::Code, $code)
-                    ->with(Data::File, $file)
-                    ->with(Data::ChangeDetector, new FileChangeDetector($file, $mtime, md5($code))),
-                hooks: new Hooks($hooks),
-            );
-        } finally {
-            @fclose($handle);
-        }
+        return new self(
+            data: $data
+                ->with(Data::Code, $code)
+                ->with(Data::File, $file)
+                ->with(Data::ChangeDetector, new FileChangeDetector(
+                    file: $file,
+                    mtime: $mtime,
+                    xxh3: hash(FileChangeDetector::HASHING_ALGORITHM, $code),
+                )),
+            hooks: new Hooks($hooks),
+        );
     }
 }
