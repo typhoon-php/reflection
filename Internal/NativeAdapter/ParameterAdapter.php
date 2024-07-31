@@ -6,7 +6,6 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\ConstantExpression\ClassConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\ConstantFetch;
 use Typhoon\Reflection\Internal\ConstantExpression\MagicClassInTrait;
@@ -15,6 +14,7 @@ use Typhoon\Reflection\Internal\ConstantExpression\SelfClass;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Type\IsNativeTypeNullable;
 use Typhoon\Reflection\ParameterReflection;
+use Typhoon\Reflection\TypeKind;
 use Typhoon\Reflection\TyphoonReflector;
 
 /**
@@ -57,7 +57,7 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function allowsNull(): bool
     {
-        $nativeType = $this->reflection->type(DeclarationKind::Native);
+        $nativeType = $this->reflection->type(TypeKind::Native);
 
         return $nativeType === null || $nativeType->accept(new IsNativeTypeNullable());
     }
@@ -145,12 +145,12 @@ final class ParameterAdapter extends \ReflectionParameter
 
     public function getType(): ?\ReflectionType
     {
-        return $this->reflection->type(DeclarationKind::Native)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->type(TypeKind::Native)?->accept(new ToNativeTypeConverter());
     }
 
     public function hasType(): bool
     {
-        return $this->reflection->type(DeclarationKind::Native) !== null;
+        return $this->reflection->type(TypeKind::Native) !== null;
     }
 
     public function isArray(): bool

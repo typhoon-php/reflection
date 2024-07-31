@@ -7,7 +7,7 @@ namespace Typhoon\Reflection;
 /**
  * @api
  */
-enum DeclarationKind
+enum ModifierKind
 {
     case Resolved;
     case Native;

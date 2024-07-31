@@ -247,21 +247,21 @@ final class ClassReflection
         return $this->data[Data::BackingType];
     }
 
-    public function isFinal(DeclarationKind $kind = DeclarationKind::Resolved): bool
+    public function isFinal(ModifierKind $kind = ModifierKind::Resolved): bool
     {
         return match ($kind) {
-            DeclarationKind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
-            DeclarationKind::Native => $this->data[Data::NativeFinal],
-            DeclarationKind::Annotated => $this->data[Data::AnnotatedFinal],
+            ModifierKind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
+            ModifierKind::Native => $this->data[Data::NativeFinal],
+            ModifierKind::Annotated => $this->data[Data::AnnotatedFinal],
         };
     }
 
-    public function isReadonly(DeclarationKind $kind = DeclarationKind::Resolved): bool
+    public function isReadonly(ModifierKind $kind = ModifierKind::Resolved): bool
     {
         return match ($kind) {
-            DeclarationKind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
-            DeclarationKind::Native => $this->data[Data::NativeReadonly],
-            DeclarationKind::Annotated => $this->data[Data::AnnotatedReadonly],
+            ModifierKind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
+            ModifierKind::Native => $this->data[Data::NativeReadonly],
+            ModifierKind::Annotated => $this->data[Data::AnnotatedReadonly],
         };
     }
 

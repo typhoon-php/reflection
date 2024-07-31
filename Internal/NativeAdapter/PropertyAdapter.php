@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
-use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\ModifierKind;
 use Typhoon\Reflection\PropertyReflection;
+use Typhoon\Reflection\TypeKind;
 use Typhoon\Reflection\TyphoonReflector;
 
 /**
@@ -98,7 +99,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function getType(): ?\ReflectionType
     {
-        return $this->reflection->type(DeclarationKind::Native)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->type(TypeKind::Native)?->accept(new ToNativeTypeConverter());
     }
 
     public function getValue(?object $object = null): mixed
@@ -115,7 +116,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function hasType(): bool
     {
-        return $this->reflection->type(DeclarationKind::Native) !== null;
+        return $this->reflection->type(TypeKind::Native) !== null;
     }
 
     public function isDefault(): bool
@@ -152,7 +153,7 @@ final class PropertyAdapter extends \ReflectionProperty
 
     public function isReadonly(): bool
     {
-        return $this->reflection->isReadonly(DeclarationKind::Native);
+        return $this->reflection->isReadonly(ModifierKind::Native);
     }
 
     public function isStatic(): bool

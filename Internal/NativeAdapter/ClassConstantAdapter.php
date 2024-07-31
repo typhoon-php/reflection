@@ -6,8 +6,9 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\Reflection\ClassConstantReflection;
-use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\ModifierKind;
+use Typhoon\Reflection\TypeKind;
 use Typhoon\Reflection\TyphoonReflector;
 
 /**
@@ -107,7 +108,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
      */
     public function getType(): ?\ReflectionType
     {
-        return $this->reflection->type(DeclarationKind::Native)?->accept(new ToNativeTypeConverter());
+        return $this->reflection->type(TypeKind::Native)?->accept(new ToNativeTypeConverter());
     }
 
     public function getValue(): mixed
@@ -120,7 +121,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
      */
     public function hasType(): bool
     {
-        return $this->reflection->type(DeclarationKind::Native) !== null;
+        return $this->reflection->type(TypeKind::Native) !== null;
     }
 
     public function isEnumCase(): bool
@@ -130,7 +131,7 @@ final class ClassConstantAdapter extends \ReflectionClassConstant
 
     public function isFinal(): bool
     {
-        return $this->reflection->isFinal(DeclarationKind::Native);
+        return $this->reflection->isFinal(ModifierKind::Native);
     }
 
     public function isPrivate(): bool

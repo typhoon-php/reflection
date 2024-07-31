@@ -109,12 +109,12 @@ final class ClassConstantReflection
         return $visibility === null || $visibility === Visibility::Public;
     }
 
-    public function isFinal(DeclarationKind $kind = DeclarationKind::Resolved): bool
+    public function isFinal(ModifierKind $kind = ModifierKind::Resolved): bool
     {
         return match ($kind) {
-            DeclarationKind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
-            DeclarationKind::Native => $this->data[Data::NativeFinal],
-            DeclarationKind::Annotated => $this->data[Data::AnnotatedFinal],
+            ModifierKind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
+            ModifierKind::Native => $this->data[Data::NativeFinal],
+            ModifierKind::Annotated => $this->data[Data::AnnotatedFinal],
         };
     }
 
@@ -143,9 +143,9 @@ final class ClassConstantReflection
     }
 
     /**
-     * @return ($kind is DeclarationKind::Resolved ? Type : ?Type)
+     * @return ($kind is TypeKind::Resolved ? Type : ?Type)
      */
-    public function type(DeclarationKind $kind = DeclarationKind::Resolved): ?Type
+    public function type(TypeKind $kind = TypeKind::Resolved): ?Type
     {
         return $this->data[Data::Type]->get($kind);
     }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\Data;
 
-use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Internal\Inheritance\TypeResolver;
+use Typhoon\Reflection\TypeKind;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
@@ -58,14 +58,14 @@ final class TypeData
     }
 
     /**
-     * @return ($kind is DeclarationKind::Resolved ? Type : ?Type)
+     * @return ($kind is TypeKind::Resolved ? Type : ?Type)
      */
-    public function get(DeclarationKind $kind = DeclarationKind::Resolved): ?Type
+    public function get(TypeKind $kind = TypeKind::Resolved): ?Type
     {
         return match ($kind) {
-            DeclarationKind::Resolved => $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed,
-            DeclarationKind::Native => $this->native,
-            DeclarationKind::Annotated => $this->annotated,
+            TypeKind::Resolved => $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed,
+            TypeKind::Native => $this->native,
+            TypeKind::Annotated => $this->annotated,
         };
     }
 }

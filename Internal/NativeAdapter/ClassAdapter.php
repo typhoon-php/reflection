@@ -10,10 +10,10 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\ClassConstantReflection;
 use Typhoon\Reflection\ClassReflection;
 use Typhoon\Reflection\Collection;
-use Typhoon\Reflection\DeclarationKind;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\MethodReflection;
+use Typhoon\Reflection\ModifierKind;
 use Typhoon\Reflection\PropertyReflection;
 use Typhoon\Reflection\ReflectionCollections;
 use Typhoon\Reflection\TyphoonReflector;
@@ -422,7 +422,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isFinal(): bool
     {
-        return $this->reflection->isFinal(DeclarationKind::Native);
+        return $this->reflection->isFinal(ModifierKind::Native);
     }
 
     public function isInstance(object $object): bool
@@ -465,7 +465,7 @@ final class ClassAdapter extends \ReflectionClass
 
     public function isReadonly(): bool
     {
-        return $this->reflection->isReadonly(DeclarationKind::Native);
+        return $this->reflection->isReadonly(ModifierKind::Native);
     }
 
     public function isSubclassOf(string|\ReflectionClass $class): bool
