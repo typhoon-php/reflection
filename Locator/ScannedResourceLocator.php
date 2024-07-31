@@ -25,8 +25,8 @@ final class ScannedResourceLocator implements ConstantLocator, NamedFunctionLoca
      * @param list<Id> $ids
      */
     public function __construct(
-        private readonly Resource $resource,
         array $ids,
+        private readonly Resource $resource,
     ) {
         $idsMap = [];
 

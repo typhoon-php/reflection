@@ -258,7 +258,7 @@ final class TyphoonReflector
 
         return new self(
             codeReflector: $this->codeReflector,
-            locators: $this->locators->with(new ScannedResourceLocator($resource, $reflectedResource->ids())),
+            locators: $this->locators->with(new ScannedResourceLocator($reflectedResource->ids(), $resource)),
             hooks: $this->hooks,
             cache: $this->cache,
             buffer: $this->buffer->withMap($reflectedResource),
