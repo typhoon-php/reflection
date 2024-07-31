@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Cache;
+namespace Typhoon\Reflection\Internal\Cache;
 
 use Psr\SimpleCache\InvalidArgumentException;
 
 /**
  * @internal
- * @psalm-internal Typhoon\Reflection\Cache
+ * @psalm-internal Typhoon\Reflection\Internal\Cache
  */
 final class InvalidCacheKey extends \InvalidArgumentException implements InvalidArgumentException
 {

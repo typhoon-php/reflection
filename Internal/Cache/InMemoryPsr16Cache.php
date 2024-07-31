@@ -2,23 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Cache;
+namespace Typhoon\Reflection\Internal\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 
 /**
- * @api
+ * @internal
+ * @psalm-internal Typhoon\Reflection
  */
-final class InMemoryCache implements CacheInterface
+final class InMemoryPsr16Cache implements CacheInterface
 {
+    private const CAPACITY = 1000;
+
     /**
      * @var array<string, mixed>
      */
     private array $values = [];
-
-    public function __construct(
-        private readonly int $capacity = 1000,
-    ) {}
 
     public function get(string $key, mixed $default = null): mixed
     {
@@ -45,6 +44,9 @@ final class InMemoryCache implements CacheInterface
         return true;
     }
 
+    /**
+     * @psalm-suppress PossiblyUnusedReturnValue
+     */
     public function delete(string $key): bool
     {
         self::validateKey($key);
@@ -103,8 +105,8 @@ final class InMemoryCache implements CacheInterface
 
     private function evict(): void
     {
-        if (\count($this->values) > $this->capacity) {
-            $this->values = \array_slice($this->values, -$this->capacity);
+        if (\count($this->values) > self::CAPACITY) {
+            $this->values = \array_slice($this->values, -self::CAPACITY);
         }
     }
 

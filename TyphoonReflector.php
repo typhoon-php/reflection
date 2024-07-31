@@ -21,9 +21,9 @@ use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Annotated\CustomTypeResolver;
 use Typhoon\Reflection\Annotated\NullCustomTypeResolver;
-use Typhoon\Reflection\Cache\InMemoryCache;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
-use Typhoon\Reflection\Internal\Cache;
+use Typhoon\Reflection\Internal\Cache\Cache;
+use Typhoon\Reflection\Internal\Cache\InMemoryPsr16Cache;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUpInternallyDefined;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnum;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParameterToProperty;
@@ -71,7 +71,7 @@ final class TyphoonReflector
      */
     public static function build(
         ?iterable $locators = null,
-        CacheInterface $cache = new InMemoryCache(),
+        ?CacheInterface $cache = null,
         CustomTypeResolver $customTypeResolver = new NullCustomTypeResolver(),
         ?Parser $phpParser = null,
     ): self {
@@ -101,7 +101,7 @@ final class TyphoonReflector
                 RemoveCode::Instance,
                 CleanUpInternallyDefined::Instance,
             ]),
-            cache: new Cache($cache),
+            cache: new Cache($cache ?? self::defaultInMemoryCache()),
         );
     }
 
@@ -125,6 +125,11 @@ final class TyphoonReflector
         }
 
         return $locators;
+    }
+
+    public static function defaultInMemoryCache(): CacheInterface
+    {
+        return new InMemoryPsr16Cache();
     }
 
     /**
