@@ -41,8 +41,8 @@ final class CodeReflector
             : FixNodeLocationVisitor::fromCode($code);
         $nameResolver = new NameResolver();
         $contextVisitor = new ContextVisitor(
-            file: $file,
             code: $code,
+            file: $file,
             nameContext: $nameResolver->getNameContext(),
             annotatedDeclarationsDiscoverer: $this->annotatedDeclarationsDiscoverer,
         );

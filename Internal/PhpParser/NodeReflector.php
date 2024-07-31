@@ -59,14 +59,13 @@ final class NodeReflector
     public function reflectClassLike(ClassLike $node): TypedMap
     {
         $context = ContextVisitor::fromNode($node);
-        $compiler = new ConstantExpressionCompiler($context);
 
         $data = (new TypedMap())
             ->with(Data::PhpDoc, $node->getDocComment())
-            ->with(Data::Location, $this->reflectLocation($node))
+            ->with(Data::Location, $this->reflectLocation($context, $node))
             ->with(Data::Context, $context)
             ->with(Data::Namespace, $context->namespace())
-            ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
+            ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
             ->with(Data::Constants, $this->reflectConstants($context, $node->stmts));
 
         if ($node instanceof Class_) {
@@ -220,8 +219,8 @@ final class NodeReflector
             if ($node instanceof ClassConst) {
                 $data = (new TypedMap())
                     ->with(Data::PhpDoc, $node->getDocComment())
-                    ->with(Data::Location, $this->reflectLocation($node))
-                    ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
+                    ->with(Data::Location, $this->reflectLocation($context, $node))
+                    ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
                     ->with(Data::NativeFinal, $node->isFinal())
                     ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
                     ->with(Data::Visibility, $this->reflectVisibility($node->flags));
@@ -241,8 +240,8 @@ final class NodeReflector
 
                 $constants[$node->name->name] = (new TypedMap())
                     ->with(Data::PhpDoc, $node->getDocComment())
-                    ->with(Data::Location, $this->reflectLocation($node))
-                    ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
+                    ->with(Data::Location, $this->reflectLocation($context, $node))
+                    ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
                     ->with(Data::EnumCase, true)
                     ->with(Data::Type, new TypeData(annotated: types::classConstant($enumType, $node->name->name)))
                     ->with(Data::Visibility, Visibility::Public)
@@ -267,8 +266,8 @@ final class NodeReflector
         foreach ($nodes as $node) {
             $data = (new TypedMap())
                 ->with(Data::PhpDoc, $node->getDocComment())
-                ->with(Data::Location, $this->reflectLocation($node))
-                ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
+                ->with(Data::Location, $this->reflectLocation($context, $node))
+                ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeReadonly, $node->isReadonly())
                 ->with(Data::Type, new TypeData($this->reflectType($context, $node->type)))
@@ -291,16 +290,15 @@ final class NodeReflector
     private function reflectFunctionLike(FunctionLike $node): TypedMap
     {
         $context = ContextVisitor::fromNode($node);
-        $compiler = new ConstantExpressionCompiler($context);
 
         return (new TypedMap())
             ->with(Data::PhpDoc, $node->getDocComment())
-            ->with(Data::Location, $this->reflectLocation($node))
+            ->with(Data::Location, $this->reflectLocation($context, $node))
             ->with(Data::Context, $context)
             ->with(Data::Type, new TypeData($this->reflectType($context, $node->getReturnType())))
             ->with(Data::ReturnsReference, $node->returnsByRef())
             ->with(Data::Generator, GeneratorVisitor::isGenerator($node))
-            ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->getAttrGroups()))
+            ->with(Data::Attributes, $this->reflectAttributes($context, $node->getAttrGroups()))
             ->with(Data::Parameters, $this->reflectParameters($context, $node->getParams()));
     }
 
@@ -339,9 +337,9 @@ final class NodeReflector
 
             $parameters[$node->var->name] = (new TypedMap())
                 ->with(Data::PhpDoc, $node->getDocComment())
-                ->with(Data::Location, $this->reflectLocation($node))
+                ->with(Data::Location, $this->reflectLocation($context, $node))
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
-                ->with(Data::Attributes, $this->reflectAttributes($compiler, $node->attrGroups))
+                ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
                 ->with(Data::Type, new TypeData($this->reflectParameterType($context, $node->type, $default)))
                 ->with(Data::PassedBy, $node->byRef ? PassedBy::Reference : PassedBy::Value)
                 ->with(Data::DefaultValueExpression, $default)
@@ -371,14 +369,15 @@ final class NodeReflector
      * @param array<AttributeGroup> $attributeGroups
      * @return list<TypedMap>
      */
-    private function reflectAttributes(ConstantExpressionCompiler $compiler, array $attributeGroups): array
+    private function reflectAttributes(Context $context, array $attributeGroups): array
     {
+        $compiler = new ConstantExpressionCompiler($context);
         $attributes = [];
 
         foreach ($attributeGroups as $attributeGroup) {
             foreach ($attributeGroup->attrs as $attr) {
                 $attributes[] = (new TypedMap())
-                    ->with(Data::Location, $this->reflectLocation($attr))
+                    ->with(Data::Location, $this->reflectLocation($context, $attr))
                     ->with(Data::AttributeClassName, $attr->name->toString())
                     ->with(Data::ArgumentsExpression, $this->reflectArguments($compiler, $attr->args));
             }
@@ -465,7 +464,7 @@ final class NodeReflector
         throw new \LogicException(\sprintf('Type node of class %s is not supported', $node::class));
     }
 
-    private function reflectLocation(Node $node): Location
+    private function reflectLocation(Context $context, Node $node): Location
     {
         $startPosition = $node->getStartFilePos();
         $endPosition = $node->getEndFilePos();
@@ -488,11 +487,8 @@ final class NodeReflector
             endPosition: $endPosition,
             startLine: $startLine,
             endLine: $endLine,
-            startColumn: 1,
-            endColumn: 1,
-            // TODO
-            // startColumn: column($this->resourceData[Data::Code], $startPosition),
-            // endColumn: column($this->resourceData[Data::Code], $endPosition),
+            startColumn: $context->column($startPosition),
+            endColumn: $context->column($endPosition),
         );
     }
 

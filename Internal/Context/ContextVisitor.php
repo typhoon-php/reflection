@@ -20,7 +20,6 @@ use PhpParser\NodeVisitorAbstract;
 use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
 use Typhoon\Reflection\Internal\Annotated\NullAnnotatedDeclarationsDiscoverer;
 use function Typhoon\Reflection\Internal\array_value_last;
-use function Typhoon\Reflection\Internal\column;
 
 /**
  * @internal
@@ -30,7 +29,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
 {
     private const ATTRIBUTE = 'context';
 
-    private readonly Context $fileContext;
+    private readonly Context $codeContext;
 
     /**
      * @var list<Context>
@@ -41,12 +40,12 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
      * @param ?non-empty-string $file
      */
     public function __construct(
+        string $code,
         ?string $file,
-        private readonly string $code,
         private readonly NameContext $nameContext,
         private readonly AnnotatedDeclarationsDiscoverer $annotatedDeclarationsDiscoverer = NullAnnotatedDeclarationsDiscoverer::Instance,
     ) {
-        $this->fileContext = Context::start($file);
+        $this->codeContext = Context::start($code, $file);
     }
 
     public static function fromNode(FunctionLike|ClassLike $node): Context
@@ -59,7 +58,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
     public function current(): Context
     {
         return array_value_last($this->contextStack)
-            ?? $this->fileContext->withNameContext($this->nameContext);
+            ?? $this->codeContext->withNameContext($this->nameContext);
     }
 
     public function beforeTraverse(array $nodes): ?array
@@ -87,12 +86,12 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         if ($node instanceof Closure || $node instanceof ArrowFunction) {
             $line = $node->getStartLine();
             \assert($line > 0);
-            $offset = $node->getStartFilePos();
-            \assert($offset >= 0);
+            $position = $node->getStartFilePos();
+            \assert($position >= 0);
 
             $context = $this->current()->enterAnonymousFunction(
                 line: $line,
-                column: column($this->code, $offset),
+                column: $this->codeContext->column($position),
                 templateNames: $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node)->templateNames,
             );
             $this->contextStack[] = $context;
@@ -107,12 +106,12 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             if ($node->name === null) {
                 $line = $node->getStartLine();
                 \assert($line > 0);
-                $offset = $node->getStartFilePos();
-                \assert($offset >= 0);
+                $position = $node->getStartFilePos();
+                \assert($position >= 0);
 
                 $context = $this->current()->enterAnonymousClass(
                     line: $line,
-                    column: column($this->code, $offset),
+                    column: $this->codeContext->column($position),
                     parentName: $node->extends?->toString(),
                     aliasNames: $typeNames->aliasNames,
                     templateNames: $typeNames->templateNames,

@@ -39,7 +39,6 @@ use Typhoon\Type\Type;
 use Typhoon\Type\types;
 use Typhoon\Type\Variance;
 use Typhoon\TypedMap\TypedMap;
-use function Typhoon\Reflection\Internal\column;
 use function Typhoon\Reflection\Internal\map;
 
 /**
@@ -85,55 +84,55 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
     public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
-            return $this->reflectFunctionLike($data[Data::Code], $data);
+            return $this->reflectFunctionLike($data);
         }
 
-        return $this->reflectClass($data[Data::Code], $data);
+        return $this->reflectClass($data);
     }
 
-    private function reflectFunctionLike(string $code, TypedMap $data): TypedMap
+    private function reflectFunctionLike(TypedMap $data): TypedMap
     {
-        $typeReflector = new PhpDocTypeReflector($data[Data::Context], $this->customTypeResolver);
+        $context = $data[Data::Context];
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
         if ($phpDoc !== null) {
             $data = $data
                 ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
-                ->with(Data::Templates, $this->reflectTemplates($code, $typeReflector, $phpDoc->templateTags()))
-                ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->returnType()))
-                ->with(Data::ThrowsType, $this->reflectThrowsType($typeReflector, $phpDoc->throwsTypes()));
+                ->with(Data::Templates, $this->reflectTemplates($context, $phpDoc->templateTags()))
+                ->with(Data::Type, $this->addAnnotatedType($context, $data[Data::Type], $phpDoc->returnType()))
+                ->with(Data::ThrowsType, $this->reflectThrowsType($context, $phpDoc->throwsTypes()));
         }
 
         $paramTypes = $phpDoc?->paramTypes() ?? [];
 
         return $data->with(Data::Parameters, map(
             $data[Data::Parameters],
-            function (TypedMap $parameter, string $name) use ($typeReflector, $paramTypes): TypedMap {
+            function (TypedMap $parameter, string $name) use ($context, $paramTypes): TypedMap {
                 $phpDoc = $this->parsePhpDoc($parameter[Data::PhpDoc]);
 
                 return $parameter
                     ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc?->deprecatedMessage()))
                     ->with(Data::AnnotatedReadonly, $parameter[Data::AnnotatedReadonly] || ($phpDoc?->hasReadonly() ?? false))
-                    ->with(Data::Type, $this->addAnnotatedType($typeReflector, $parameter[Data::Type], $phpDoc?->varType() ?? $paramTypes[$name] ?? null));
+                    ->with(Data::Type, $this->addAnnotatedType($context, $parameter[Data::Type], $phpDoc?->varType() ?? $paramTypes[$name] ?? null));
             },
         ));
     }
 
-    private function reflectClass(string $code, TypedMap $data): TypedMap
+    private function reflectClass(TypedMap $data): TypedMap
     {
-        $typeReflector = new PhpDocTypeReflector($data[Data::Context], $this->customTypeResolver);
+        $context = $data[Data::Context];
 
         $data = $data
             ->with(Data::Constants, array_map(
-                fn(TypedMap $constant): TypedMap => $this->reflectNativeConstant($typeReflector, $constant),
+                fn(TypedMap $constant): TypedMap => $this->reflectNativeConstant($context, $constant),
                 $data[Data::Constants],
             ))
             ->with(Data::Properties, array_map(
-                fn(TypedMap $property): TypedMap => $this->reflectNativeProperty($typeReflector, $property),
+                fn(TypedMap $property): TypedMap => $this->reflectNativeProperty($context, $property),
                 $data[Data::Properties],
             ))
             ->with(Data::Methods, array_map(
-                fn(TypedMap $method): TypedMap => $this->reflectFunctionLike($code, $method),
+                fn(TypedMap $method): TypedMap => $this->reflectFunctionLike($method),
                 $data[Data::Methods],
             ));
 
@@ -147,37 +146,38 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
             ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedFinal] || $phpDoc->hasFinal())
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedReadonly] || $phpDoc->hasReadonly())
-            ->with(Data::Templates, $this->reflectTemplates($code, $typeReflector, $phpDoc->templateTags()))
-            ->with(Data::Aliases, $this->reflectAliases($code, $typeReflector, $phpDoc))
-            ->with(Data::UnresolvedParent, $this->reflectParent($typeReflector, $data, $phpDoc))
-            ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($typeReflector, $data, $phpDoc))
-            ->with(Data::UnresolvedTraits, $this->reflectUses($typeReflector, $data))
+            ->with(Data::Templates, $this->reflectTemplates($context, $phpDoc->templateTags()))
+            ->with(Data::Aliases, $this->reflectAliases($context, $phpDoc))
+            ->with(Data::UnresolvedParent, $this->reflectParent($context, $data, $phpDoc))
+            ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($context, $data, $phpDoc))
+            ->with(Data::UnresolvedTraits, $this->reflectUses($context, $data))
             ->with(Data::Properties, [
                 ...$data[Data::Properties],
-                ...$this->reflectPhpDocProperties($code, $typeReflector, $phpDoc->propertyTags()),
+                ...$this->reflectPhpDocProperties($context, $phpDoc->propertyTags()),
             ])
             ->with(Data::Methods, [
                 ...$data[Data::Methods],
-                ...$this->reflectPhpDocMethods($code, $data[Data::Context], $phpDoc->methodTags()),
+                ...$this->reflectPhpDocMethods($context, $phpDoc->methodTags()),
             ]);
     }
 
     /**
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectAliases(string $code, PhpDocTypeReflector $typeReflector, PhpDoc $phpDoc): array
+    private function reflectAliases(Context $context, PhpDoc $phpDoc): array
     {
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
         $aliases = [];
 
         foreach ($phpDoc->typeAliasTags() as $tag) {
             $aliases[$tag->value->alias] = (new TypedMap())
-                ->with(Data::Location, $this->reflectLocation($code, $tag))
+                ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::AliasType, $typeReflector->reflectType($tag->value->type));
         }
 
         foreach ($phpDoc->typeAliasImportTags() as $tag) {
             $aliases[$tag->value->importedAs ?? $tag->value->importedAlias] = (new TypedMap())
-                ->with(Data::Location, $this->reflectLocation($code, $tag))
+                ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::AliasType, types::classAlias(
                     class: $typeReflector->resolveClass($tag->value->importedFrom),
                     name: $tag->value->importedAlias,
@@ -191,13 +191,14 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
      * @param list<PhpDocTagNode<TemplateTagValueNode>> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectTemplates(string $code, PhpDocTypeReflector $typeReflector, array $tags): array
+    private function reflectTemplates(Context $context, array $tags): array
     {
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
         $templates = [];
 
         foreach ($tags as $tag) {
             $templates[$tag->value->name] = (new TypedMap())
-                ->with(Data::Location, $this->reflectLocation($code, $tag))
+                ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::Constraint, $typeReflector->reflectType($tag->value->bound) ?? types::mixed)
                 ->with(Data::Variance, match (true) {
                     str_ends_with($tag->name, 'covariant') => Variance::Covariant,
@@ -212,13 +213,15 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
     /**
      * @return ?array{non-empty-string, list<Type>}
      */
-    private function reflectParent(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): ?array
+    private function reflectParent(Context $context, TypedMap $data, PhpDoc $phpDoc): ?array
     {
         $parent = $data[Data::UnresolvedParent];
 
         if ($parent === null) {
             return null;
         }
+
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
 
         foreach ($phpDoc->extendedTypes() as $type) {
             if ($parent[0] === $typeReflector->resolveClass($type->type)) {
@@ -232,7 +235,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
     /**
      * @return array<non-empty-string, list<Type>>
      */
-    private function reflectInterfaces(PhpDocTypeReflector $typeReflector, TypedMap $data, PhpDoc $phpDoc): array
+    private function reflectInterfaces(Context $context, TypedMap $data, PhpDoc $phpDoc): array
     {
         $interfaces = $data[Data::UnresolvedInterfaces];
 
@@ -240,6 +243,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
             return [];
         }
 
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
         $types = $data[Data::ClassKind] === ClassKind::Interface ? $phpDoc->extendedTypes() : $phpDoc->implementedTypes();
 
         foreach ($types as $type) {
@@ -256,13 +260,15 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
     /**
      * @return array<non-empty-string, list<Type>>
      */
-    private function reflectUses(PhpDocTypeReflector $typeReflector, TypedMap $data): array
+    private function reflectUses(Context $context, TypedMap $data): array
     {
         $uses = $data[Data::UnresolvedTraits];
 
         if ($uses === []) {
             return [];
         }
+
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
 
         foreach ($data[Data::UsePhpDocs] as $usePhpDoc) {
             $usePhpDoc = $this->parsePhpDoc($usePhpDoc);
@@ -279,7 +285,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
         return $uses;
     }
 
-    private function reflectNativeConstant(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectNativeConstant(Context $context, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -290,10 +296,10 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
         return $data
             ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
             ->with(Data::AnnotatedFinal, $data[Data::AnnotatedFinal] || $phpDoc->hasFinal())
-            ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
+            ->with(Data::Type, $this->addAnnotatedType($context, $data[Data::Type], $phpDoc->varType()));
     }
 
-    private function reflectNativeProperty(PhpDocTypeReflector $typeReflector, TypedMap $data): TypedMap
+    private function reflectNativeProperty(Context $context, TypedMap $data): TypedMap
     {
         $phpDoc = $this->parsePhpDoc($data[Data::PhpDoc]);
 
@@ -304,15 +310,16 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
         return $data
             ->with(Data::Deprecation, $this->reflectDeprecation($phpDoc->deprecatedMessage()))
             ->with(Data::AnnotatedReadonly, $data[Data::AnnotatedReadonly] || $phpDoc->hasReadonly())
-            ->with(Data::Type, $this->addAnnotatedType($typeReflector, $data[Data::Type], $phpDoc->varType()));
+            ->with(Data::Type, $this->addAnnotatedType($context, $data[Data::Type], $phpDoc->varType()));
     }
 
     /**
      * @param list<PhpDocTagNode<PropertyTagValueNode>> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocProperties(string $code, PhpDocTypeReflector $typeReflector, array $tags): array
+    private function reflectPhpDocProperties(Context $context, array $tags): array
     {
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
         $properties = [];
 
         foreach ($tags as $tag) {
@@ -323,7 +330,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
             }
 
             $properties[$name] = (new TypedMap())
-                ->with(Data::Location, $this->reflectLocation($code, $tag))
+                ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::Annotated, true)
                 ->with(Data::Visibility, Visibility::Public)
                 ->with(Data::AnnotatedReadonly, str_contains($tag->name, 'read'))
@@ -337,7 +344,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
      * @param list<PhpDocTagNode<MethodTagValueNode>> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocMethods(string $code, Context $classContext, array $tags): array
+    private function reflectPhpDocMethods(Context $classContext, array $tags): array
     {
         $methods = [];
 
@@ -346,7 +353,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
             $context = $classContext->enterMethod($name, array_column($tag->value->templateTypes, 'name'));
             $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
             $methods[$name] = (new TypedMap())
-                ->with(Data::Location, $this->reflectLocation($code, $tag))
+                ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::Context, $context)
                 ->with(Data::Annotated, true)
                 ->with(Data::Visibility, Visibility::Public)
@@ -356,13 +363,13 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
                     array_column($tag->value->templateTypes, 'name'),
                     array_map(
                         fn(TemplateTagValueNode $value): TypedMap => (new TypedMap())
-                            ->with(Data::Location, $this->reflectLocation($code, $value))
+                            ->with(Data::Location, $this->reflectLocation($context, $value))
                             ->with(Data::Constraint, $typeReflector->reflectType($value->bound) ?? types::mixed)
                             ->with(Data::Variance, Variance::Invariant),
                         $tag->value->templateTypes,
                     ),
                 ))
-                ->with(Data::Parameters, $this->reflectPhpDocMethodParameters($code, $context, $typeReflector, $tag->value->parameters));
+                ->with(Data::Parameters, $this->reflectPhpDocMethodParameters($context, $tag->value->parameters));
         }
 
         return $methods;
@@ -372,8 +379,9 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
      * @param array<MethodTagValueParameterNode> $tags
      * @return array<non-empty-string, TypedMap>
      */
-    private function reflectPhpDocMethodParameters(string $code, Context $context, PhpDocTypeReflector $typeReflector, array $tags): array
+    private function reflectPhpDocMethodParameters(Context $context, array $tags): array
     {
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
         $compiler = new PhpDocConstantExpressionCompiler($context);
         $parameters = [];
 
@@ -383,7 +391,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
 
             $parameters[$name] = (new TypedMap())
                 ->with(Data::Annotated, true)
-                ->with(Data::Location, $this->reflectLocation($code, $tag))
+                ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::Type, new TypeData(annotated: $typeReflector->reflectType($tag->type)))
                 ->with(Data::PassedBy, $tag->isReference ? PassedBy::Reference : PassedBy::Value)
                 ->with(Data::Variadic, $tag->isVariadic)
@@ -393,11 +401,13 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
         return $parameters;
     }
 
-    private function addAnnotatedType(PhpDocTypeReflector $typeReflector, TypeData $type, ?TypeNode $node): TypeData
+    private function addAnnotatedType(Context $context, TypeData $type, ?TypeNode $node): TypeData
     {
         if ($node === null) {
             return $type;
         }
+
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
 
         return $type->withAnnotated($typeReflector->reflectType($node));
     }
@@ -414,24 +424,29 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
     /**
      * @param list<TypeNode> $throwsTypes
      */
-    private function reflectThrowsType(PhpDocTypeReflector $typeReflector, array $throwsTypes): ?Type
+    private function reflectThrowsType(Context $context, array $throwsTypes): ?Type
     {
         if ($throwsTypes === []) {
             return null;
         }
 
+        $typeReflector = new PhpDocTypeReflector($context, $this->customTypeResolver);
+
         return types::union(...array_map($typeReflector->reflectType(...), $throwsTypes));
     }
 
-    private function reflectLocation(string $code, Node $node): Location
+    private function reflectLocation(Context $context, Node $node): Location
     {
+        $startPosition = PhpDocParser::startPosition($node);
+        $endPosition = PhpDocParser::endPosition($node);
+
         return new Location(
-            startPosition: $startPosition = PhpDocParser::startPosition($node),
-            endPosition: $endPosition = PhpDocParser::endPosition($node),
+            startPosition: $startPosition,
+            endPosition: $endPosition,
             startLine: PhpDocParser::startLine($node),
             endLine: PhpDocParser::endLine($node),
-            startColumn: column($code, $startPosition),
-            endColumn: column($code, $endPosition),
+            startColumn: $context->column($startPosition),
+            endColumn: $context->column($endPosition),
         );
     }
 

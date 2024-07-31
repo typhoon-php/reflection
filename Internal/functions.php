@@ -61,22 +61,22 @@ function array_value_last(array $array): mixed
 /**
  * @internal
  * @psalm-internal Typhoon\Reflection
- * @param non-negative-int $offset
+ * @param non-negative-int $position
  * @return positive-int
  */
-function column(string $string, int $offset): int
+function line(string $string, int $position): int
 {
-    if ($offset === 0) {
+    if ($position === 0) {
         return 1;
     }
 
-    $lineStartPosition = strrpos($string, "\n", $offset - \strlen($string) - 1);
+    $lineStartPosition = strrpos($string, "\n", $position - \strlen($string) - 1);
 
     if ($lineStartPosition === false) {
-        return $offset + 1;
+        return $position + 1;
     }
 
-    $column = $offset - $lineStartPosition;
+    $column = $position - $lineStartPosition;
     \assert($column > 0);
 
     return $column;

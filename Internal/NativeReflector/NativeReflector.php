@@ -102,10 +102,10 @@ enum NativeReflector
         $extension = $reflection->getExtension();
 
         if ($extension === null) {
-            throw new \LogicException(sprintf(
+            throw new \LogicException(\sprintf(
                 'Internal %s %s is expected to have an extension',
                 $reflection instanceof \ReflectionFunction ? 'function' : 'class',
-                $reflection->name
+                $reflection->name,
             ));
         }
 

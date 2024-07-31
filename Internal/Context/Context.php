@@ -32,6 +32,7 @@ final class Context implements TypeContext
      * @param array<non-empty-string, TemplateId> $templates
      */
     private function __construct(
+        public readonly string $code,
         public readonly ?string $file,
         private NameContext $nameContext,
         public readonly null|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $currentId = null,
@@ -45,12 +46,12 @@ final class Context implements TypeContext
     /**
      * @param ?non-empty-string $file
      */
-    public static function start(?string $file = null): self
+    public static function start(string $code, ?string $file = null): self
     {
         $nameContext = new NameContext(new Throwing());
         $nameContext->startNamespace();
 
-        return new self($file, $nameContext);
+        return new self($code, $file, $nameContext);
     }
 
     public function withNameContext(NameContext $nameContext): self
@@ -70,6 +71,7 @@ final class Context implements TypeContext
         $id = Id::namedFunction($name);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -89,6 +91,7 @@ final class Context implements TypeContext
         $id = Id::anonymousFunction($this->file, $line, $column);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -118,6 +121,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -149,6 +153,7 @@ final class Context implements TypeContext
         $id = Id::anonymousClass($this->file, $line, $column);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -172,6 +177,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -194,6 +200,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -216,6 +223,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -238,6 +246,7 @@ final class Context implements TypeContext
         $id = Id::method($this->currentId, $name);
 
         return new self(
+            code: $this->code,
             file: $this->file,
             nameContext: $this->nameContext,
             currentId: $id,
@@ -250,6 +259,28 @@ final class Context implements TypeContext
                 ...self::templatesFromNames($id, $templateNames),
             ],
         );
+    }
+
+    /**
+     * @param non-negative-int $position
+     * @return positive-int
+     */
+    public function column(int $position): int
+    {
+        if ($position === 0) {
+            return 1;
+        }
+
+        $lineStartPosition = strrpos($this->code, "\n", $position - \strlen($this->code) - 1);
+
+        if ($lineStartPosition === false) {
+            return $position + 1;
+        }
+
+        $column = $position - $lineStartPosition;
+        \assert($column > 0);
+
+        return $column;
     }
 
     public function directory(): ?string
