@@ -8,9 +8,10 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\ClassHook;
+use Typhoon\Reflection\Internal\Hook\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\HookPriorities;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\TypedMap\TypedMap;
 
@@ -22,12 +23,18 @@ enum SetParameterOptional implements FunctionHook, ClassHook
 {
     case Instance;
 
-    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    public function priority(): int
     {
-        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
-            return self::processParameters($data);
-        }
+        return HookPriorities::COMPLETE_REFLECTION;
+    }
 
+    public function processFunction(NamedFunctionId|AnonymousFunctionId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
+        return self::processParameters($data);
+    }
+
+    public function processClass(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
         return $data->with(Data::Methods, array_map(self::processParameters(...), $data[Data::Methods]));
     }
 

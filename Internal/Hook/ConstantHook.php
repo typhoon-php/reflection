@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Internal\Hook;
 
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\Reflection\TyphoonReflector;
@@ -14,5 +14,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 interface ConstantHook
 {
-    public function process(ConstantId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap;
+    public function priority(): int;
+
+    public function processConstant(ConstantId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap;
 }

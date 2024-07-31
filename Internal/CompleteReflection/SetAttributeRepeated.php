@@ -8,9 +8,10 @@ use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\ClassHook;
+use Typhoon\Reflection\Internal\Hook\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\HookPriorities;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\TypedMap\TypedMap;
 
@@ -22,22 +23,28 @@ enum SetAttributeRepeated implements FunctionHook, ClassHook
 {
     case Instance;
 
-    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    public function priority(): int
     {
-        $data = self::processAttributes($data);
+        return HookPriorities::COMPLETE_REFLECTION;
+    }
 
-        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
-            return $data;
-        }
+    public function processFunction(NamedFunctionId|AnonymousFunctionId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
+        return self::processFunctionLike($data);
+    }
 
-        return $data
+    public function processClass(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
+        return self::processAttributes($data)
             ->with(Data::Constants, array_map(self::processAttributes(...), $data[Data::Constants]))
             ->with(Data::Properties, array_map(self::processAttributes(...), $data[Data::Properties]))
-            ->with(Data::Methods, array_map(
-                static fn(TypedMap $method): TypedMap => self::processAttributes($method)
-                    ->with(Data::Parameters, array_map(self::processAttributes(...), $method[Data::Parameters])),
-                $data[Data::Methods],
-            ));
+            ->with(Data::Methods, array_map(self::processFunctionLike(...), $data[Data::Methods]));
+    }
+
+    private static function processFunctionLike(TypedMap $data): TypedMap
+    {
+        return self::processAttributes($data)
+            ->with(Data::Parameters, array_map(self::processAttributes(...), $data[Data::Parameters]));
     }
 
     private static function processAttributes(TypedMap $data): TypedMap

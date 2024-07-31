@@ -25,14 +25,14 @@ use Typhoon\Reflection\Annotated\NullCustomTypeResolver;
 use Typhoon\Reflection\Deprecation;
 use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarations;
 use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
-use Typhoon\Reflection\Internal\ClassHook;
 use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\PassedBy;
 use Typhoon\Reflection\Internal\Data\TypeData;
 use Typhoon\Reflection\Internal\Data\Visibility;
-use Typhoon\Reflection\Internal\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\ClassHook;
+use Typhoon\Reflection\Internal\Hook\FunctionHook;
 use Typhoon\Reflection\Location;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Type;
@@ -45,7 +45,7 @@ use function Typhoon\Reflection\Internal\map;
  * @internal
  * @psalm-internal Typhoon\Reflection
  */
-final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHook, FunctionHook
+final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, FunctionHook, ClassHook
 {
     public function __construct(
         private readonly CustomTypeResolver $customTypeResolver = new NullCustomTypeResolver(),
@@ -81,13 +81,14 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
         );
     }
 
-    public function process(NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    public function priority(): int
     {
-        if ($id instanceof NamedFunctionId || $id instanceof AnonymousFunctionId) {
-            return $this->reflectFunctionLike($data);
-        }
+        return 500;
+    }
 
-        return $this->reflectClass($data);
+    public function processFunction(NamedFunctionId|AnonymousFunctionId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
+        return $this->reflectFunctionLike($data);
     }
 
     private function reflectFunctionLike(TypedMap $data): TypedMap
@@ -118,7 +119,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, ClassHoo
         ));
     }
 
-    private function reflectClass(TypedMap $data): TypedMap
+    public function processClass(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         $context = $data[Data::Context];
 

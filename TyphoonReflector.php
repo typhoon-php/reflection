@@ -38,7 +38,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\SetReadonlyClassPropertyReado
 use Typhoon\Reflection\Internal\CompleteReflection\SetStringableInterface;
 use Typhoon\Reflection\Internal\CompleteReflection\SetTemplateIndex;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\Hooks;
+use Typhoon\Reflection\Internal\Hook\Hooks;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
 use Typhoon\Reflection\Internal\NativeReflector\NativeReflector;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
@@ -306,9 +306,12 @@ final class TyphoonReflector
         $code = $resource->data[Data::Code];
         $file = $resource->data[Data::File];
 
+        $baseData = $resource->data;
+        $hooks = $this->hooks->merge($resource->hooks);
+
         $idReflectors = $this->codeReflector->reflectCode($code, $file)->map(
             static fn(\Closure $idReflector, NamedFunctionId|NamedClassId|AnonymousClassId $id): \Closure =>
-                static function (self $reflector) use ($resource, $id, $idReflector): TypedMap {
+                static function (self $reflector) use ($id, $idReflector, $baseData, $hooks): TypedMap {
                     static $started = false;
 
                     if ($started) {
@@ -317,9 +320,8 @@ final class TyphoonReflector
 
                     $started = true;
 
-                    $data = $resource->data->withMap($idReflector());
-                    $data = $resource->hooks->process($id, $data, $reflector);
-                    $data = $reflector->hooks->process($id, $data, $reflector);
+                    $data = $baseData->withMap($idReflector());
+                    $data = $hooks->process($id, $data, $reflector);
 
                     $reflector->cache->set($id, $data);
                     $reflector->buffer = $reflector->buffer->without($id);

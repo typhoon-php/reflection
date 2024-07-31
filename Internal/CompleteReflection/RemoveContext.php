@@ -9,10 +9,11 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\ClassHook;
-use Typhoon\Reflection\Internal\ConstantHook;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\ClassHook;
+use Typhoon\Reflection\Internal\Hook\ConstantHook;
+use Typhoon\Reflection\Internal\Hook\FunctionHook;
+use Typhoon\Reflection\Internal\Hook\HookPriorities;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\TypedMap\TypedMap;
 
@@ -24,7 +25,22 @@ enum RemoveContext implements ConstantHook, FunctionHook, ClassHook
 {
     case Instance;
 
-    public function process(ConstantId|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    public function priority(): int
+    {
+        return HookPriorities::CLEAN_UP;
+    }
+
+    public function processConstant(ConstantId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
+        return $data->without(Data::Context);
+    }
+
+    public function processFunction(NamedFunctionId|AnonymousFunctionId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
+    {
+        return $data->without(Data::Context);
+    }
+
+    public function processClass(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
         return $data
             ->without(Data::Context)
