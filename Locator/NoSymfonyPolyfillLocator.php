@@ -7,20 +7,18 @@ namespace Typhoon\Reflection\Locator;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data;
-use Typhoon\Reflection\Internal\Locators;
 
 /**
  * @api
  */
 final class NoSymfonyPolyfillLocator implements NamedFunctionLocator, NamedClassLocator
 {
-    private const NEEDLE = '/symfony/polyfill';
+    private const PATTERN = '/symfony/polyfill';
 
     private readonly Locators $locator;
 
-    public function __construct(
-        NamedFunctionLocator|NamedClassLocator $locator,
-    ) {
+    public function __construct(NamedFunctionLocator|NamedClassLocator $locator)
+    {
         $this->locator = new Locators([$locator]);
     }
 
@@ -34,7 +32,7 @@ final class NoSymfonyPolyfillLocator implements NamedFunctionLocator, NamedClass
 
         $file = $resource->data[Data::File];
 
-        if ($file !== null && str_contains($file, self::NEEDLE)) {
+        if ($file !== null && str_contains($file, self::PATTERN)) {
             return null;
         }
 

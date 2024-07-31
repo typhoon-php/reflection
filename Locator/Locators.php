@@ -2,25 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Typhoon\Reflection\Internal;
+namespace Typhoon\Reflection\Locator;
 
 use Typhoon\DeclarationId\AnonymousClassId;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\ConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Exception\LocatorErrored;
-use Typhoon\Reflection\Locator\AnonymousLocator;
-use Typhoon\Reflection\Locator\ConstantLocator;
-use Typhoon\Reflection\Locator\NamedClassLocator;
-use Typhoon\Reflection\Locator\NamedFunctionLocator;
-use Typhoon\Reflection\Locator\Resource;
 
 /**
- * @internal
- * @psalm-internal Typhoon\Reflection
+ * @api
  */
-final class Locators
+final class Locators implements ConstantLocator, NamedFunctionLocator, NamedClassLocator, AnonymousLocator
 {
     /**
      * @var list<ConstantLocator>
@@ -63,12 +56,8 @@ final class Locators
         };
 
         foreach ($locators as $locator) {
-            try {
-                /** @psalm-suppress PossiblyInvalidArgument */
-                $resource = $locator->locate($id);
-            } catch (\Throwable $exception) {
-                throw new LocatorErrored($id, $exception);
-            }
+            /** @psalm-suppress PossiblyInvalidArgument */
+            $resource = $locator->locate($id);
 
             if ($resource !== null) {
                 return $resource;
