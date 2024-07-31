@@ -57,10 +57,13 @@ final class TypeData
         );
     }
 
-    public function get(?DeclarationKind $kind = null): ?Type
+    /**
+     * @return ($kind is DeclarationKind::Resolved ? Type : ?Type)
+     */
+    public function get(DeclarationKind $kind = DeclarationKind::Resolved): ?Type
     {
         return match ($kind) {
-            null => $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed,
+            DeclarationKind::Resolved => $this->annotated ?? $this->tentative ?? $this->native ?? types::mixed,
             DeclarationKind::Native => $this->native,
             DeclarationKind::Annotated => $this->annotated,
         };

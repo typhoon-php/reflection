@@ -9,6 +9,7 @@ namespace Typhoon\Reflection;
  */
 enum DeclarationKind
 {
+    case Resolved;
     case Native;
     case Annotated;
 }

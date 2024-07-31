@@ -142,12 +142,12 @@ final class MethodReflection
         return $this->data[Data::Abstract];
     }
 
-    public function isFinal(?DeclarationKind $kind = null): bool
+    public function isFinal(DeclarationKind $kind = DeclarationKind::Resolved): bool
     {
         return match ($kind) {
+            DeclarationKind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
             DeclarationKind::Native => $this->data[Data::NativeFinal],
             DeclarationKind::Annotated => $this->data[Data::AnnotatedFinal],
-            null => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
     }
 
@@ -189,9 +189,9 @@ final class MethodReflection
     }
 
     /**
-     * @return ($kind is null ? Type : ?Type)
+     * @return ($kind is DeclarationKind::Resolved ? Type : ?Type)
      */
-    public function returnType(?DeclarationKind $kind = null): ?Type
+    public function returnType(DeclarationKind $kind = DeclarationKind::Resolved): ?Type
     {
         return $this->data[Data::Type]->get($kind);
     }

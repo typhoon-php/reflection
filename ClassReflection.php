@@ -247,21 +247,21 @@ final class ClassReflection
         return $this->data[Data::BackingType];
     }
 
-    public function isFinal(?DeclarationKind $kind = null): bool
+    public function isFinal(DeclarationKind $kind = DeclarationKind::Resolved): bool
     {
         return match ($kind) {
+            DeclarationKind::Resolved => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
             DeclarationKind::Native => $this->data[Data::NativeFinal],
             DeclarationKind::Annotated => $this->data[Data::AnnotatedFinal],
-            null => $this->data[Data::NativeFinal] || $this->data[Data::AnnotatedFinal],
         };
     }
 
-    public function isReadonly(?DeclarationKind $kind = null): bool
+    public function isReadonly(DeclarationKind $kind = DeclarationKind::Resolved): bool
     {
         return match ($kind) {
+            DeclarationKind::Resolved => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
             DeclarationKind::Native => $this->data[Data::NativeReadonly],
             DeclarationKind::Annotated => $this->data[Data::AnnotatedReadonly],
-            null => $this->data[Data::NativeReadonly] || $this->data[Data::AnnotatedReadonly],
         };
     }
 
