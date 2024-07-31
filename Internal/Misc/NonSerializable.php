@@ -15,7 +15,7 @@ trait NonSerializable
         throw new \LogicException(\sprintf('Object of class %s must not be serialized', self::class));
     }
 
-    public function __unserialize(array $data): never
+    public function __unserialize(array $_data): never
     {
         throw new \LogicException(\sprintf('Object of class %s must not be unserialized', self::class));
     }
