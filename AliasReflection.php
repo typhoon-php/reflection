@@ -6,6 +6,7 @@ namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\AliasId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
 
@@ -14,6 +15,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class AliasReflection
 {
+    use NonSerializable;
+
     public readonly AliasId $id;
 
     /**

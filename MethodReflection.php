@@ -8,6 +8,7 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\MethodId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\MethodAdapter;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
@@ -20,6 +21,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class MethodReflection
 {
+    use NonSerializable;
+
     public readonly MethodId $id;
 
     /**

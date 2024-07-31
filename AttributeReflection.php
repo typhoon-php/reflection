@@ -13,6 +13,7 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\AttributeAdapter;
 use Typhoon\TypedMap\TypedMap;
 
@@ -21,6 +22,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class AttributeReflection
 {
+    use NonSerializable;
+
     /**
      * This internal property is public for testing purposes.
      * It will likely be available as part of the API in the near future.

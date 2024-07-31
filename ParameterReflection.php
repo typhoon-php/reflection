@@ -8,6 +8,7 @@ use Typhoon\DeclarationId\MethodId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\PassedBy;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\ParameterAdapter;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
@@ -18,6 +19,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ParameterReflection
 {
+    use NonSerializable;
+
     public readonly ParameterId $id;
 
     /**

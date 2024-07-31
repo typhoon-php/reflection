@@ -10,6 +10,7 @@ use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassAdapter;
 use Typhoon\Type\Type;
 use Typhoon\Type\Visitor\TemplateTypeResolver;
@@ -28,6 +29,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ClassReflection
 {
+    use NonSerializable;
+
     /**
      * @var TId
      */

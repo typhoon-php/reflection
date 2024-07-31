@@ -8,6 +8,7 @@ use Typhoon\DeclarationId\ClassConstantId;
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\ClassConstantAdapter;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
@@ -18,6 +19,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class ClassConstantReflection
 {
+    use NonSerializable;
+
     public readonly ClassConstantId $id;
 
     /**

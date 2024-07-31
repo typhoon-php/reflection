@@ -9,6 +9,7 @@ use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\Id;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\FunctionAdapter;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
@@ -21,6 +22,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class FunctionReflection
 {
+    use NonSerializable;
+
     public readonly AnonymousFunctionId|NamedFunctionId $id;
 
     /**

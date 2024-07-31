@@ -40,6 +40,7 @@ use Typhoon\Reflection\Internal\CompleteReflection\SetTemplateIndex;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Hook\Hooks;
 use Typhoon\Reflection\Internal\Inheritance\ResolveClassInheritance;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeReflector\NativeReflector;
 use Typhoon\Reflection\Internal\PhpDoc\PhpDocReflector;
 use Typhoon\Reflection\Internal\PhpParser\CodeReflector;
@@ -64,6 +65,7 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class TyphoonReflector
 {
+    use NonSerializable;
     private const BUFFER_SIZE = 100;
 
     /**

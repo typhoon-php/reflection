@@ -6,6 +6,7 @@ namespace Typhoon\Reflection;
 
 use Typhoon\DeclarationId\TemplateId;
 use Typhoon\Reflection\Internal\Data;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Type\Type;
 use Typhoon\Type\Variance;
 use Typhoon\TypedMap\TypedMap;
@@ -15,6 +16,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class TemplateReflection
 {
+    use NonSerializable;
+
     public readonly TemplateId $id;
 
     /**

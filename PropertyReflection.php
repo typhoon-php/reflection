@@ -7,6 +7,7 @@ namespace Typhoon\Reflection;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\Visibility;
+use Typhoon\Reflection\Internal\Misc\NonSerializable;
 use Typhoon\Reflection\Internal\NativeAdapter\PropertyAdapter;
 use Typhoon\Type\Type;
 use Typhoon\TypedMap\TypedMap;
@@ -17,6 +18,8 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class PropertyReflection
 {
+    use NonSerializable;
+
     public readonly PropertyId $id;
 
     /**
