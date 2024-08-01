@@ -73,8 +73,12 @@ final class ToNativeTypeConverter extends DefaultTypeVisitor
         return NamedTypeAdapter::object();
     }
 
-    public function namedObject(Type $type, NamedClassId $classId, array $typeArguments): mixed
+    public function namedObject(Type $type, NamedClassId|AnonymousClassId $classId, array $typeArguments): mixed
     {
+        if ($classId instanceof AnonymousClassId) {
+            throw new NonConvertableType($type);
+        }
+
         return NamedTypeAdapter::namedObject($classId->name);
     }
 
