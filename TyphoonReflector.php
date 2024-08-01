@@ -20,7 +20,7 @@ use Typhoon\DeclarationId\PropertyId;
 use Typhoon\DeclarationId\TemplateId;
 use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Annotated\CustomTypeResolver;
-use Typhoon\Reflection\Annotated\NullCustomTypeResolver;
+use Typhoon\Reflection\Annotated\CustomTypeResolvers;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
 use Typhoon\Reflection\Internal\Cache\Cache;
 use Typhoon\Reflection\Internal\Cache\InMemoryPsr16Cache;
@@ -70,14 +70,15 @@ final class TyphoonReflector
 
     /**
      * @param ?iterable<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
+     * @param iterable<CustomTypeResolver> $customTypeResolvers
      */
     public static function build(
         ?iterable $locators = null,
         ?CacheInterface $cache = null,
-        CustomTypeResolver $customTypeResolver = new NullCustomTypeResolver(),
+        iterable $customTypeResolvers = [],
         ?Parser $phpParser = null,
     ): self {
-        $phpDocReflector = new PhpDocReflector($customTypeResolver);
+        $phpDocReflector = new PhpDocReflector(new CustomTypeResolvers($customTypeResolvers));
 
         return new self(
             codeReflector: new CodeReflector(
