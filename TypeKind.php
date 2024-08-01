@@ -9,8 +9,9 @@ namespace Typhoon\Reflection;
  */
 enum TypeKind
 {
-    case Resolved;
     case Native;
+    case Tentative;
     case Inferred;
     case Annotated;
+    case Resolved;
 }

@@ -7,7 +7,6 @@ namespace Typhoon\Reflection\Internal\NativeAdapter;
 use Typhoon\DeclarationId\AnonymousFunctionId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\FunctionReflection;
-use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\ParameterReflection;
 use Typhoon\Reflection\TypeKind;
 
@@ -199,7 +198,7 @@ final class FunctionAdapter extends \ReflectionFunction
 
     public function getTentativeReturnType(): ?\ReflectionType
     {
-        return $this->reflection->data[Data::Type]->tentative?->accept(new ToNativeTypeConverter());
+        return $this->reflection->returnType(TypeKind::Tentative)?->accept(new ToNativeTypeConverter());
     }
 
     public function hasReturnType(): bool
@@ -209,7 +208,7 @@ final class FunctionAdapter extends \ReflectionFunction
 
     public function hasTentativeReturnType(): bool
     {
-        return $this->reflection->data[Data::Type]->tentative !== null;
+        return $this->reflection->returnType(TypeKind::Tentative) !== null;
     }
 
     public function inNamespace(): bool
