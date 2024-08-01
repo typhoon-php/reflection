@@ -231,7 +231,7 @@ final class NodeReflector
                         ->with(Data::ValueExpression, $compiler->compile($const->value))
                         ->with(Data::Type, new TypeData(
                             native: $nativeType,
-                            value: $valueTypeReflector->reflect($const->value),
+                            inferred: $valueTypeReflector->reflect($const->value),
                         ));
                 }
 
@@ -249,7 +249,7 @@ final class NodeReflector
                     ->with(Data::Location, $this->reflectLocation($context, $node))
                     ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
                     ->with(Data::EnumCase, true)
-                    ->with(Data::Type, new TypeData(value: types::classConstant($enumType, $node->name->name)))
+                    ->with(Data::Type, new TypeData(inferred: types::classConstant($enumType, $node->name->name)))
                     ->with(Data::Visibility, Visibility::Public)
                     ->with(Data::BackingValueExpression, $compiler->compile($node->expr));
 

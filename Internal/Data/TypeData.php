@@ -23,7 +23,7 @@ final class TypeData
         /** @readonly */
         public ?Type $tentative = null,
         /** @readonly */
-        public ?Type $value = null,
+        public ?Type $inferred = null,
     ) {}
 
     public function withNative(?Type $native): self
@@ -56,7 +56,7 @@ final class TypeData
             native: $typeResolver->resolveNativeType($this->native),
             annotated: $typeResolver->resolveType($this->annotated),
             tentative: $typeResolver->resolveNativeType($this->tentative),
-            value: $typeResolver->resolveNativeType($this->value),
+            inferred: $typeResolver->resolveNativeType($this->inferred),
         );
     }
 
@@ -66,9 +66,9 @@ final class TypeData
     public function get(TypeKind $kind = TypeKind::Resolved): ?Type
     {
         return match ($kind) {
-            TypeKind::Resolved => $this->annotated ?? $this->value ?? $this->tentative ?? $this->native ?? types::mixed,
+            TypeKind::Resolved => $this->annotated ?? $this->inferred ?? $this->tentative ?? $this->native ?? types::mixed,
             TypeKind::Native => $this->native,
-            TypeKind::Inferred => $this->value,
+            TypeKind::Inferred => $this->inferred,
             TypeKind::Annotated => $this->annotated,
         };
     }
