@@ -124,6 +124,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, Function
         $context = $data[Data::Context];
 
         $data = $data
+            ->with(Data::UnresolvedTraits, $this->reflectUses($context, $data))
             ->with(Data::Constants, array_map(
                 fn(TypedMap $constant): TypedMap => $this->reflectNativeConstant($context, $constant),
                 $data[Data::Constants],
@@ -151,7 +152,6 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, Function
             ->with(Data::Aliases, $this->reflectAliases($context, $phpDoc))
             ->with(Data::UnresolvedParent, $this->reflectParent($context, $data, $phpDoc))
             ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($context, $data, $phpDoc))
-            ->with(Data::UnresolvedTraits, $this->reflectUses($context, $data))
             ->with(Data::Properties, [
                 ...$data[Data::Properties],
                 ...$this->reflectPhpDocProperties($context, $phpDoc->propertyTags()),
