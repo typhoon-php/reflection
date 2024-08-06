@@ -143,6 +143,7 @@ final class TyphoonReflector
         private readonly Locators $locators,
         private readonly Hooks $hooks,
         private readonly Cache $cache,
+        private readonly NativeReflector $nativeReflector = new NativeReflector(),
         private IdMap $buffer = new IdMap(),
     ) {}
 
@@ -232,13 +233,13 @@ final class TyphoonReflector
     public function reflect(Id $id): FunctionReflection|ClassReflection|ClassConstantReflection|PropertyReflection|MethodReflection|ParameterReflection|AliasReflection|TemplateReflection
     {
         try {
-            if ($id instanceof NamedFunctionId) {
-                return new FunctionReflection($id, $this->reflectData($id), $this);
-            }
-
             if ($id instanceof NamedClassId || $id instanceof AnonymousClassId) {
                 /** @var NamedClassId<class-string>|AnonymousClassId<?class-string> $id */
-                return new ClassReflection($id, $this->reflectData($id), $this);
+                return new ClassReflection($id, $this->reflectClassData($id), $this);
+            }
+
+            if ($id instanceof NamedFunctionId) {
+                return new FunctionReflection($id, $this->reflectFunctionData($id), $this);
             }
         } finally {
             if ($this->buffer->count() > self::BUFFER_SIZE) {
@@ -266,11 +267,12 @@ final class TyphoonReflector
             locators: $this->locators->with(new ScannedResourceLocator($reflectedResource->ids(), $resource)),
             hooks: $this->hooks,
             cache: $this->cache,
+            nativeReflector: $this->nativeReflector,
             buffer: $this->buffer->withMap($reflectedResource),
         );
     }
 
-    private function reflectData(NamedFunctionId|NamedClassId|AnonymousClassId $id): TypedMap
+    private function reflectFunctionData(NamedFunctionId $id): TypedMap
     {
         $buffered = $this->buffer[$id] ?? null;
 
@@ -292,12 +294,47 @@ final class TyphoonReflector
             return ($this->buffer[$id] ?? throw new DeclarationNotFound($id))($this);
         }
 
-        $nativeData = NativeReflector::reflectData($id);
+        $data = $this->nativeReflector->reflectNamedFunction($id);
 
-        if ($nativeData !== null) {
-            $this->cache->set($id, $nativeData);
+        if ($data !== null) {
+            $this->cache->set($id, $data);
 
-            return $nativeData;
+            return $data;
+        }
+
+        throw new DeclarationNotFound($id);
+    }
+
+    private function reflectClassData(NamedClassId|AnonymousClassId $id): TypedMap
+    {
+        $buffered = $this->buffer[$id] ?? null;
+
+        if ($buffered !== null) {
+            return $buffered($this);
+        }
+
+        $cachedData = $this->cache->get($id);
+
+        if ($cachedData !== null) {
+            return $cachedData;
+        }
+
+        $resource = $this->locators->locate($id);
+
+        if ($resource !== null) {
+            $this->buffer = $this->buffer->withMap($this->reflectResource($resource));
+
+            return ($this->buffer[$id] ?? throw new DeclarationNotFound($id))($this);
+        }
+
+        if ($id instanceof NamedClassId) {
+            $data = $this->nativeReflector->reflectNamedClass($id);
+
+            if ($data !== null) {
+                $this->cache->set($id, $data);
+
+                return $data;
+            }
         }
 
         throw new DeclarationNotFound($id);
@@ -357,7 +394,7 @@ final class TyphoonReflector
                 $idWithoutColumn = $idsOnLine[0]->withoutColumn();
 
                 if (\count($idsOnLine) === 1) {
-                    yield $idWithoutColumn => static fn(self $reflector): TypedMap => $reflector->reflectData($idsOnLine[0]);
+                    yield $idWithoutColumn => static fn(self $reflector): TypedMap => $reflector->reflectClassData($idsOnLine[0]);
 
                     continue;
                 }
