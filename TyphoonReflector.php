@@ -66,7 +66,7 @@ use Typhoon\TypedMap\TypedMap;
 final class TyphoonReflector
 {
     use NonSerializable;
-    private const BUFFER_SIZE = 100;
+    private const BUFFER_SIZE = 300;
 
     /**
      * @param ?iterable<ConstantLocator|NamedFunctionLocator|NamedClassLocator|AnonymousLocator> $locators
