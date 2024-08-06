@@ -10,5 +10,5 @@ namespace Typhoon\Reflection\Internal\Context;
  */
 interface ContextProvider
 {
-    public function current(): Context;
+    public function get(): Context;
 }

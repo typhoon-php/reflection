@@ -39,7 +39,7 @@ final class CollectIdReflectorsVisitor extends NodeVisitorAbstract
     public function leaveNode(Node $node): ?int
     {
         if ($node instanceof Function_) {
-            $context = $this->contextProvider->current();
+            $context = $this->contextProvider->get();
             \assert($context->currentId instanceof NamedFunctionId);
 
             $nodeReflector = $this->nodeReflector;
@@ -52,7 +52,7 @@ final class CollectIdReflectorsVisitor extends NodeVisitorAbstract
         }
 
         if ($node instanceof ClassLike) {
-            $context = $this->contextProvider->current();
+            $context = $this->contextProvider->get();
             \assert($context->currentId instanceof NamedClassId || $context->currentId instanceof AnonymousClassId);
 
             $nodeReflector = $this->nodeReflector;
@@ -65,7 +65,7 @@ final class CollectIdReflectorsVisitor extends NodeVisitorAbstract
         }
 
         if ($node instanceof ClassMethod) {
-            NodeContextAttribute::set($node, $this->contextProvider->current());
+            NodeContextAttribute::set($node, $this->contextProvider->get());
 
             return null;
         }

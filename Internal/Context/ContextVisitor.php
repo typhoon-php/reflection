@@ -46,7 +46,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         $this->codeContext = Context::start($code, $file);
     }
 
-    public function current(): Context
+    public function get(): Context
     {
         return array_value_last($this->contextStack)
             ?? $this->codeContext->withNameContext($this->nameContext);
@@ -64,7 +64,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         if ($node instanceof Function_) {
             \assert($node->namespacedName !== null);
 
-            $this->contextStack[] = $this->current()->enterFunction(
+            $this->contextStack[] = $this->get()->enterFunction(
                 name: $node->namespacedName->toString(),
                 templateNames: $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node)->templateNames,
             );
@@ -78,7 +78,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             $position = $node->getStartFilePos();
             \assert($position >= 0);
 
-            $this->contextStack[] = $this->current()->enterAnonymousFunction(
+            $this->contextStack[] = $this->get()->enterAnonymousFunction(
                 line: $line,
                 column: $this->codeContext->column($position),
                 templateNames: $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node)->templateNames,
@@ -96,7 +96,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 $position = $node->getStartFilePos();
                 \assert($position >= 0);
 
-                $this->contextStack[] = $this->current()->enterAnonymousClass(
+                $this->contextStack[] = $this->get()->enterAnonymousClass(
                     line: $line,
                     column: $this->codeContext->column($position),
                     parentName: $node->extends?->toString(),
@@ -109,7 +109,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
 
             \assert($node->namespacedName !== null);
 
-            $this->contextStack[] = $this->current()->enterClass(
+            $this->contextStack[] = $this->get()->enterClass(
                 name: $node->namespacedName->toString(),
                 parentName: $node->extends?->toString(),
                 aliasNames: $typeNames->aliasNames,
@@ -123,7 +123,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             \assert($node->namespacedName !== null);
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $this->contextStack[] = $this->current()->enterInterface(
+            $this->contextStack[] = $this->get()->enterInterface(
                 name: $node->namespacedName->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
@@ -136,7 +136,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             \assert($node->namespacedName !== null);
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $this->contextStack[] = $this->current()->enterTrait(
+            $this->contextStack[] = $this->get()->enterTrait(
                 name: $node->namespacedName->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
@@ -149,7 +149,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             \assert($node->namespacedName !== null);
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $this->contextStack[] = $this->current()->enterEnum(
+            $this->contextStack[] = $this->get()->enterEnum(
                 name: $node->namespacedName->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
@@ -161,7 +161,7 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         if ($node instanceof ClassMethod) {
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $this->contextStack[] = $this->current()->enterMethod(
+            $this->contextStack[] = $this->get()->enterMethod(
                 name: $node->name->name,
                 templateNames: $typeNames->templateNames,
             );
