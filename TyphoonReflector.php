@@ -241,7 +241,9 @@ final class TyphoonReflector
                 return new ClassReflection($id, $this->reflectData($id), $this);
             }
         } finally {
-            $this->buffer = $this->buffer->slice(-self::BUFFER_SIZE);
+            if ($this->buffer->count() > self::BUFFER_SIZE) {
+                $this->buffer = $this->buffer->slice(-self::BUFFER_SIZE);
+            }
         }
 
         return match (true) {
