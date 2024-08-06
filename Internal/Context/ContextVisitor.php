@@ -27,8 +27,6 @@ use function Typhoon\Reflection\Internal\array_value_last;
  */
 final class ContextVisitor extends NodeVisitorAbstract implements ContextProvider
 {
-    private const ATTRIBUTE = 'context';
-
     private readonly Context $codeContext;
 
     /**
@@ -46,13 +44,6 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         private readonly AnnotatedDeclarationsDiscoverer $annotatedDeclarationsDiscoverer = NullAnnotatedDeclarationsDiscoverer::Instance,
     ) {
         $this->codeContext = Context::start($code, $file);
-    }
-
-    public static function fromNode(FunctionLike|ClassLike $node): Context
-    {
-        $context = $node->getAttribute(self::ATTRIBUTE);
-
-        return $context instanceof Context ? $context : throw new \LogicException();
     }
 
     public function current(): Context
@@ -73,12 +64,10 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         if ($node instanceof Function_) {
             \assert($node->namespacedName !== null);
 
-            $context = $this->current()->enterFunction(
+            $this->contextStack[] = $this->current()->enterFunction(
                 name: $node->namespacedName->toString(),
                 templateNames: $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node)->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }
@@ -89,13 +78,11 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             $position = $node->getStartFilePos();
             \assert($position >= 0);
 
-            $context = $this->current()->enterAnonymousFunction(
+            $this->contextStack[] = $this->current()->enterAnonymousFunction(
                 line: $line,
                 column: $this->codeContext->column($position),
                 templateNames: $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node)->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }
@@ -109,29 +96,25 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
                 $position = $node->getStartFilePos();
                 \assert($position >= 0);
 
-                $context = $this->current()->enterAnonymousClass(
+                $this->contextStack[] = $this->current()->enterAnonymousClass(
                     line: $line,
                     column: $this->codeContext->column($position),
                     parentName: $node->extends?->toString(),
                     aliasNames: $typeNames->aliasNames,
                     templateNames: $typeNames->templateNames,
                 );
-                $this->contextStack[] = $context;
-                $node->setAttribute(self::ATTRIBUTE, $context);
 
                 return null;
             }
 
             \assert($node->namespacedName !== null);
 
-            $context = $this->current()->enterClass(
+            $this->contextStack[] = $this->current()->enterClass(
                 name: $node->namespacedName->toString(),
                 parentName: $node->extends?->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }
@@ -140,13 +123,11 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             \assert($node->namespacedName !== null);
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $context = $this->current()->enterInterface(
+            $this->contextStack[] = $this->current()->enterInterface(
                 name: $node->namespacedName->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }
@@ -155,13 +136,11 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             \assert($node->namespacedName !== null);
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $context = $this->current()->enterTrait(
+            $this->contextStack[] = $this->current()->enterTrait(
                 name: $node->namespacedName->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }
@@ -170,13 +149,11 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
             \assert($node->namespacedName !== null);
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $context = $this->current()->enterEnum(
+            $this->contextStack[] = $this->current()->enterEnum(
                 name: $node->namespacedName->toString(),
                 aliasNames: $typeNames->aliasNames,
                 templateNames: $typeNames->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }
@@ -184,12 +161,10 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
         if ($node instanceof ClassMethod) {
             $typeNames = $this->annotatedDeclarationsDiscoverer->discoverAnnotatedDeclarations($node);
 
-            $context = $this->current()->enterMethod(
+            $this->contextStack[] = $this->current()->enterMethod(
                 name: $node->name->name,
                 templateNames: $typeNames->templateNames,
             );
-            $this->contextStack[] = $context;
-            $node->setAttribute(self::ATTRIBUTE, $context);
 
             return null;
         }

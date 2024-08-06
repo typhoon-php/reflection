@@ -35,7 +35,6 @@ use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\ConstantExpression\Value;
 use Typhoon\Reflection\Internal\ConstantExpression\Values;
 use Typhoon\Reflection\Internal\Context\Context;
-use Typhoon\Reflection\Internal\Context\ContextVisitor;
 use Typhoon\Reflection\Internal\Data;
 use Typhoon\Reflection\Internal\Data\ClassKind;
 use Typhoon\Reflection\Internal\Data\PassedBy;
@@ -56,17 +55,23 @@ use Typhoon\TypedMap\TypedMap;
  */
 final class NodeReflector
 {
-    public function reflectClassLike(ClassLike $node): TypedMap
+    public function reflectFunction(Function_ $node, Context $context): TypedMap
     {
-        $context = ContextVisitor::fromNode($node);
+        return $this
+            ->reflectFunctionLike($node, $context)
+            ->with(Data::Namespace, $context->namespace());
+    }
 
+    public function reflectClassLike(ClassLike $node, Context $context): TypedMap
+    {
         $data = (new TypedMap())
             ->with(Data::PhpDoc, $node->getDocComment())
             ->with(Data::Location, $this->reflectLocation($context, $node))
             ->with(Data::Context, $context)
             ->with(Data::Namespace, $context->namespace())
             ->with(Data::Attributes, $this->reflectAttributes($context, $node->attrGroups))
-            ->with(Data::Constants, $this->reflectConstants($context, $node->stmts));
+            ->with(Data::Constants, $this->reflectConstants($context, $node->stmts))
+            ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
 
         if ($node instanceof Class_) {
             return $data
@@ -77,15 +82,13 @@ final class NodeReflector
                 ->with(Data::Abstract, $node->isAbstract())
                 ->with(Data::NativeReadonly, $node->isReadonly())
                 ->with(Data::NativeFinal, $node->isFinal())
-                ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
-                ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
+                ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()));
         }
 
         if ($node instanceof Interface_) {
             return $data
                 ->with(Data::ClassKind, ClassKind::Interface)
-                ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->extends))
-                ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
+                ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->extends));
         }
 
         if ($node instanceof Enum_) {
@@ -97,8 +100,7 @@ final class NodeReflector
                 ->with(Data::UnresolvedInterfaces, $this->reflectInterfaces($node->implements))
                 ->withMap($this->reflectTraitUses($node->getTraitUses()))
                 ->with(Data::NativeFinal, true)
-                ->with(Data::BackingType, $backingType)
-                ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
+                ->with(Data::BackingType, $backingType);
         }
 
         \assert($node instanceof Trait_, 'Unknown ClassLike node %s' . $node::class);
@@ -106,15 +108,7 @@ final class NodeReflector
         return $data
             ->with(Data::ClassKind, ClassKind::Trait)
             ->withMap($this->reflectTraitUses($node->getTraitUses()))
-            ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()))
-            ->with(Data::Methods, $this->reflectMethods($node->getMethods()));
-    }
-
-    public function reflectFunction(Function_ $node): TypedMap
-    {
-        return $this
-            ->reflectFunctionLike($node)
-            ->with(Data::Namespace, ContextVisitor::fromNode($node)->namespace());
+            ->with(Data::Properties, $this->reflectProperties($context, $node->getProperties()));
     }
 
     /**
@@ -293,10 +287,8 @@ final class NodeReflector
         return $properties;
     }
 
-    private function reflectFunctionLike(FunctionLike $node): TypedMap
+    private function reflectFunctionLike(FunctionLike $node, Context $context): TypedMap
     {
-        $context = ContextVisitor::fromNode($node);
-
         return (new TypedMap())
             ->with(Data::PhpDoc, $node->getDocComment())
             ->with(Data::Location, $this->reflectLocation($context, $node))
@@ -317,7 +309,7 @@ final class NodeReflector
         $methods = [];
 
         foreach ($nodes as $node) {
-            $methods[$node->name->name] = $this->reflectFunctionLike($node)
+            $methods[$node->name->name] = $this->reflectFunctionLike($node, NodeContextAttribute::get($node))
                 ->with(Data::Visibility, $this->reflectVisibility($node->flags))
                 ->with(Data::Static, $node->isStatic())
                 ->with(Data::NativeFinal, $node->isFinal())

@@ -46,7 +46,7 @@ final class CodeReflector
             nameContext: $nameResolver->getNameContext(),
             annotatedDeclarationsDiscoverer: $this->annotatedDeclarationsDiscoverer,
         );
-        $collector = new CollectIdReflectorsVisitor($this->nodeReflector);
+        $collector = new CollectIdReflectorsVisitor($this->nodeReflector, $contextVisitor);
 
         $traverser = new NodeTraverser();
 
