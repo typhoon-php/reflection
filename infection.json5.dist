@@ -16,4 +16,5 @@
     "mutators": {
         "@default": true,
     },
+    "testFrameworkOptions": "--testsuite=infection",
 }

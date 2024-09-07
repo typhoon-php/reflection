@@ -17,6 +17,12 @@
         <testsuite name="main">
             <directory>tests</directory>
         </testsuite>
+
+        <testsuite name="infection">
+            <file>tests/Internal/Inheritance/TypeResolversTest.php</file>
+            <file>tests/Internal/GetNamespaceTest.php</file>
+            <file>tests/Internal/GetShortNameTest.php</file>
+        </testsuite>
     </testsuites>
 
     <source restrictDeprecations="true" restrictNotices="true" restrictWarnings="true">
