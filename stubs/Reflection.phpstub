@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @template-covariant TEnum of UnitEnum
+ * @extends ReflectionClass<TEnum>
+ */
+class ReflectionEnum {}
+
+/**
+ * @template-covariant TClass as object
+ */
+class ReflectionAttribute {}
+
+class ReflectionFunction
+{
+    /**
+     * @var non-empty-string
+     */
+    public string $name;
+}

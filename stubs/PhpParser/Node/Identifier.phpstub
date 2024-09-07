@@ -1,0 +1,21 @@
+<?php
+
+namespace PhpParser\Node;
+
+class Identifier
+{
+    /**
+     * @var non-empty-string
+     */
+    public $name;
+
+    /**
+     * @return non-empty-string
+     */
+    public function toString() {}
+
+    /**
+     * @return non-empty-lowercase-string
+     */
+    public function toLowerString() {}
+}

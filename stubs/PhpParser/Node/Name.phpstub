@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PhpParser\Node;
+
+class Name
+{
+    /**
+     * @return non-empty-string
+     */
+    public function toString() {}
+
+    /**
+     * @return non-empty-string
+     */
+    public function toCodeString() {}
+
+    /**
+     * @psalm-assert-if-true class-string $this->toString()
+     */
+    public function isFullyQualified() {}
+
+    /**
+     * @param string|string[]|self|null $name1
+     * @param string|string[]|self|null $name2
+     * @return ($name1 is null ? ($name2 is null ? null : static) : static)
+     */
+    public static function concat($name1, $name2, array $attributes = []) {}
+
+    /**
+     * @return non-empty-list<non-empty-string>
+     */
+    public function getParts() {}
+}

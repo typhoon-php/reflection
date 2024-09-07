@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace PHPStan\PhpDocParser\Ast\PhpDoc;
+
+/**
+ * @template-covariant TValue of PhpDocTagValueNode
+ */
+class PhpDocTagNode implements PhpDocChildNode
+{
+	/**
+	 * @var non-empty-string
+	 */
+	public $name;
+
+	/**
+	 * @var TValue
+	 */
+	public $value;
+
+	/**
+	 * @param non-empty-string $name
+	 * @param TValue $value
+	 */
+	public function __construct(string $name, PhpDocTagValueNode $value) {}
+}

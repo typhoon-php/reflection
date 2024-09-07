@@ -26,6 +26,10 @@ final class TypeData
         public ?Type $inferred = null,
     ) {}
 
+    /**
+     * Required for PhpStormReflectionStubs.
+     * @psalm-suppress PossiblyUnusedMethod
+     */
     public function withNative(?Type $native): self
     {
         $data = clone $this;
