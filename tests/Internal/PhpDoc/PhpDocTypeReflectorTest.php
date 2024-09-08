@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Typhoon\Reflection\Internal\PhpDoc;
 
+use PHPStan\PhpDocParser\Ast\Type\TypeNode;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,7 @@ final class PhpDocTypeReflectorTest extends TestCase
         yield ['int<min, 123>', types::intRange(max: 123)];
         yield ['int<-99, max>', types::intRange(min: -99)];
         yield ['int<min, max>', types::int];
+        yield ['int<int, string, bool>', new InvalidPhpDocType('int range type should have 2 type arguments, got 3')];
         yield ['0', types::int(0)];
         yield ['932', types::int(932)];
         yield ['-5', types::int(-5)];
@@ -56,11 +58,13 @@ final class PhpDocTypeReflectorTest extends TestCase
         yield ["'\\n'", types::string('\n')];
         yield ['\stdClass::class', types::class(\stdClass::class)];
         yield ['class-string<\stdClass>', types::classString(types::object(\stdClass::class))];
+        yield ['class-string<\stdClass, int>', new InvalidPhpDocType('class-string type should have at most 1 type argument, got 2')];
         yield ['float', types::float];
         yield ['double', types::float];
         yield ['float<10.0002, 231.00002>', types::floatRange(10.0002, 231.00002)];
         yield ['float<min, 123>', types::floatRange(max: 123)];
         yield ['float<-99, max>', types::floatRange(min: -99)];
+        yield ['float<int, string, bool>', new InvalidPhpDocType('float range type should have 2 type arguments, got 3')];
         yield ['literal-string', types::literalString];
         yield ['literal-float', types::literalFloat];
         yield ['numeric-string', types::numericString];
@@ -216,5 +220,15 @@ final class PhpDocTypeReflectorTest extends TestCase
         $result = $reflector->reflectType(null);
 
         self::assertNull($result);
+    }
+
+    public function testItTrowsForUnknownType(): void
+    {
+        $reflector = new PhpDocTypeReflector(Context::start(''));
+        $node = $this->createMock(TypeNode::class);
+
+        $this->expectException(InvalidPhpDocType::class);
+
+        $reflector->reflectType($node);
     }
 }

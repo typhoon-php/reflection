@@ -160,10 +160,10 @@ final class PhpDocTypeReflector
             'string' => types::string,
             'non-falsy-string', 'truthy-string' => types::truthyString,
             'numeric-string' => types::numericString,
-            'class-string' => match (\count($typeArguments)) {
+            'class-string' => match ($number = \count($typeArguments)) {
                 0 => types::classString,
                 1 => types::classString($typeArguments[0]),
-                default => throw new InvalidPhpDocType(),
+                default => throw new InvalidPhpDocType(\sprintf('class-string type should have at most 1 type argument, got %d', $number)),
             },
             'array-key' => types::arrayKey,
             'key-of' => match ($number = \count($typeArguments)) {

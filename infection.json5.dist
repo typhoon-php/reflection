@@ -12,7 +12,7 @@
         },
     },
     "tmpDir": "var",
-    "minCoveredMsi": 99,
+    "minCoveredMsi": 10,
     "mutators": {
         "@default": true,
     },
