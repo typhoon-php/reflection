@@ -192,7 +192,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, Constant
             $aliases[$tag->value->importedAs ?? $tag->value->importedAlias] = (new TypedMap())
                 ->with(Data::Location, $this->reflectLocation($context, $tag))
                 ->with(Data::AliasType, types::classAlias(
-                    class: $typeReflector->resolveClass($tag->value->importedFrom),
+                    class: $context->resolveClassName($tag->value->importedFrom->name),
                     name: $tag->value->importedAlias,
                 ));
         }
@@ -273,7 +273,7 @@ final class PhpDocReflector implements AnnotatedDeclarationsDiscoverer, Constant
             $usePhpDoc = $this->parsePhpDoc($usePhpDoc);
 
             foreach ($usePhpDoc->usedTypes() as $type) {
-                $name = $typeReflector->resolveClass($type->type);
+                $name = $context->resolveClassName($type->type->name);
 
                 if (isset($uses[$name])) {
                     $uses[$name] = array_map($typeReflector->reflectType(...), $type->genericTypes);

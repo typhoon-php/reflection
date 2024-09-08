@@ -50,14 +50,6 @@ final class PhpDocTypeReflector
     ) {}
 
     /**
-     * @return non-empty-string
-     */
-    public function resolveClass(IdentifierTypeNode $node): string
-    {
-        return $this->context->resolveClassName($node->name);
-    }
-
-    /**
      * @return ($node is null ? null : Type)
      * @throws InvalidPhpDocType
      */
@@ -409,7 +401,7 @@ final class PhpDocTypeReflector
             );
         }
 
-        $class = $this->resolveClass($node->identifier);
+        $class = $this->context->resolveClassName($node->identifier->name);
 
         if ($class === \Closure::class) {
             return types::Closure(
