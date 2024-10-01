@@ -32,7 +32,7 @@ use function Typhoon\Reflection\Internal\get_short_name;
  */
 final class ClassAdapter extends \ReflectionClass
 {
-    public const IS_READONLY = 65536;
+    public const IS_READONLY_PHP_82 = 65536;
 
     public static function normalizeNameForException(string $name): string
     {
@@ -210,7 +210,7 @@ final class ClassAdapter extends \ReflectionClass
         /** @var int-mask-of<\ReflectionClass::IS_*> */
         return ($this->reflection->isAbstract() ? self::IS_EXPLICIT_ABSTRACT : 0)
             | ($this->isFinal() ? self::IS_FINAL : 0)
-            | ($this->isReadonly() ? self::IS_READONLY : 0);
+            | ($this->isReadonly() ? self::IS_READONLY_PHP_82 : 0);
     }
 
     public function getName(): string

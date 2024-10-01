@@ -18,8 +18,6 @@ use Typhoon\Reflection\ClassReflection;
  */
 final class EnumAdapter extends \ReflectionEnum
 {
-    public const IS_READONLY = ClassAdapter::IS_READONLY;
-
     /**
      * @param ClassAdapter<TEnum> $_class
      * @param ClassReflection<TEnum, NamedClassId<class-string<TEnum>>> $reflection
