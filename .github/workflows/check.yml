@@ -5,6 +5,9 @@ on:
     branches: ['main', '*.*.x']
   pull_request: ~
 
+env:
+  COMPOSER_ROOT_VERSION: 0.4.x-dev
+
 jobs:
   composer:
     runs-on: ubuntu-latest
