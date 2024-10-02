@@ -40,7 +40,7 @@ final class FunctionalTest extends TestCase
     {
         self::$reflector ??= TyphoonReflector::build();
         /** @psalm-suppress UnresolvableInclude */
-        $test = require_once $file;
+        $test = require $file;
         \assert($test instanceof \Closure);
 
         $test(self::$reflector, $this);
