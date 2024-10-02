@@ -19,7 +19,6 @@ final class Cache
      * This should help to avoid deserialization errors.
      */
     private const VERSION = 0;
-    private const PREFIX = 'typhoon/reflection';
 
     public function __construct(
         private readonly CacheInterface $cache,
@@ -43,6 +42,6 @@ final class Cache
 
     private static function key(Id $id): string
     {
-        return hash('xxh128', self::PREFIX . $id->encode() . self::VERSION);
+        return hash('xxh128', \sprintf('typhoon.reflection.%d.%d.%s', self::VERSION, \PHP_VERSION_ID, $id->encode()));
     }
 }
