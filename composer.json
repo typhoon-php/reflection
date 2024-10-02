@@ -30,7 +30,6 @@
         "dragon-code/benchmark": "^2.6",
         "ergebnis/composer-normalize": "^2.44.0",
         "friendsofphp/php-cs-fixer": "^3.64.0",
-        "infection/infection": "^0.29.6",
         "phpstan/phpstan": "^1.12.5",
         "phpunit/phpunit": "^10.5.35",
         "phpyh/coding-standard": "^2.6.2",
@@ -60,8 +59,7 @@
     "config": {
         "allow-plugins": {
             "bamarni/composer-bin-plugin": true,
-            "ergebnis/composer-normalize": true,
-            "infection/extension-installer": true
+            "ergebnis/composer-normalize": true
         },
         "platform": {
             "php": "8.1"
@@ -83,7 +81,7 @@
         "check-require": "tools/composer-require-checker/vendor/bin/composer-require-checker",
         "check-unused": "tools/composer-unused/vendor/bin/composer-unused",
         "fixcs": "php-cs-fixer fix --diff",
-        "infection": "infection --show-mutations",
+        "infection": "tools/infection/vendor/bin/infection --show-mutations",
         "pre-command-run": "mkdir -p var",
         "psalm": "tools/psalm/vendor/bin/psalm --show-info --no-diff --no-cache",
         "test": "phpunit"
