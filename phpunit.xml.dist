@@ -22,7 +22,6 @@
         <testsuite name="php84">
             <directory>tests</directory>
             <exclude>tests/Internal/NativeAdapter/AdapterCompatibilityTest.php</exclude>
-            <exclude>tests/TyphoonReflectorMemoryTest.php</exclude>
         </testsuite>
 
         <testsuite name="infection">
