@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Typhoon\Reflection\Internal\Context\Context;
+use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
@@ -171,17 +172,17 @@ final class PhpDocTypeReflectorTest extends TestCase
         yield [
             '($return is true ? string : void)',
             types::conditional(types::functionArg('var_export', 'return'), types::true, types::string, types::void),
-            Context::start('')->enterFunction('var_export'),
+            Context::start(new Resource(''))->enterFunction('var_export'),
         ];
         yield [
             '($return is not true ? void : string)',
             types::conditional(types::functionArg('var_export', 'return'), types::true, types::string, types::void),
-            Context::start('')->enterFunction('var_export'),
+            Context::start(new Resource(''))->enterFunction('var_export'),
         ];
         yield [
             '(T is true ? string : void)',
             types::conditional(types::functionTemplate('x', 'T'), types::true, types::string, types::void),
-            Context::start('')->enterFunction('x', templateNames: ['T']),
+            Context::start(new Resource(''))->enterFunction('x', templateNames: ['T']),
         ];
     }
 
@@ -190,7 +191,7 @@ final class PhpDocTypeReflectorTest extends TestCase
      */
     public static function validTypesNamed(): \Generator
     {
-        $defaultContext = Context::start('');
+        $defaultContext = Context::start(new Resource(''));
 
         foreach (self::validTypes() as $args) {
             yield $args[0] => [$args[0], $args[1], $args[2] ?? $defaultContext];
@@ -215,7 +216,7 @@ final class PhpDocTypeReflectorTest extends TestCase
 
     public function testItReturnsNullTypeIfNullNodePassed(): void
     {
-        $reflector = new PhpDocTypeReflector(Context::start(''));
+        $reflector = new PhpDocTypeReflector(Context::start(new Resource('')));
 
         $result = $reflector->reflectType(null);
 
@@ -224,7 +225,7 @@ final class PhpDocTypeReflectorTest extends TestCase
 
     public function testItTrowsForUnknownType(): void
     {
-        $reflector = new PhpDocTypeReflector(Context::start(''));
+        $reflector = new PhpDocTypeReflector(Context::start(new Resource('')));
         $node = $this->createMock(TypeNode::class);
 
         $this->expectException(InvalidPhpDocType::class);

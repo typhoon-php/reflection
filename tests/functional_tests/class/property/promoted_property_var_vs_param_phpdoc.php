@@ -9,7 +9,7 @@ use Typhoon\Type\types;
 use function PHPUnit\Framework\assertEquals;
 
 return static function (TyphoonReflector $reflector): void {
-    $reflector = $reflector->withResource(Resource::fromCode(
+    $reflector = $reflector->withResource(new Resource(
         <<<'PHP'
             <?php
 

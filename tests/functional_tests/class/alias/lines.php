@@ -9,7 +9,7 @@ use function PHPUnit\Framework\assertSame;
 
 return static function (TyphoonReflector $reflector): void {
     $aliases = $reflector
-        ->withResource(Resource::fromCode(<<<'PHP'
+        ->withResource(new Resource(<<<'PHP'
             <?php
             /** 
              * @psalm-type First = string

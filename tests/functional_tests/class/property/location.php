@@ -9,7 +9,7 @@ use function PHPUnit\Framework\assertEquals;
 
 return static function (TyphoonReflector $reflector): void {
     $properties = $reflector
-        ->withResource(Resource::fromCode(
+        ->withResource(new Resource(
             <<<'PHP'
                 <?php
                 final class A

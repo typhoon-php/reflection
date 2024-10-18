@@ -54,8 +54,8 @@ final class ConstantExpressionTypeReflector
             $expr instanceof Scalar\DNumber => types::float($expr->value),
             $expr instanceof Expr\Array_ => $this->reflectArray($expr),
             $expr instanceof Scalar\MagicConst\Line => types::int($expr->getStartLine()),
-            $expr instanceof Scalar\MagicConst\File => types::string($this->context->file ?? ''),
-            $expr instanceof Scalar\MagicConst\Dir => types::string($this->context->directory() ?? ''),
+            $expr instanceof Scalar\MagicConst\File => types::string($this->context->resource->file ?? ''),
+            $expr instanceof Scalar\MagicConst\Dir => types::string($this->context->resource->directory() ?? ''),
             $expr instanceof Scalar\MagicConst\Namespace_ => types::string($this->context->namespace()),
             // $expr instanceof Scalar\MagicConst\Function_ => $this->context->magicFunction(),
             $expr instanceof Scalar\MagicConst\Class_ => types::self(resolvedClass: $this->context->self),
@@ -99,9 +99,6 @@ final class ConstantExpressionTypeReflector
         return types::arrayShape($elements);
     }
 
-    /**
-     * @throws ConstExprEvaluationException
-     */
     private function reflectConstant(Name $name): Type
     {
         $lowerStringName = $name->toLowerString();

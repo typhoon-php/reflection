@@ -30,6 +30,10 @@ enum CompleteEnum implements ClassHook
 
     public function processClass(NamedClassId|AnonymousClassId $id, TypedMap $data, TyphoonReflector $reflector): TypedMap
     {
+        if ($id->name === \UnitEnum::class || $id->name === \BackedEnum::class) {
+            return $data->without(Data::Properties);
+        }
+
         if ($data[Data::ClassKind] !== ClassKind::Enum) {
             return $data;
         }

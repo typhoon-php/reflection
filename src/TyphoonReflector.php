@@ -19,7 +19,6 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\ParameterId;
 use Typhoon\DeclarationId\PropertyId;
 use Typhoon\DeclarationId\TemplateId;
-use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
 use Typhoon\Reflection\Annotated\CustomTypeResolver;
 use Typhoon\Reflection\Annotated\CustomTypeResolvers;
 use Typhoon\Reflection\Exception\DeclarationNotFound;
@@ -28,7 +27,6 @@ use Typhoon\Reflection\Internal\Cache\InMemoryPsr16Cache;
 use Typhoon\Reflection\Internal\CompleteReflection\CleanUpInternallyDefined;
 use Typhoon\Reflection\Internal\CompleteReflection\CompleteEnum;
 use Typhoon\Reflection\Internal\CompleteReflection\CopyPromotedParameterToProperty;
-use Typhoon\Reflection\Internal\CompleteReflection\RemoveCode;
 use Typhoon\Reflection\Internal\CompleteReflection\RemoveContext;
 use Typhoon\Reflection\Internal\CompleteReflection\SetAttributeRepeated;
 use Typhoon\Reflection\Internal\CompleteReflection\SetClassCloneable;
@@ -58,6 +56,7 @@ use Typhoon\Reflection\Locator\NativeReflectionClassLocator;
 use Typhoon\Reflection\Locator\NativeReflectionFunctionLocator;
 use Typhoon\Reflection\Locator\NoSymfonyPolyfillLocator;
 use Typhoon\Reflection\Locator\OnlyLoadedClassLocator;
+use Typhoon\Reflection\Locator\PhpStormStubsLocator;
 use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Reflection\Locator\ScannedResourceLocator;
 use Typhoon\TypedMap\TypedMap;
@@ -103,7 +102,6 @@ final class TyphoonReflector
                 SetTemplateIndex::Instance,
                 ResolveClassInheritance::Instance,
                 RemoveContext::Instance,
-                RemoveCode::Instance,
                 CleanUpInternallyDefined::Instance,
             ]),
             cache: new Cache($cache ?? self::defaultInMemoryCache()),
@@ -390,13 +388,14 @@ final class TyphoonReflector
      */
     private function reflectResource(Resource $resource): IdMap
     {
-        $code = $resource->data[Data::Code];
-        $file = $resource->data[Data::File];
-
-        $baseData = $resource->data;
+        $baseData = (new TypedMap())
+            ->with(Data::File, $resource->file)
+            ->with(Data::ChangeDetector, $resource->changeDetector)
+            ->with(Data::PhpExtension, $resource->extension)
+            ->with(Data::InternallyDefined, $resource->extension !== null);
         $hooks = $this->hooks->merge($resource->hooks);
 
-        $idReflectors = $this->codeReflector->reflectCode($code, $file)->map(
+        $idReflectors = $this->codeReflector->reflectCode($resource)->map(
             static fn(\Closure $idReflector, ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId $id): \Closure =>
                 static function (self $reflector) use ($id, $idReflector, $baseData, $hooks): TypedMap {
                     static $started = false;

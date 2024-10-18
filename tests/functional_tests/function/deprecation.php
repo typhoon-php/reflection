@@ -11,7 +11,7 @@ use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertTrue;
 
 return static function (TyphoonReflector $reflector): void {
-    $reflector = $reflector->withResource(Resource::fromCode(
+    $reflector = $reflector->withResource(new Resource(
         <<<'PHP'
             <?php
             function notDeprecated () {}

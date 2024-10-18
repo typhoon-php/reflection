@@ -11,7 +11,7 @@ use function PHPUnit\Framework\assertNull;
 
 return static function (TyphoonReflector $reflector): void {
     $parameters = $reflector
-        ->withResource(Resource::fromCode(
+        ->withResource(new Resource(
             <<<'PHP'
                 <?php
                 namespace X;

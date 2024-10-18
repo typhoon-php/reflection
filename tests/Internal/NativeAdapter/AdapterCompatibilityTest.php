@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use Traits\Trait1;
 use Typhoon\DeclarationId\Id;
-use Typhoon\PhpStormReflectionStubs\PhpStormStubsLocator;
+use Typhoon\Reflection\Locator\PhpStormStubsLocator;
 use Typhoon\Reflection\TyphoonReflector;
 use Typhoon\Type\Variance;
 

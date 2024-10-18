@@ -9,7 +9,7 @@ use function PHPUnit\Framework\assertSame;
 
 return static function (TyphoonReflector $reflector): void {
     $templates = $reflector
-        ->withResource(Resource::fromCode(<<<'PHP'
+        ->withResource(new Resource(<<<'PHP'
             <?php
             /** 
              * @template T0

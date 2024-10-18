@@ -12,7 +12,7 @@ use function PHPUnit\Framework\assertSame;
 
 return static function (TyphoonReflector $reflector): void {
     $constant = $reflector
-        ->withResource(Resource::fromCode(
+        ->withResource(new Resource(
             <<<'PHP'
                 <?php
                 

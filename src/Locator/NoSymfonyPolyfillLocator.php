@@ -6,7 +6,6 @@ namespace Typhoon\Reflection\Locator;
 
 use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
-use Typhoon\Reflection\Internal\Data;
 
 /**
  * @api
@@ -30,9 +29,7 @@ final class NoSymfonyPolyfillLocator implements NamedFunctionLocator, NamedClass
             return null;
         }
 
-        $file = $resource->data[Data::File];
-
-        if ($file !== null && str_contains($file, self::PATTERN)) {
+        if ($resource->file !== null && str_contains($resource->file, self::PATTERN)) {
             return null;
         }
 

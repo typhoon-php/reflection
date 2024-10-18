@@ -14,6 +14,7 @@ use Typhoon\DeclarationId\NamedClassId;
 use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
+use Typhoon\Reflection\Locator\Resource;
 use Typhoon\TypedMap\TypedMap;
 
 /**
@@ -29,21 +30,19 @@ final class CodeReflector
     ) {}
 
     /**
-     * @param ?non-empty-string $file
      * @return IdMap<ConstantId|NamedFunctionId|NamedClassId|AnonymousClassId, \Closure(): TypedMap>
      */
-    public function reflectCode(string $code, ?string $file = null): IdMap
+    public function reflectCode(Resource $resource): IdMap
     {
-        $nodes = $this->phpParser->parse($code) ?? throw new \LogicException();
+        $nodes = $this->phpParser->parse($resource->code) ?? throw new \LogicException();
 
         /** @psalm-suppress MixedArgument, ArgumentTypeCoercion, UnusedPsalmSuppress */
         $linesFixer = method_exists($this->phpParser, 'getTokens')
             ? new FixNodeLocationVisitor($this->phpParser->getTokens())
-            : FixNodeLocationVisitor::fromCode($code);
+            : FixNodeLocationVisitor::fromCode($resource->code);
         $nameResolver = new NameResolver();
         $contextVisitor = new ContextVisitor(
-            code: $code,
-            file: $file,
+            resource: $resource,
             nameContext: $nameResolver->getNameContext(),
             annotatedDeclarationsDiscoverer: $this->annotatedDeclarationsDiscoverer,
         );

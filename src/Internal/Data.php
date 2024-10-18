@@ -62,7 +62,6 @@ enum Data
     public const Constraint = Data\ConstraintKey::Key;
     public const UsePhpDocs = Data\UsePhpDocsKey::Key;
     public const Location = Data\LocationKey::Key;
-    public const Code = Data\CodeKey::Key;
     public const Deprecation = Data\DeprecationKey::Key;
     public const Optional = Data\BoolKeys::Optional;
     public const Cloneable = Data\BoolKeys::Cloneable;

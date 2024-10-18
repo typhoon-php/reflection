@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Typhoon\Reflection\Internal\ConstantExpression\Expression;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
+use Typhoon\Reflection\Locator\Resource;
 
 #[CoversClass(ConstantExpressionCompiler::class)]
 final class ConstantExpressionCompilerTest extends TestCase
@@ -297,7 +298,7 @@ final class ConstantExpressionCompilerTest extends TestCase
         $nodes = self::$parser->parse($code) ?? [];
 
         $nameResolver = new NameResolver();
-        $contextVisitor = new ContextVisitor($code, 'file.php', $nameResolver->getNameContext());
+        $contextVisitor = new ContextVisitor(new Resource($code, file: 'file.php'), $nameResolver->getNameContext());
         $findAndCompile = new FindAndCompileVisitor($contextVisitor, $expressionFinder);
         $traverser = new NodeTraverser();
         $traverser->addVisitor($nameResolver);

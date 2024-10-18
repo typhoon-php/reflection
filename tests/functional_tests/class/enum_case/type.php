@@ -11,7 +11,7 @@ use function PHPUnit\Framework\assertNull;
 
 return static function (TyphoonReflector $reflector): void {
     $reflection = $reflector
-        ->withResource(Resource::fromCode('<?php enum A { case X; }'))
+        ->withResource(new Resource('<?php enum A { case X; }'))
         ->reflectClass('A')
         ->enumCases()['X'];
 

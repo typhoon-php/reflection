@@ -45,7 +45,7 @@ final class CompilationContext
      */
     public function magicFile(): Expression
     {
-        return Value::from($this->context->file ?? '');
+        return Value::from($this->context->resource->file ?? '');
     }
 
     /**
@@ -53,7 +53,7 @@ final class CompilationContext
      */
     public function magicDir(): Expression
     {
-        return Value::from($this->context->directory() ?? '');
+        return Value::from($this->context->resource->directory() ?? '');
     }
 
     /**

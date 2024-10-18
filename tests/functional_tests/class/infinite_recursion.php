@@ -11,6 +11,6 @@ return static function (TyphoonReflector $reflector, TestCase $test): void {
     $test->expectExceptionObject(new \LogicException('Infinite recursive reflection of class A detected'));
 
     $reflector
-        ->withResource(Resource::fromCode('<?php class A extends A {}'))
+        ->withResource(new Resource('<?php class A extends A {}'))
         ->reflectClass('A');
 };

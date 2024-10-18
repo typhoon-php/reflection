@@ -16,6 +16,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Typhoon\Reflection\Internal\Context\Context;
 use Typhoon\Reflection\Internal\Context\ContextVisitor;
+use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
@@ -26,7 +27,7 @@ final class ConstantExpressionTypeReflectorTest extends TestCase
 
     public function testItReturnsNullForNullExpression(): void
     {
-        $reflector = new ConstantExpressionTypeReflector(Context::start(''));
+        $reflector = new ConstantExpressionTypeReflector(Context::start(new Resource('')));
 
         $type = $reflector->reflect(null);
 
@@ -100,7 +101,7 @@ final class ConstantExpressionTypeReflectorTest extends TestCase
         $nodes = self::$parser->parse($code) ?? [];
 
         $nameResolver = new NameResolver();
-        $contextVisitor = new ContextVisitor($code, 'file.php', $nameResolver->getNameContext());
+        $contextVisitor = new ContextVisitor(new Resource($code, 'file.php'), $nameResolver->getNameContext());
         $findAndReflect = new FindAndReflectVisitor($contextVisitor, $expressionFinder);
         $traverser = new NodeTraverser();
         $traverser->addVisitor($nameResolver);

@@ -11,7 +11,7 @@ use function PHPUnit\Framework\assertNull;
 
 return static function (TyphoonReflector $reflector): void {
     $constants = $reflector
-        ->withResource(Resource::fromCode(<<<'PHP'
+        ->withResource(new Resource(<<<'PHP'
             <?php
             class A
             {

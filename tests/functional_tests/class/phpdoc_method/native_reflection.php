@@ -10,7 +10,7 @@ use function PHPUnit\Framework\assertFalse;
 
 return static function (TyphoonReflector $reflector): void {
     $class = $reflector
-        ->withResource(Resource::fromCode(
+        ->withResource(new Resource(
             <<<'PHP'
                 <?php
                 /** 

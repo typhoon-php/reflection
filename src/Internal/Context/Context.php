@@ -17,6 +17,7 @@ use Typhoon\DeclarationId\NamedFunctionId;
 use Typhoon\DeclarationId\TemplateId;
 use Typhoon\Reflection\Annotated\TypeContext;
 use Typhoon\Reflection\Internal\PhpParser\NameParser;
+use Typhoon\Reflection\Locator\Resource;
 use Typhoon\Type\Type;
 use Typhoon\Type\types;
 
@@ -27,13 +28,11 @@ use Typhoon\Type\types;
 final class Context implements TypeContext
 {
     /**
-     * @param ?non-empty-string $file
      * @param array<non-empty-string, AliasId> $aliases
      * @param array<non-empty-string, TemplateId> $templates
      */
     private function __construct(
-        public readonly string $code,
-        public readonly ?string $file,
+        public readonly Resource $resource,
         private NameContext $nameContext,
         public readonly null|NamedFunctionId|AnonymousFunctionId|NamedClassId|AnonymousClassId|MethodId $currentId = null,
         public readonly null|NamedClassId|AnonymousClassId $self = null,
@@ -43,15 +42,12 @@ final class Context implements TypeContext
         private readonly array $templates = [],
     ) {}
 
-    /**
-     * @param ?non-empty-string $file
-     */
-    public static function start(string $code, ?string $file = null): self
+    public static function start(Resource $resource): self
     {
         $nameContext = new NameContext(new Throwing());
         $nameContext->startNamespace();
 
-        return new self($code, $file, $nameContext);
+        return new self($resource, $nameContext);
     }
 
     public function withNameContext(NameContext $nameContext): self
@@ -71,8 +67,7 @@ final class Context implements TypeContext
         $id = Id::namedFunction($name);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             aliases: $this->aliases,
@@ -87,12 +82,11 @@ final class Context implements TypeContext
      */
     public function enterAnonymousFunction(int $line, int $column, array $templateNames = []): self
     {
-        \assert($this->file !== null);
-        $id = Id::anonymousFunction($this->file, $line, $column);
+        \assert($this->resource->file !== null);
+        $id = Id::anonymousFunction($this->resource->file, $line, $column);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             self: $this->self,
@@ -121,8 +115,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             self: $id,
@@ -149,12 +142,11 @@ final class Context implements TypeContext
         array $aliasNames = [],
         array $templateNames = [],
     ): self {
-        \assert($this->file !== null);
-        $id = Id::anonymousClass($this->file, $line, $column);
+        \assert($this->resource->file !== null);
+        $id = Id::anonymousClass($this->resource->file, $line, $column);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             self: $id,
@@ -177,8 +169,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             self: $id,
@@ -200,8 +191,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             self: $id,
@@ -223,8 +213,7 @@ final class Context implements TypeContext
         $id = Id::namedClass($name);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             trait: $id,
@@ -240,14 +229,13 @@ final class Context implements TypeContext
      * @param non-empty-string $name
      * @param list<non-empty-string> $templateNames
      */
-    public function enterMethod(string $name, array $templateNames): self
+    public function enterMethod(string $name, array $templateNames = []): self
     {
         \assert($this->currentId instanceof NamedClassId || $this->currentId instanceof AnonymousClassId);
         $id = Id::method($this->currentId, $name);
 
         return new self(
-            code: $this->code,
-            file: $this->file,
+            resource: $this->resource,
             nameContext: $this->nameContext,
             currentId: $id,
             self: $this->self,
@@ -271,7 +259,7 @@ final class Context implements TypeContext
             return 1;
         }
 
-        $lineStartPosition = strrpos($this->code, "\n", $position - \strlen($this->code) - 1);
+        $lineStartPosition = strrpos($this->resource->code, "\n", $position - \strlen($this->resource->code) - 1);
 
         if ($lineStartPosition === false) {
             return $position + 1;
@@ -281,15 +269,6 @@ final class Context implements TypeContext
         \assert($column > 0);
 
         return $column;
-    }
-
-    public function directory(): ?string
-    {
-        if ($this->file === null) {
-            return null;
-        }
-
-        return \dirname($this->file);
     }
 
     public function namespace(): string

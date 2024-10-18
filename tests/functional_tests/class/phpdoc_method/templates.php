@@ -11,7 +11,7 @@ use function PHPUnit\Framework\assertSame;
 
 return static function (TyphoonReflector $reflector): void {
     $method = $reflector
-        ->withResource(Resource::fromCode(
+        ->withResource(new Resource(
             <<<'PHP'
                 <?php
                 /** 

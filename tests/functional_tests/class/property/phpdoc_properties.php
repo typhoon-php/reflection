@@ -13,7 +13,7 @@ use function PHPUnit\Framework\assertTrue;
 
 return static function (TyphoonReflector $reflector): void {
     $properties = $reflector
-        ->withResource(Resource::fromCode(
+        ->withResource(new Resource(
             <<<'PHP'
                 <?php
                 /** 

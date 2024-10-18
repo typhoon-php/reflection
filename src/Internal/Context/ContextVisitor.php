@@ -19,6 +19,7 @@ use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
 use Typhoon\Reflection\Internal\Annotated\AnnotatedDeclarationsDiscoverer;
 use Typhoon\Reflection\Internal\Annotated\NullAnnotatedDeclarationsDiscoverer;
+use Typhoon\Reflection\Locator\Resource;
 use function Typhoon\Reflection\Internal\array_value_last;
 
 /**
@@ -34,16 +35,12 @@ final class ContextVisitor extends NodeVisitorAbstract implements ContextProvide
      */
     private array $contextStack = [];
 
-    /**
-     * @param ?non-empty-string $file
-     */
     public function __construct(
-        string $code,
-        ?string $file,
+        Resource $resource,
         private readonly NameContext $nameContext,
         private readonly AnnotatedDeclarationsDiscoverer $annotatedDeclarationsDiscoverer = NullAnnotatedDeclarationsDiscoverer::Instance,
     ) {
-        $this->codeContext = Context::start($code, $file);
+        $this->codeContext = Context::start($resource);
     }
 
     public function get(): Context
